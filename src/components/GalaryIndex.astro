@@ -1,0 +1,43 @@
+---
+import type { Image } from "../data/types/Image";
+
+export interface Props {
+  image: Image;
+  href?: string;
+}
+const { image, href } = Astro.props as Props;
+---
+
+    <div class="galerys">
+        <a href="">
+            <div class="galery-one-big">
+                <img src={image.src.compressed} alt={image.alt} />
+            </div>
+        </a>
+        <div class="gal-right-real">
+            <div class="galary-right-2">
+                <a href="">
+                    <div class="phot-mini">
+                        <img src={image.src.compressed} alt={image.alt} />
+                    </div>
+                </a>
+                <a href="">
+                    <div class="phot-mini">
+                        <img src={image.src.compressed} alt={image.alt} />
+                    </div>
+                </a>
+            </div>
+            <div class="galary-right-1">
+                <a href="">
+                    <div class="phot-mini">
+                        <img src={image.src.compressed} alt={image.alt} />
+                    </div>
+                </a>
+                <a href="">
+                    <div class="phot-mini">
+                        <img src={image.src.compressed} alt={image.alt} />
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>

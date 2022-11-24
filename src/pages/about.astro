@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Page.astro'
+import BlogPostsList from '../components/BlogPostsList.astro';
+
+const seo = {
+    title: 'About',
+    description: 'About TheFoxxStuff, Aytal Popov',
+  }
+
+const posts = (await Astro.glob('./blog/*.{md,mdx}')).sort(
+	(a, b) => new Date(b.frontmatter.publishedAt).valueOf() - new Date(a.frontmatter.publishedAt).valueOf()
+);
+---
+
+
+<Layout seo={seo}>
+    <div class="div-block-2"></div>
+    <div class="dirbox">
+        <div class="dirbox">
+            <h1 class="heading-isssn">About me</h1>
+            <div class="dir">
+                <a href="/">
+                    <div id="dirdark" class="dirlink">Home</div>
+                </a>
+
+                <img src="/img/icons/cheveron-right.svg" loading="lazy" alt="" class="rightch">
+
+                <a href="/about/">
+                    <div class="dirlink_cor">About</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="profffdas w-row">
+        <div class="column-6 w-col w-col-6">
+            <div class="prof_img">
+                <img src="/img/about.jpg">
+            </div>
+            <div class="div-block-6">
+                <h1 class="heading-ins">Ссылки</h1>
+            </div>
+            <div class="div-block-7">
+                <div class="buttonmusic">
+                    <div>Youtube</div>
+                </div>
+                <div class="buttonmusic">
+                    <div>Twitter</div>
+                </div>
+                <div class="buttonmusic">
+                    <div>Vk</div>
+                </div>
+                <div class="buttonmusic">
+                    <div>Telegram</div>
+                </div>
+            </div>
+        </div>
+        <div class="profff w-col w-col-6">
+            <h1 class="heading-ins">Aytal Popov</h1>
+            <div class="div-block-5">
+                <div class="prof_minidata w-row">
+                    <div class="left-info-prof w-col w-col-6">
+                        <div>Date of birth:</div>
+                    </div>
+                    <div class="column-7 w-col w-col-6">
+                        <div>25 June 2002</div>
+                    </div>
+                </div>
+                <div class="prof_minidata w-row">
+                    <div class="left-info-prof w-col w-col-6">
+                        <div>Zodiac sign:</div>
+                    </div>
+                    <div class="column-7 w-col w-col-6">
+                        <div>Cancer</div>
+                    </div>
+                </div>
+                <div class="prof_minidata w-row">
+                    <div class="left-info-prof w-col w-col-6">
+                        <div>From:</div>
+                    </div>
+                    <div class="column-7 w-col w-col-6">
+                        <div>Republic of Sakha (Yakutia)</div>
+                    </div>
+                </div>
+                <div class="prof_minidata w-row">
+                    <div class="left-info-prof w-col w-col-6">
+                        <div>Occupancy:</div>
+                    </div>
+                    <div class="column-7 w-col w-col-6">
+                        <div>Web Developer</div>
+                    </div>
+                </div>
+            </div>
+            <div>2020 tak hanya ditandai oleh pandemi virus corona. Ia digoyang oleh berbagai peristiwa alam dan kemanusiaan tragis yang telah dimulai puluhan tahun sebelumnya. 2020 adalah puncak dari kerakusan dan ketamakan manusia yang merupakan akibat
+                dari budaya kapitalisme. Satu-satunya cara menghadapi ini adalah sifat membuka diri untuk saling bekerja sama satu sama lain. Terlihat sederhana jika anda seorang utopis. Tradisi berkelompok dengan skala kecil namun sporadis sangat
+                diperlukan untuk kesejahteraan umat. Metode kolektif seperti ini harus dilakukan dengan proses yang lambat, panjang, dan membutuhkan keberanian yang besar karena akan berhadapan keras dengan sistem kuasa yang tidak menginginkan pemerataan
+                faedah.
+                <br><br>Pada tahun 2019 Senyawa mulai menggagas sebuah unit usaha untuk menghadapi tantangan keberlangsungan ekonominya secara mandiri bernama Senyawa Mandiri. Unit ini juga dirancang untuk mengurangi ketergantungan pada produk korporasi
+                raksasa. Berjalannya waktu, Senyawa Mandiri berkembang menjadi sebuah sikap politik bagi Senyawa sendiri. Ia tak lagi Rully Shabara dan Wukir Suryadi. Ia menjelma menjadi multi-entitas yang terbuka dan egaliter.</div>
+        </div>
+    </div>
+
+</Layout>
+
+<style>
+    .prof_img img{
+        height: 100%;
+        object-fit: cover;
+    }
+</style>

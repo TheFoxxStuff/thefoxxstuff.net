@@ -1,0 +1,13 @@
+---
+import BlogProjectPreview from "./BlogProjectPreview.astro";
+
+const {postss} = Astro.props;
+---
+
+<div class="relises">
+  {postss.map((post) => (
+
+      <BlogProjectPreview post={post} />
+
+  ))}
+</div>

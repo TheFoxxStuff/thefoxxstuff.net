@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/404.astro'
+const seo = {
+    title: 'Not Found',
+    description: 'Page not found! (error 404)',
+  }
+---
+
+
+<Layout seo={seo}>
+    <center>
+    <h1 class="err">404</h1>
+    <a href="/">
+        <div class="right-box-down">
+            <div class="text-block-5">GO TO MAIN</div>
+        </div>
+    </a>
+    </center>
+</Layout>
+
+
+<style>
+    .err {
+        margin-top: 200px;
+        font-size: 92px;
+    }
+    .right-box-down {
+        margin-top: 64px;
+        width: 160px;
+    }
+</style>
