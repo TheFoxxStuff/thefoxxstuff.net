@@ -3,6 +3,7 @@ import Layout from '../layouts/Page.astro'
 import ImagePreview from "../components/ImagePreview.astro";
 import { artwork } from "../data/artwork";
 import { photos } from "../data/photos";
+import images from '../data/images.json';
 
 const seo = {
   title: 'Arts',
@@ -32,6 +33,21 @@ const seo = {
     <h1 class="heading">2022</h1>
     <div class="relises">
         {artwork.map((art) => <ImagePreview image={art} />)}
+
+
+        {images.map(image => {
+            return (
+                    <div key={image.id}>
+                        <a href={image.link}>
+                        <div class="photo-box">
+                            <img src={image.image} alt={ image.title } />
+                        </div>  
+                        </a>
+                    </div>
+                )
+        })}
+
+
         
     </div>
 
