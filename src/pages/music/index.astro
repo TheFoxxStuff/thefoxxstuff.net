@@ -4,7 +4,6 @@ import Layout from '../../layouts/Page.astro'
 import BlogMusicPreview from '../../components/BlogMusicPreview.astro';
 
 import { getAllRel } from '../../lib/api.js';
-import { getAllTracks } from '../../lib/api.js';
 
 import Container from '../../components/Container.astro';
 import Header from '../../components/Header.astro';
@@ -17,7 +16,6 @@ const seo = {
 }
 
 const getAllRels = await getAllRel();
-const getAllTrackss = await getAllTracks();
 ---
 
 <Layout seo={seo}>
