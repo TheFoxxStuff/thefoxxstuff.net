@@ -33,3 +33,6 @@ export const photos: Photo[] = [
   raggiDelPianeta,
   rivederLeStelle,
 ];
+
+
+
