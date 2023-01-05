@@ -1,0 +1,66 @@
+---
+// Component Imports
+import Layout from '../../layouts/Page.astro'
+import BlogMusicPreview from '../../components/BlogMusicPreview.astro';
+
+import { getAllRel } from '../../lib/api.js';
+import { getAllTracks } from '../../lib/api.js';
+
+import Container from '../../components/Container.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../config';
+
+
+const seo = {
+  title: 'music',
+  description: 'This is a starter repo for an blog built with Astro including open graph tags, canonical urls, RSS, sitemap support.'
+}
+
+const getAllRels = await getAllRel();
+const getAllTrackss = await getAllTracks();
+---
+
+<Layout seo={seo}>
+  <Header title={SITE_TITLE} />
+  <Container>
+    <article class="blog-page-content__article">
+      <section class="postlist">
+        {getAllRels.map((music) =>
+        <BlogMusicPreview music={music} />)}
+      </section>
+    </article>
+  </Container>
+</Layout>
+
+<style is:global>
+  /* Posts list */
+  .postlist {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    list-style: none;
+    padding: 0;
+
+  }
+
+  .postlist-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .postlist-item__img {
+    border-radius: 0.5rem;
+    height: auto;
+  }
+
+  @media screen and (max-width: 769px) {
+    .blog-page-content__article {
+      padding: 1rem;
+    }
+
+    .postlist {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

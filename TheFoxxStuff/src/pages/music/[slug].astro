@@ -1,0 +1,27 @@
+---
+// Component Imports
+import Layout from '../../layouts/Post.astro'
+import MusicPage from '../../components/MusicPage.astro'
+import { getSanityImageURL } from '../../utils/helpers.js';
+import { getAllRel } from '../../lib/api.js';
+import { getAllTracks } from '../../lib/api.js';
+
+
+export async function getStaticPaths() {
+  const allMusicInfo = await getAllRel();
+
+  return allMusicInfo.map(music => ({ params: { slug: music.slug.current }, props: { music } }));
+}
+
+const { music } = Astro.props;
+
+const seo = {
+  title: music.title,
+  description: music.title,
+  image: getSanityImageURL(music.cover).width(1200).url(),
+}
+---
+
+<Layout seo={seo}>
+  <MusicPage music={music} />
+</Layout>

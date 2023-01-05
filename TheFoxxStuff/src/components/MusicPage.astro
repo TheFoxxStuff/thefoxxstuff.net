@@ -1,0 +1,46 @@
+---
+import SanityPortableText from './SanityPortableText.astro'
+import { getSanityImageURL, formatBlogPostDate } from '../utils/helpers.js'
+import Container from './Container.astro';
+
+export interface Props {
+  music: any;
+}
+
+
+const { music } = Astro.props;
+// const blogPostBody = await convertBlockContentToMarkdown(post.bodyRaw);
+---
+
+<Container>
+  <article class="post-content__article">
+      {music.cover && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(music.cover).url()} />}
+      <h1>{music.title}</h1>
+      <time>{formatBlogPostDate(music.released)}</time>
+
+<p>количество треков: {music.numberoftracks}</p>
+<p>жанр: {music.genre}</p>
+<p>цена: {music.price}</p>
+
+{music.track && <p>By {music.track.trackname}</p>}
+
+<a href={music.downloadmp3}>downloadmp3</a>
+<a href={music.bandcamplink}>bandcamplink</a>
+      <h1>инфа вкладыш</h1>
+      <SanityPortableText portableText={music.releaseNote} />
+      <h1>инфа продакшн</h1>
+      <SanityPortableText portableText={music.productNote} />
+  </article>
+</Container>
+
+<style>
+  .post-content__article {
+    padding: 1rem;
+  }
+
+  .post-main__img {
+    width: 100%;
+    height: auto;
+  }
+</style>
+
