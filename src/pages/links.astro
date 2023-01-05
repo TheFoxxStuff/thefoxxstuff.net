@@ -1,0 +1,77 @@
+---
+import Layout from '../layouts/Page.astro';
+import BlogPostsList from '../components/BlogPostsList.astro';
+import BlogProjectList from '../components/BlogProjectList.astro';
+
+const seo = {
+    title: 'Links',
+    description: 'Links',
+  }
+
+---
+<h1>Курс TON coin: <span id="ton-price"></span> USD</h1>
+<Layout seo={seo}>
+<div class="div-block-2"></div>
+<div class="dirbox">
+    <h1 class="heading-isssn">Links</h1>
+    <div class="dir">
+        <a href="/">
+            <div id="dirdark" class="dirlink">Home</div>
+        </a>
+
+        <img src="/img/icons/cheveron-right.svg" loading="lazy" alt="" class="rightch">
+
+        <a href="/links/">
+            <div class="dirlink_cor">Links</div>
+        </a>
+    </div>
+</div>
+<br>
+<div class="selection">
+
+<a class="link" href="https://thefoxxstuff.bandcamp.com " target="_blank ">
+    <div class="buttons ">Bandcamp</div>
+</a>
+
+<a class="link" href="https://soundcloud.com/thefoxxstuff" target="_blank ">
+    <div class="buttons ">SoundCloud</div>
+</a>
+
+<a class="link" href="https://www.youtube.com/@thefoxxstuff" target="_blank ">
+    <div class="buttons ">YouTube</div>
+</a>
+
+</div>
+
+
+
+<!-- <h1 class="heading">Demo tracks</h1>
+<BlogProjectList postss={projects}/> -->
+
+</Layout>
+
+<style>
+    .selection {
+        margin: auto;
+        width: 600px;
+    }
+    .link {
+    height: 48px;
+    width: 100%;
+}
+.buttons {
+    padding: 13px 15px;
+    border-radius: 8px;
+    background-color: hsla(0, 0%, 100%, 0.05);
+    text-align: center;
+    line-height: inherit;
+    color: #fff;
+    margin-bottom: 10px;
+    transition: 0.2s;
+}
+
+.buttons:hover {
+    transition: 0.1s;
+    background-color: hsla(0, 0%, 100%, 0.08);
+}
+</style>
