@@ -23,7 +23,7 @@ const { music } = Astro.props;
 <p>цена: {music.price}</p>
 <hr>
 <h1>трек лист</h1>
-{music.trackList.map((tracklist) => (
+<!-- {music.trackList.map((tracklist) => (
   <li key={tracklist._id}>
     <span>
       {tracklist.tracknumber},
@@ -32,6 +32,17 @@ const { music } = Astro.props;
     </span>
   </li>
 ))
+} -->
+{music.tracklist &&
+  music.tracklist.map((tracklist) => {
+    return (
+      <li>
+        {tracklist.number}
+        {tracklist.name}
+        {tracklist.duration}
+      </li>
+    );                  
+   })
 }
 <hr>
 <h1>галерея</h1>

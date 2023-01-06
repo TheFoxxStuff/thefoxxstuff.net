@@ -2,19 +2,17 @@
 import { getSanityImageURL, formatBlogPostDate } from '../utils/helpers'
 
 export interface Props {
-  post: any;
+  art: any;
 }
 
-const { post } = Astro.props;
+const { art } = Astro.props;
 ---
 
 <article class="post-preview__article">
-    <a href={`/blog/${post.slug.current}`}>
-      {post.mainImage && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(post.mainImage).url()} />}
-      <h1 class="title">{post.title}</h1>
-      <time class="publish-date">{formatBlogPostDate(post.publishedAt)}</time>
-      <p>{post.excerpt}</p>
-      <p style="color: lime;"> ass </p>
+    <a href={`/arts/${art.slug.current}`}>
+      {art.image && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(art.image).url()} />}
+      <h1 class="title">{art.title}</h1>
+      <time class="publish-date">{formatBlogPostDate(art.date)}</time>
     </a>
 </article>
 

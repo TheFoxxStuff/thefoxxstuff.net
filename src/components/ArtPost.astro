@@ -1,0 +1,33 @@
+---
+import SanityPortableText from './SanityPortableText.astro'
+import { getSanityImageURL, formatBlogPostDate } from '../utils/helpers.js'
+import Container from './Container.astro';
+
+export interface Props {
+  art: any;
+}
+
+const { art } = Astro.props;
+// const blogPostBody = await convertBlockContentToMarkdown(post.bodyRaw);
+---
+
+<Container>
+  <article class="post-content__article">
+      {art.image && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(art.image).url()} />}
+      <h1>{art.title}</h1>
+      <time>{formatBlogPostDate(art.date)}</time>
+      <SanityPortableText portableText={art.description} />
+  </article>
+</Container>
+
+<style>
+  .post-content__article {
+    padding: 1rem;
+  }
+
+  .post-main__img {
+    width: 100%;
+    height: auto;
+  }
+</style>
+

@@ -20,7 +20,13 @@ export async function getAllCategoriesWithPosts() {
 }
 
 export async function getAllRel() {
-    const query = `*[_type == 'music']{..., "trackList": tracklist[]->{trackduration, trackname, ...},author -> {trackname, tracknumber, trackduration}} | order(publishedAt desc)`;
+    const query = `*[_type == 'music']{...,author -> {trackname, tracknumber, trackduration}} | order(publishedAt desc)`;
+    const data = await useSanityClient().fetch(query);
+    return data;
+}
+
+export async function getAllArts() {
+    const query = `*[_type == 'art']`;
     const data = await useSanityClient().fetch(query);
     return data;
 }
