@@ -1,0 +1,225 @@
+---
+import Layout from './Page.astro';
+import { formatDate, slugify } from '../utils/helpers';
+import LinerNotes from '../components/Music/LinerNotes.astro';
+
+
+const { frontmatter } = Astro.props;
+
+
+
+
+const seo = {
+  title: frontmatter.title,
+  description: frontmatter.description,
+  image: frontmatter.image,
+};
+---
+
+
+
+
+<!-- <Layout seo={seo}>
+    <h1>asdasdasdas</h1>
+    <article class="post-content__article">
+      <div class="post-content__top fade-in">
+        {
+          frontmatter.category && (
+            <p class="post-content__category">
+              <a href={`/blog/category/${slugify(frontmatter.category)}`}>
+                {frontmatter.category}
+              </a>
+            </p>
+          )
+        }
+        <h1 class="post-content__title">{frontmatter.title}</h1>
+        <p class="post-content__date">
+          <time>{formatDate(frontmatter.publishedAt)}</time>
+        </p>
+        {
+          frontmatter.image && (
+            <picture>
+              <source srcset={`${frontmatter.image}.webp`} type="image/webp" />
+              <img
+                width="1200"
+                height="630"
+                class="post-content__img"
+                loading="eager"
+                src={`${frontmatter.image}.png`}
+                alt={frontmatter.alt}
+              />
+            </picture>
+          )
+        }
+      </div>
+      <div class="post-content__content flow fade-in">
+        <slot />
+      </div>
+    </article>
+</Layout> -->
+
+<Layout seo={seo}>
+<div class="div-block-2"></div>
+
+<div class="dirbox">
+    <div class="dirbox">
+        <h1 class="heading-isssn">{frontmatter.title} ({frontmatter.year})</h1>
+        <h1>{frontmatter.author}</h1>
+        <div class="dir">
+            <a href="/">
+                <div id="dirdark" class="dirlink">Home</div>
+            </a>
+
+            <img src="/img/icons/cheveron-right.svg" loading="lazy" alt="" class="rightch">
+
+            <a href="/music/">
+                <div id="dirdark" class="dirlink_cor">Music</div>
+            </a>
+
+            <img src="/img/icons/cheveron-right.svg" loading="lazy" alt="" class="rightch">
+
+            <a href="/i_wanna_die/">
+                <div class="dirlink_cor">{frontmatter.title}</div>
+            </a>
+        </div>
+    </div>
+</div>
+<div class="musicinner">
+    <div class="w-row">
+        <div class="column-3 w-col w-col-6">
+          <a href={`${frontmatter.image}.jpg`}>
+            <div class="div-block-4"><img src={`${frontmatter.image}.jpg`} class="image-3"></div>
+          </a>
+        </div>
+        <div class="column-5 w-col w-col-6">
+            <h1 class="heading-ina">{frontmatter.title}</h1>
+            <div>
+                Released: {formatDate(frontmatter.publishedAt)}
+                <br> Number of tracks: {frontmatter.numberoftracks}
+                <br> Genre: {frontmatter.genre}
+                <br> Type: {frontmatter.type}
+                <br> Price: {frontmatter.price}
+            </div>
+            <div class="ffff w-row">
+                <div class="w-col w-col-6">
+                    <a class="buttonmusic" href={frontmatter.downloadmp3}>
+                        <img src="/img/icons/bxs-download.svg.svg">
+                        <div>DOWNLOAD MP3</div>
+                    </a>
+                </div>
+                <div class="w-col w-col-6">
+                    <a class="buttonmusic" href={frontmatter.downloadflac}>
+                        <img src="/img/icons/brandico_bandcamp.svg">
+                        <div>DOWNLOAD FLAC</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h1 class="heading-isssn">Track List</h1>
+
+    <div class="listmus">
+      			{
+              frontmatter.stack.map(([stackName, stackHomepage, stackTime]) => (
+                <div class="musiclist w-row">
+                    <div class="column-2 w-col w-col-6">
+                        <div class="numertrack">{stackName}.</div>
+                        <div>{stackHomepage}</div>
+                    </div>
+                    <div class="column w-col w-col-6">
+                        <div class="tas">{stackTime}</div>
+                    </div>
+                </div>
+              ))
+            }
+
+  </div>
+
+</div>
+<h1 class="heading-isssn"><strong>Gallery</strong></h1>
+<note/>
+<div class="relises">
+    <div class="photo-box"><img src="https://pixhost.icu/avaxhome/40/35/004a3540.jpg" height="100%" width="100%"></div>
+    <div class="photo-box"><img src="6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38.jpg" loading="lazy" srcset="6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38-p-500.jpg 500w, 6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38.jpg 640w"
+            sizes="(max-width: 479px) 22vw, (max-width: 991px) 23vw, 195px" alt="" class="image-3"></div>
+    <div class="photo-box"><img src="6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38.jpg" loading="lazy" srcset="6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38-p-500.jpg 500w, 6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38.jpg 640w"
+            sizes="(max-width: 479px) 22vw, (max-width: 991px) 23vw, 195px" alt="" class="image-3"></div>
+    <div class="photo-box"><img src="6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38.jpg" loading="lazy" srcset="6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38-p-500.jpg 500w, 6350de25b6de2eb628c3ba65/6350ed22b48f48199365d990_photo_2022-10-18_17-39-38.jpg 640w"
+            sizes="(max-width: 479px) 22vw, (max-width: 991px) 23vw, 195px" alt="" class="image-3"></div>
+</div>
+<div class="nmusicnotes">
+    <div class="w-row">
+        <div class="column-4 w-col w-col-6">
+            <h1 class="heading-ins">Production Notes</h1>
+            <div class="tas">
+                All music written and produced by TheFoxxStuff<br> Artwork by TheFoxxStuff<br>
+
+                <br> released {formatDate(frontmatter.publishedAt)}<br>
+
+                <br>© all rights reserved 
+              
+              </div>
+        </div>
+        <div class="column-9 w-col w-col-6">
+            <h1 class="heading-ins">Liner Notes</h1>
+            <div class="text-block-4">
+              <LinerNotes />
+
+              <slot />
+
+                Follow me:
+                <br>►BANDCAMP: <a id="link" target="_blank" href="https://thefoxxstuff.bandcamp.com">thefoxxstuff.bandcamp.com</a>
+                <br>►SOUNDCLOUD: <a id="link" target="_blank" href="https://soundcloud.com/thefoxxstuff">soundcloud.com/thefoxxstuff</a>
+                <br>►TWETTER: <a id="link" target="_blank" href="https://twitter.com/thefoxxstuff">twitter.com/thefoxxstuff</a>
+                <br>►VK: <a id="link" target="_blank" href="https://vk.com/thefoxxstuff">vk.com/thefoxxstuff</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+</Layout>
+
+<style>
+  .post-content__top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .post-content__category {
+    padding: 0.5rem 1rem;
+    font-size: var(--step--1);
+    background-color: var(--theme-surface-1);
+    border-radius: 2rem;
+  }
+  .post-content__category a {
+    text-decoration: none;
+  }
+  .post-content__category a:hover {
+    opacity: 0.8;
+  }
+  .post-content__article {
+    padding: 5vh 0;
+  }
+  .post-content__title {
+    margin: 1rem auto;
+    font-size: var(--step-5);
+  }
+  .post-content__date {
+    margin: 0 auto;
+    font-size: var(--step--1);
+    color: var(--color-gray);
+    font-style: italic;
+  }
+  .post-content__img {
+    margin: 3rem 0 2rem 0;
+    max-width: 100%;
+    height: auto;
+    border-radius: 2rem;
+  }
+  .post-content__content :global(img) {
+    display: block;
+    margin: 2rem auto;
+    max-width: 100%;
+  }
+</style>

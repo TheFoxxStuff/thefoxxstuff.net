@@ -1,31 +1,21 @@
-export function formatDate(date) {
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+import { parseISO, format } from 'date-fns';
+import { useSanityClient, createImageBuilder } from 'astro-sanity';
+
+const builder = createImageBuilder(useSanityClient());
+
+export function formatBlogPostDate(date) {
+    const dateString = parseISO(date, 'YYYY/MM/Do');
+    const formattedDateString = format(dateString, 'MMMM dd, yyyy');
+    return `${formattedDateString}`;
 }
 
-export function slugify(string) {
-  return string
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+export function formatMusicPerv(date) {
+    const dateString = parseISO(date, 'YYYY/MM/Do');
+    const formattedDateString = format(dateString, 'yyyy');
+    return `${formattedDateString}`;
 }
 
-export function generateCategoryData(categories) {
-  let categoryData = [];
-  categories.forEach((category) => {
-    categoryData.push({
-      name: category,
-      slug: `${slugify(category)}`,
-    });
-  });
-  return categoryData;
+
+export function getSanityImageURL(source) {
+    return builder.image(source);
 }

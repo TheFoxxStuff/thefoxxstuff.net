@@ -1,0 +1,70 @@
+---
+import SanityPortableText from '.././SanityPortableText.astro'
+import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers.js'
+import Container from '.././Container.astro';
+
+export interface Props {
+  music: any;
+}
+
+
+const { music } = Astro.props;
+// const blogPostBody = await convertBlockContentToMarkdown(post.bodyRaw);
+---
+
+<Container>
+  <article class="post-content__article">
+      {music.cover && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(music.cover).url()} />}
+      <h1>{music.title}</h1>
+      <time>{formatBlogPostDate(music.released)}</time>
+
+<p>количество треков: {music.numberoftracks}</p>
+<p>жанр: {music.genre}</p>
+<p>цена: {music.price}</p>
+<hr>
+<h1>трек лист</h1>
+<!-- {music.trackList.map((tracklist) => (
+  <li key={tracklist._id}>
+    <span>
+      {tracklist.tracknumber},
+      {tracklist.trackname}
+      {tracklist.trackduration}
+    </span>
+  </li>
+))
+} -->
+{music.tracklist &&
+  music.tracklist.map((tracklist) => {
+    return (
+      <li>
+        {tracklist.number}
+        {tracklist.name}
+        {tracklist.duration}
+      </li>
+    );                  
+   })
+}
+<hr>
+<h1>галерея</h1>
+{music.gallary &&
+  music.gallary.map((gallary) => {
+    return (
+      <li>
+        {gallary.image && <img width="100%" src={getSanityImageURL(gallary.image).url()} />}
+        {gallary.name}
+        {gallary.description}
+      </li>
+    );                  
+   })
+}
+
+<hr>
+<hr>
+<a href={music.downloadmp3}>downloadmp3</a>
+<a href={music.bandcamplink}>bandcamplink</a>
+      <h1>инфа вкладыш</h1>
+      <SanityPortableText portableText={music.releaseNote} />
+      <h1>инфа продакшн</h1>
+      <SanityPortableText portableText={music.productNote} />
+  </article>
+</Container>

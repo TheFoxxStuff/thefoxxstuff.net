@@ -1,0 +1,52 @@
+---
+import { formatBlogPostDate, getSanityImageURL } from '../../utils/helpers.js';
+import SanityPortableText from '../../components/SanityPortableText.astro'
+
+export interface Props {
+  art: any;
+}
+
+const { art } = Astro.props;
+---
+
+  <div class="div-block-2"></div>
+  <div class="dirbox">
+      <div class="dirbox">
+          <h1 class="heading-isssn">{art.title}</h1>
+          <div class="dir">
+            <a href="/">
+              <div id="dirdark" class="dirlink">Home</div>
+          </a>
+
+          <img src="/img/icons/cheveron-right.svg">
+
+          <a href="/arts/">
+              <div class="dirlink_cor">Art's</div>
+          </a>
+
+          <img src="/img/icons/cheveron-right.svg">
+
+          <a href={`/arts/${art.slug.current}`}>
+              <div class="dirlink_cor">{art.title}</div>
+          </a>
+      </div>
+  </div>
+</div>
+{art.image && <img src={getSanityImageURL(art.image).url()} />}
+
+<SanityPortableText portableText={art.description} />
+<br>
+
+{formatBlogPostDate(art.date)}<br>
+
+<a href={getSanityImageURL(art.image).url()} download="" class="underline">
+Download Original
+</a>
+
+<style>
+  .artworkscreen {
+    margin-top: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+</style>

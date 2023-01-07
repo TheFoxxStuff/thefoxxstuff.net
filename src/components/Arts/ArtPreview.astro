@@ -1,0 +1,32 @@
+---
+import type { Image } from "../../data/types/Image";
+import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers'
+
+export interface Props {
+  art: any;
+}
+
+const { art } = Astro.props;
+
+export interface Props {
+  image: Image;
+  href?: string;
+}
+const { image, href } = Astro.props as Props;
+---
+
+<div>
+  <a href={`/arts/${art.slug.current}`}>
+    <div class="photo-box">
+      {art.image && <img loading="lazy" src={getSanityImageURL(art.image).url()} />}
+    </div>
+  </a>
+  
+</div>
+
+<style>
+  .photo-box img{
+    height: 100%;
+    width: 100%;
+  }
+</style>

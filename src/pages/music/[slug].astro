@@ -1,10 +1,10 @@
 ---
-import Layout from './Page.astro';
-import LinerNotes from '../components/Music/LinerNotes.astro';
+import Layout from '../../layouts/Page.astro';
+import LinerNotes from '../../components/Music/LinerNotes.astro';
 
-import SanityPortableText from '../components/SanityPortableText.astro'
-import { getSanityImageURL, formatBlogPostDate } from '../utils/helpers.js'
-import { getAllRel } from '../lib/api.js';
+import SanityPortableText from '../../components/SanityPortableText.astro'
+import { getSanityImageURL, formatBlogPostDate, formatMusicPerv } from '../../utils/helpers.js'
+import { getAllRel } from '../../lib/api.js';
 
 
 const { frontmatter } = Astro.props;
@@ -37,8 +37,7 @@ const seo = {
 
 <div class="dirbox">
     <div class="dirbox">
-        <h1 class="heading-isssn">{music.title} ({formatBlogPostDate(music.released)})</h1>
-        <h1>{frontmatter.author}</h1>
+        <h1 class="heading-isssn">{music.title} ({formatMusicPerv(music.released)})</h1>
         <div class="dir">
             <a href="/">
                 <div id="dirdark" class="dirlink">Home</div>
@@ -61,7 +60,7 @@ const seo = {
 <div class="musicinner">
     <div class="w-row">
         <div class="column-3 w-col w-col-6">
-          <a href="">
+          <a href={getSanityImageURL(music.cover).url()}>
             <div class="div-block-4">{music.cover && <img class="image-3" src={getSanityImageURL(music.cover).url()} />}</div>
           </a>
         </div>
@@ -71,7 +70,7 @@ const seo = {
                 Released: {formatBlogPostDate(music.released)}
                 <br> Number of tracks: {music.numberoftracks}
                 <br> Genre: {music.genre}
-                <br> Type: aaaa
+                <br> Type: {music.type}
                 <br> Price: {music.price}
             </div>
             <div class="ffff w-row">
@@ -98,8 +97,8 @@ const seo = {
           return (
             <div class="musiclist w-row">
                     <div class="column-2 w-col w-col-6">
-                        <div class="numertrack">{tracklist.name}.</div>
-                        <div>{tracklist.number}</div>
+                        <div class="numertrack">{tracklist.number}.</div>
+                        <div>{tracklist.name}</div>
                     </div>
                     <div class="column w-col w-col-6">
                         <div class="tas">{tracklist.duration}</div>
@@ -116,8 +115,10 @@ const seo = {
   {music.gallary &&
     music.gallary.map((gallary) => {
       return (
+        <a href={getSanityImageURL(gallary.image).url()}>
           <div class="photo-box">{gallary.image && <img width="100%" height="100%" src={getSanityImageURL(gallary.image).url()} />}</div>
-      );                  
+        </a>
+          );                  
     })
   }
 </div>
@@ -126,16 +127,18 @@ const seo = {
         <div class="column-4 w-col w-col-6">
             <h1 class="heading-ins">Production Notes</h1>
             <div class="tas">
-              <SanityPortableText portableText={music.releaseNote} />         
+              <SanityPortableText portableText={music.productNote} />         
             </div>
         </div>
         <div class="column-9 w-col w-col-6">
-            <h1 class="heading-ins">Liner Notes</h1>
+            <h1 class="heading-ins">Release Notes</h1>
             <div class="text-block-4">
               <LinerNotes />
-              <SanityPortableText portableText={music.productNote} />
+              <SanityPortableText portableText={music.releaseNote} />
             </div>
         </div>
     </div>
 </div>
 </Layout>
+
+

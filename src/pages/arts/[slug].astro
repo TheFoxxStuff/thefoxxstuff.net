@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Page.astro'
+import ArtPage from '../../components/Arts/ArtPage.astro'
+import { getSanityImageURL } from '../../utils/helpers.js';
+import { getAllArts } from '../../lib/api.js';
+
+export async function getStaticPaths() {
+  const allArts = await getAllArts();
+
+  return allArts.map(art => ({ params: { slug: art.slug.current }, props: { art } }));
+}
+
+const { art } = Astro.props;
+
+const seo = {
+  title: art.title,
+  description: art.description,
+  image: getSanityImageURL(art.image).width(1200).url(),
+}
+---
+
+<Layout seo={seo}>
+  <ArtPage art={art} />
+</Layout>

@@ -1,0 +1,21 @@
+---
+import { getSanityImageURL, formatMusicPerv } from '../../utils/helpers'
+
+export interface Props {
+  music: any;
+}
+
+const { music } = Astro.props;
+---
+  <a href={`/music/${music.slug.current}`}>
+      <div class="relise">
+          <div class="relise-con">
+              <div class="test1">
+                <img class="post-preview__img" src={getSanityImageURL(music.cover).url()}></div>
+              <div class="resile-text-box">
+                  <div class="relise-text">{music.title}</div>
+                  <div class="resile-text-2">{music.price}</div>
+              </div>
+          </div>
+      </div>
+  </a>

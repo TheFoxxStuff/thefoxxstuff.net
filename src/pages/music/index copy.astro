@@ -1,21 +1,12 @@
 ---
-import Layout from '../layouts/Page.astro'
-import BlogPostsList from '../components/BlogPostsList.astro';
-import BlogProjectList from '../components/BlogProjectList.astro';
-import MusicNew from '../components/MusicNew.astro';
+import Layout from '../../layouts/Page.astro'
+import MusicList from '../../components/Music/MusicList.astro';
+import MusicNew from '../../components/MusicNew.astro';
 
 const seo = {
     title: 'Music',
     description: 'All Music releases and old, demo tracks',
   }
-
-const posts = (await Astro.glob('./blog/*.{md,mdx}')).sort(
-	(a, b) => new Date(b.frontmatter.publishedAt).valueOf() - new Date(a.frontmatter.publishedAt).valueOf()
-);
-const projects = (await Astro.glob('./project/*.{md,mdx}')).sort(
-	(a, b) => new Date(b.frontmatter.publishedAt).valueOf() - new Date(a.frontmatter.publishedAt).valueOf()
-);
-
 ---
 
 
@@ -51,12 +42,5 @@ const projects = (await Astro.glob('./project/*.{md,mdx}')).sort(
     </div>
 </div>
 
-<BlogPostsList posts={posts}/>
-
-
-<!-- <h1 class="heading">Demo tracks</h1>
-<BlogProjectList postss={projects}/> -->
-
-<audio src="https://bafybeieibz4ak63x6di65zf2aedrbym2dz2i7j5h6atrxliyekeyazla2m.ipfs.w3s.link/ipfs/bafybeieibz4ak63x6di65zf2aedrbym2dz2i7j5h6atrxliyekeyazla2m/EMESIS%20LIVE%202011-11-04%20RENARD.mp3" controls></audio>
-
+<MusicList ={}/>
 </Layout>

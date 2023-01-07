@@ -1,0 +1,44 @@
+---
+import Layout from '../../layouts/Page.astro'
+import ArtPreview from "../../components/Arts/ArtPreview.astro";
+import { getAllArts } from '../../lib/api.js';
+
+const allArtsData = await getAllArts();
+
+const seo = {
+  title: 'Arts',
+  description: 'TheFoxxStuff Artworks',
+}
+---
+
+
+<Layout seo={seo}>
+    <div class="div-block-2"></div>
+    <div class="dirbox">
+        <div class="dirbox">
+            <h1 class="heading-isssn">Art's</h1>
+            <div class="dir">
+                <a href="/">
+                    <div id="dirdark" class="dirlink">Home</div>
+                </a>
+
+                <img src="/img/icons/cheveron-right.svg" loading="lazy" alt="" class="rightch">
+
+                <a href="/arts">
+                    <div class="dirlink_cor">Art's</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <h1 class="heading">2022</h1>
+    <div class="relises">
+
+        {allArtsData.map((art) =>
+            <ArtPreview art={art} />)}
+
+    </div>
+
+    <h1 class="heading">2021</h1>
+    <div class="relises">
+    </div>
+</Layout>

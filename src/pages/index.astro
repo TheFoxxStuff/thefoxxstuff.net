@@ -5,6 +5,10 @@ import BlogPostsList from '../components/BlogPostsList.astro';
 import BlogProjectList from '../components/BlogProjectList.astro';
 import { artwork } from "../data/artwork";
 import GalaryIndex from '../components/GalaryIndex.astro';
+import MusicList from '../components/Music/MusicList.astro';
+import { getAllRel } from '../lib/api.js';
+
+const getAllRels = await getAllRel();
 
 const posts = (await Astro.glob('./blog/*.{md,mdx}')).sort(
 	(a, b) => new Date(b.frontmatter.publishedAt).valueOf() - new Date(a.frontmatter.publishedAt).valueOf()
@@ -63,13 +67,12 @@ const seo = {
       <div class="column w-col w-col-6">
         <a href="music">
           <div class="right-box">
-              <div class="right-link">Show more</div>
+              <div class="right-link">See more</div>
           </div>
         </a>
       </div>
   </div>
-    <BlogPostsList posts={posts}/>
-
+    <MusicList music={getAllRels}/>
 
     <div class="header-with-right w-row">
         <div class="column-2 w-col w-col-6">
@@ -79,13 +82,45 @@ const seo = {
         </div>
         <div class="column w-col w-col-6">
             <a href="arts" class="right-box w-inline-block">
-                <div class="right-link">Show more</div>
+                <div class="right-link">See more</div>
             </a>
         </div>
     </div>
 
-
-    {artwork.map((art) => <GalaryIndex image={art} />)}
+    <!-- {artwork.map((art) => <GalaryIndex image={art} />)} -->
+    <div class="galerys">
+        <a href="">
+            <div class="galery-one-big">
+                <img src="" alt="" />
+            </div>
+        </a>
+        <div class="gal-right-real">
+            <div class="galary-right-2">
+                <a href="">
+                    <div class="phot-mini">
+                        <img src="" alt="" />
+                    </div>
+                </a>
+                <a href="">
+                    <div class="phot-mini">
+                        <img src="" alt="" />
+                    </div>
+                </a>
+            </div>
+            <div class="galary-right-1">
+                <a href="">
+                    <div class="phot-mini">
+                        <img src="" alt="" />
+                    </div>
+                </a>
+                <a href="">
+                    <div class="phot-mini">
+                        <img src="" alt="" />
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <script type = 'text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/parallax/3.1.0/parallax.min.js">
     </script>

@@ -1,15 +1,16 @@
 import { defineConfig } from 'astro/config';
-import { settings } from './src/data/settings';
-import sitemap from "@astrojs/sitemap";
-import mdx from "@astrojs/mdx";
+import { useSanityClient } from 'astro-sanity';
+import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
+import sanity from "astro-sanity";
 
 // https://astro.build/config
 export default defineConfig({
-  site: settings.site,
-  integrations: [sitemap(), mdx()],
-  vite: {
-    ssr: {
-      external: ["svgo"]
-    }
-  }
+    site: 'https://localhost:3000',
+    integrations: [mdx(), sitemap(), sanity({
+        projectId: 'ndh6wvwa',
+        dataset: 'production',
+        apiVersion: '2021-03-25',
+        useCdn: true,
+    })]
 });
