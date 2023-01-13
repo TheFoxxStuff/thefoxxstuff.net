@@ -1,14 +1,9 @@
 ---
 import Layout from '../../layouts/Page.astro';
 import LinerNotes from '../../components/Music/LinerNotes.astro';
-
 import SanityPortableText from '../../components/SanityPortableText.astro'
 import { getSanityImageURL, formatBlogPostDate, formatMusicPerv } from '../../utils/helpers.js'
 import { getAllRel } from '../../lib/api.js';
-
-
-const { frontmatter } = Astro.props;
-
 export interface Props {
   music: any;
 }
@@ -16,14 +11,11 @@ export interface Props {
 const { music } = Astro.props;
 // const blogPostBody = await convertBlockContentToMarkdown(post.bodyRaw);
 
-
 export async function getStaticPaths() {
   const allMusicInfo = await getAllRel();
 
   return allMusicInfo.map(music => ({ params: { slug: music.slug.current }, props: { music } }));
 }
-
-
 
 const seo = {
   title: music.title,

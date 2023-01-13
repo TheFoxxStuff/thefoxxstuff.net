@@ -1,0 +1,31 @@
+---
+import Layout from '../../layouts/Page.astro'
+import { useSanityClient } from "astro-sanity";
+
+export async function getAllArts() {
+    const query = `*[_type == 'art']`;
+    const data = await useSanityClient().fetch(query);
+    return data;
+}
+
+export interface Props {
+  art: any;
+}
+
+export async function getStaticPaths() {
+  const allArtInfo = await getAllArts();
+  return allArtInfo.map(art => ({params: { slug: art.images[0].slug.current }, props: {art}}));
+}
+
+const { art } = Astro.props;
+
+const seo = {
+  title: '',
+  description: '',
+}
+
+---
+
+<Layout seo={seo}>
+  <!-- <h1>{art.title}</h1> -->
+</Layout>

@@ -7,12 +7,44 @@ export interface Props {
 }
 
 const { art } = Astro.props;
+
+// export interface Props {
+//   image: any;
+// 	content: {
+// 		title: string;
+// 		description: string;
+// 	};
+// }
+
+// const {
+// 	content: { title, description, image }
+// } = Astro.props;
 ---
+
+<!-- {art.images &&
+  art.images.map((images) => {
+    return (
+    <h1>{images.title}</h1>
+    );                  
+   })
+} -->
+<h1>{art.title}</h1>
+<h1>{art.description}</h1>
+<!-- <img src={getSanityImageURL(art.image).url()} /> -->
+
+<!-- <h1>{art.title}</h1>
+{art.images.map(image => (
+  <img src={getSanityImageURL(image.image).url()} />
+))} -->
+
+<!-- {art.images.map(object => (
+
+
 
   <div class="div-block-2"></div>
   <div class="dirbox">
       <div class="dirbox">
-          <h1 class="heading-isssn">{art.title}</h1>
+          <h1 class="heading-isssn">{object.title}</h1>
           <div class="dir">
             <a href="/">
               <div id="dirdark" class="dirlink">Home</div>
@@ -26,22 +58,11 @@ const { art } = Astro.props;
 
           <img src="/img/icons/cheveron-right.svg">
 
-          <a href={`/arts/${art.slug.current}`}>
-              <div class="dirlink_cor">{art.title}</div>
-          </a>
+
       </div>
   </div>
 </div>
-{art.image && <img src={getSanityImageURL(art.image).url()} />}
-
-<SanityPortableText portableText={art.description} />
-<br>
-
-{formatBlogPostDate(art.date)}<br>
-
-<a href={getSanityImageURL(art.image).url()} download="" class="underline">
-Download Original
-</a>
+))} -->
 
 <style>
   .artworkscreen {

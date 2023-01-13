@@ -1,10 +1,13 @@
 ---
 import type { Image } from "../../data/types/Image";
-import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers'
+import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers';
+// import Artbox from "../Arts/Artbox.astro";
+import { getAllArts } from '../../lib/api.js';
 
 export interface Props {
   art: any;
 }
+
 
 const { art } = Astro.props;
 
@@ -15,18 +18,50 @@ export interface Props {
 const { image, href } = Astro.props as Props;
 ---
 
-<div>
-  <a href={`/arts/${art.slug.current}`}>
+<!-- <div>
+  <a href={`/arts/${art.images[0].slug.current}`}>
     <div class="photo-box">
-      {art.image && <img loading="lazy" src={getSanityImageURL(art.image).url()} />}
+      {art.image && <img loading="lazy" src={getSanityImageURL(art.images[0].image).url()} />}
     </div>
   </a>
-  
-</div>
+    <h1 class="heading">{art.year}</h1>
+</div> -->
+
+{art.images.map(image => (
+  <a href={`/arts/${image.slug.current}`}>
+    <div class="photo-box">
+      {<img loading="lazy" src={getSanityImageURL(image.image).url()} />}
+    </div>
+  </a>
+  ))}
+
+      <!-- {art.images.map(image => (
+
+          <a href={/arts/${image.slug.current}}>
+            <img src={image.image.url} alt={image.title} />
+            {image.title}
+          </a>
+      ))} -->
+
+<!-- <div class="photo-box">
+  {art.image && <img loading="lazy" src={getSanityImageURL(art.images[0].image).url()} />}
+  {getAllArts.map((art) =>
+    <Artbox art={art} />)}
+</div> -->
 
 <style>
   .photo-box img{
     height: 100%;
     width: 100%;
+    transition: 0.2s
   }
+  /* .photo-box img {
+    width: 100%;
+    transition: 0.1s all ease-in-out;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+  .photo-box:hover img {
+    transform: scale(1.02);
+  } */
 </style>

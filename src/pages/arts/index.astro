@@ -30,15 +30,16 @@ const seo = {
             </div>
         </div>
     </div>
-    <h1 class="heading">2022</h1>
+    {allArtsData.map((art) =>
+    <h1 class="heading">{art.year}</h1>
     <div class="relises">
 
-        {allArtsData.map((art) =>
-            <ArtPreview art={art} />)}
+        
+            <ArtPreview art={art} /> </div>)}
 
-    </div>
+    
 
-    <h1 class="heading">2021</h1>
+
     <div class="relises">
     </div>
 </Layout>
