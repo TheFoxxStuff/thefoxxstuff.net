@@ -6,7 +6,7 @@ import sanity from "astro-sanity";
 
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://localhost:3000',
+    site: 'https://thefoxxstuff.net',
     integrations: [mdx(), sitemap(), sanity({
         projectId: 'ndh6wvwa',
         dataset: 'production',
