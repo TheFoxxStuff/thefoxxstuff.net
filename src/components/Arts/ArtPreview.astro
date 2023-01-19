@@ -5,18 +5,29 @@ import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers';
 import { getAllArts } from '../../lib/api.js';
 
 export interface Props {
-  art: any;
+  image: any;
 }
 
+const { image } = Astro.props;
 
-const { art } = Astro.props;
-
-export interface Props {
-  image: Image;
-  href?: string;
-}
-const { image, href } = Astro.props as Props;
 ---
+<img  src={getSanityImageURL(image.cover).url()} />
+<!-- <article class="post-content__article">
+  {images.image && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(images.image).url()} />}
+  <h1>{images.title}</h1>
+</article> -->
+
+<!-- <a href={`/music/${art.slug.current}`}>
+  <div class="relise">
+      <div class="relise-con">
+          <div class="test1">
+            <img class="post-preview__img" src={getSanityImageURL(art.cover).url()}></div>
+          <div class="resile-text-box">
+              <div class="relise-text">{art.title}</div>
+          </div>
+      </div>
+  </div>
+</a> -->
 
 <!-- <div>
   <a href={`/arts/${art.images[0].slug.current}`}>
@@ -27,13 +38,34 @@ const { image, href } = Astro.props as Props;
     <h1 class="heading">{art.year}</h1>
 </div> -->
 
-{art.images.map(image => (
+
+
+  <!-- <a href={`/arts/${images.slug.current}`}>
+      <div class="relise">
+          <div class="relise-con">
+              <div class="test1">
+                <img class="post-preview__img" src={getSanityImageURL(images.cover).url()}></div>
+              <div class="resile-text-box">
+                  <div class="relise-text">{art.images.title}</div>
+              </div>
+          </div>
+      </div>
+  </a> -->
+
+
+<!-- <div class="relises">
+  {allArtsData.map((music) =>
+    <MusicPreview music={music} />)}
+</div> -->
+
+
+<!-- {art.images.map(image => (
   <a href={`/arts/${image.slug.current}`}>
     <div class="photo-box">
       {<img loading="lazy" src={getSanityImageURL(image.image).url()} />}
     </div>
   </a>
-  ))}
+  ))} -->
 
       <!-- {art.images.map(image => (
 
@@ -42,6 +74,8 @@ const { image, href } = Astro.props as Props;
             {image.title}
           </a>
       ))} -->
+
+
 
 <!-- <div class="photo-box">
   {art.image && <img loading="lazy" src={getSanityImageURL(art.images[0].image).url()} />}

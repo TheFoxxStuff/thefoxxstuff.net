@@ -3,12 +3,10 @@ import Layout from '../../layouts/Page.astro'
 import ArtPage from '../../components/Arts/ArtPage.astro'
 import { getSanityImageURL } from '../../utils/helpers.js';
 import { getAllArts } from '../../lib/api.js';
-
+import SanityPortableText from '../../components/SanityPortableText.astro'
 export interface Props {
   art: any;
 }
-
-
 
 export async function getStaticPaths() {
   const allMusicInfos = await getAllArts();
@@ -22,28 +20,44 @@ export async function getStaticPaths() {
 })));
 }
 
-// const allMusicInfoss = await getAllArts();
-// return allMusicInfoss.map (art => art.images && art.images.map((images) => ({
-//     params: {
-//         slug: images.slug.current,
-//     },
-//     props: {
-//         art
-//     }
-// })));
-
-
 const { art } = Astro.props;
+const currentImage = art.images.find(image => image.slug.current === Astro.params.slug);
 
 const seo = {
-  title: art.images[0].title,
-  description: art.images.description
+  title: currentImage.title,
+  description: currentImage.description
 }
 ---
-<Layout>
-
-  {art.images.map((images) =>
-    <ArtPage art={images._key} />)}
+<Layout seo={seo}>
+<div class="div-block-2"></div>
+<div class="dirbox">
+      <div class="dirbox">
+          <h1 class="heading-isssn">{currentImage.title}</h1>
+          <div class="dir">
+            <a href="/">
+              <div id="dirdark" class="dirlink">Home</div>
+          </a>
+          <img class="rightch" src="/img/icons/cheveron-right.svg">
+          <a href="/arts/">
+            <div class="dirlink_cor">Art's</div>
+          </a>
+          <img class="rightch" src="/img/icons/cheveron-right.svg">
+          <a href={`/arts/${currentImage.slug.current}`}>
+            <div class="dirlink_cor">{currentImage.title}</div>
+          </a>
+          </div>
+      </div>
+</div>
+<div class="con">
+{<img class="artworkscreen" width="100%" alt="" src={getSanityImageURL(currentImage.image).url()} />}
+</div>
+<SanityPortableText portableText={currentImage.description} />
+<br>
+<a href={getSanityImageURL(currentImage.image).url()} download="kitten" class="underline">
+Download Original
+</a>
+  <!-- {art.images.map((images) =>
+    <ArtPage art={images} />)} -->
 
   <!-- {art.images.map((images) =>
     <ArtPage art={images} />)} -->
@@ -66,7 +80,11 @@ const seo = {
 
 
   <!-- <ArtPage art={art}/> -->
-
-
-
 </Layout>
+<style>
+  .artworkscreen {
+    margin-top: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+</style>

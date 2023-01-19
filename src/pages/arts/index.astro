@@ -2,6 +2,8 @@
 import Layout from '../../layouts/Page.astro'
 import ArtPreview from "../../components/Arts/ArtPreview.astro";
 import { getAllArts } from '../../lib/api.js';
+import { getSanityImageURL, formatBlogPostDate, formatMusicPerv } from '../../utils/helpers.js'
+
 
 const allArtsData = await getAllArts();
 
@@ -9,6 +11,13 @@ const seo = {
   title: 'Arts',
   description: 'TheFoxxStuff Artworks',
 }
+
+export interface Props {
+  art: any;
+}
+
+
+const { art } = Astro.props;
 ---
 
 
@@ -30,12 +39,39 @@ const seo = {
             </div>
         </div>
     </div>
-    {allArtsData.map((art) =>
+
+
+
+        {allArtsData.map((art) =>
+    <h1 class="heading">{formatMusicPerv(art.date)}</h1>
+    <div class="relises">
+        
+
+        
+        {art.images.map((image) => (
+            <a href={`/arts/${image.slug.current}`}>
+        <div class="photo-box">
+          {<img loading="lazy" src={getSanityImageURL(image.image).url()} />}
+        </div>
+      </a>
+))}
+
+            
+            </div>)}
+            <!-- <ArtPreview images={art.images.map} /> -->
+
+    <!-- <div class="relises">
+        {allArtsData.map((art) =>
+          <ArtPreview art={art} />)}
+      </div> -->
+
+    <!-- {art.images.title} -->
+    <!-- {allArtsData.map((art) =>
     <h1 class="heading">{art.year}</h1>
     <div class="relises">
 
         
-            <ArtPreview art={art} /> </div>)}
+            <ArtPreview arts={art.images} /> </div>)} -->
 
     
 
@@ -43,3 +79,21 @@ const seo = {
     <div class="relises">
     </div>
 </Layout>
+
+<style>
+    .photo-box img{
+      height: 100%;
+      width: 100%;
+      transition: 0.2s
+    }
+    /* .photo-box img {
+      width: 100%;
+      transition: 0.1s all ease-in-out;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    .photo-box:hover img {
+      transform: scale(1.02);
+    } */
+  </style>
+  

@@ -1,0 +1,10 @@
+---
+import MusicPreview from "./MusicPreview.astro";
+import { getAllRel } from '../../lib/api.js';
+const getAllRels = await getAllRel();
+---
+
+<div class="relises">
+  {getAllRels.slice(0, 4).map(music => <MusicPreview music={music} />)}
+</div>
+

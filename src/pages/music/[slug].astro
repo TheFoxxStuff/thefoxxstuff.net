@@ -6,24 +6,21 @@ import { getSanityImageURL, formatBlogPostDate, formatMusicPerv } from '../../ut
 import { getAllRel } from '../../lib/api.js';
 export interface Props {
   music: any;
+  innerText: any;
 }
-
-const { music } = Astro.props;
+const { music, innerText } = Astro.props;
 // const blogPostBody = await convertBlockContentToMarkdown(post.bodyRaw);
-
 export async function getStaticPaths() {
   const allMusicInfo = await getAllRel();
-
   return allMusicInfo.map(music => ({ params: { slug: music.slug.current }, props: { music } }));
 }
-
 const seo = {
   title: music.title,
   description: music.title,
   image: getSanityImageURL(music.cover).width(1200).url(),
 }
----
 
+---
 <Layout seo={seo}>
 <div class="div-block-2"></div>
 
@@ -83,7 +80,69 @@ const seo = {
     </div>
     <h1 class="heading-isssn">Track List</h1>
 
+
     <div class="listmus">
+      {music.tracklist &&
+        music.tracklist.map((tracklist, index) => {
+          return (
+            <div class="musiclist w-row">
+                    <div class="column-2 w-col w-col-6">
+                        <div class="numertrack">{tracklist.number}.</div>
+                        <div>
+                          <div class="namecopy">
+                              <div id={`tracklistName-${index}`}>{tracklist.name}</div>
+                              <a class="copy" id={`copyTracklist-${index}`}><img src="/img/icons/copy.svg"></a>
+                              
+                          </div>
+                        </div>
+                    </div>
+                    <div class="column w-col w-col-6">
+                        <div class="tas">{tracklist.duration}</div>
+                    </div>
+                </div>
+          );                  
+         })
+      }
+  </div>
+  <script>
+    
+    const copyButtons = document.querySelectorAll('[id^="copyTracklist-"]');
+copyButtons.forEach((button, index) => {
+    button.addEventListener('click', () => {
+        const tracklistName = document.getElementById(`tracklistName-${index}`);
+        const textToCopy = `TheFoxxStuff - ${tracklistName.textContent}`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const alertDiv = document.createElement('div');
+            alertDiv.textContent = "Copied";
+            alertDiv.classList.add('alert');
+            button.parentNode.appendChild(alertDiv);
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 1000);
+        }).catch((error) => {
+            alert('Error when copying: ' + error);
+        });
+    });
+});
+
+// <a class="copy" id={`copyTracklist-${index}`}>Copy</a>
+
+    // const copyButtons = document.querySelectorAll('[id^="copyTracklist-"]');
+    // copyButtons.forEach((button, index) => {
+    //     button.addEventListener('click', () => {
+    //         const tracklistName = document.getElementById(`tracklistName-${index}`);
+    //         navigator.clipboard.writeText(tracklistName.textContent).then(() => {
+    //             alert('Text copied to clipboard.');
+    //         }).catch((error) => {
+    //             alert('Error when copying: ' + error);
+    //         });
+    //     });
+    // });
+  </script>
+
+    
+
+    <!-- <div class="listmus">
       {music.tracklist &&
         music.tracklist.map((tracklist) => {
           return (
@@ -95,11 +154,12 @@ const seo = {
                     <div class="column w-col w-col-6">
                         <div class="tas">{tracklist.duration}</div>
                     </div>
+                    
                 </div>
           );                  
          })
       }
-  </div>
+  </div> -->
 
 </div>
 <h1 class="heading-isssn"><strong>Gallery</strong></h1>
@@ -134,3 +194,27 @@ const seo = {
 </Layout>
 
 
+<style>
+  .namecopy {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+  }
+  .copy {
+    margin-left: 6px;
+    margin-right: 6px;
+    transition: 0.3s;
+    opacity: 60%;
+  }
+  .copy:hover {
+    cursor: pointer;
+    opacity: 100%;
+    transition: 0.3s;
+  }
+  .copy:active {
+    opacity: 10%;
+    cursor: pointer;
+    transition: 0.05s;
+  }
+</style>

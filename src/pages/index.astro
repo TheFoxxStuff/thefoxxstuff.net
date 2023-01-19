@@ -7,20 +7,33 @@ import { artwork } from "../data/artwork";
 import GalaryIndex from '../components/GalaryIndex.astro';
 import MusicList from '../components/Music/MusicList.astro';
 import { getAllRel } from '../lib/api.js';
+import MusicPreview from '../components/Music/MusicPreview.astro';
+import { getGalaryMainPage } from '../lib/api.js';
+import { getSanityImageURL, formatMusicPerv } from '../utils/helpers';
+import MusicListMain from '../components/Music/MusicListMain.astro';
+import Oneee from '../components/Oneee.astro';
 
+const getGalaryMainPages = await getGalaryMainPage();
 const getAllRels = await getAllRel();
+// const posts = await getAllPosts();
 
-const posts = (await Astro.glob('./blog/*.{md,mdx}')).sort(
-	(a, b) => new Date(b.frontmatter.publishedAt).valueOf() - new Date(a.frontmatter.publishedAt).valueOf()
-);
+// const posts = (await Astro.glob('./blog/*.{md,mdx}')).sort(
+// 	(a, b) => new Date(b.frontmatter.publishedAt).valueOf() - new Date(a.frontmatter.publishedAt).valueOf()
+// );
 
- 
 // await Blog.fromGlob(Astro.glob("./project/*.mdx"), 4);
 
 const seo = {
   title: 'Homepage',
   description: 'TheFoxxStuff | Official Page',
 }
+
+export interface Props {
+    picccData: any;
+}
+
+const { picccData } = Astro.props;
+
 ---
 <style>
   .home-hero-text__container {
@@ -72,7 +85,7 @@ const seo = {
         </a>
       </div>
   </div>
-    <MusicList music={getAllRels}/>
+    <MusicListMain music={getAllRels}/>
 
     <div class="header-with-right w-row">
         <div class="column-2 w-col w-col-6">
@@ -86,42 +99,8 @@ const seo = {
             </a>
         </div>
     </div>
-
-    <!-- {artwork.map((art) => <GalaryIndex image={art} />)} -->
-    <div class="galerys">
-        <a href="">
-            <div class="galery-one-big">
-                <img src="" alt="" />
-            </div>
-        </a>
-        <div class="gal-right-real">
-            <div class="galary-right-2">
-                <a href="">
-                    <div class="phot-mini">
-                        <img src="" alt="" />
-                    </div>
-                </a>
-                <a href="">
-                    <div class="phot-mini">
-                        <img src="" alt="" />
-                    </div>
-                </a>
-            </div>
-            <div class="galary-right-1">
-                <a href="">
-                    <div class="phot-mini">
-                        <img src="" alt="" />
-                    </div>
-                </a>
-                <a href="">
-                    <div class="phot-mini">
-                        <img src="" alt="" />
-                    </div>
-                </a>
-            </div>
-        </div>
-    </div>
-
+    {getGalaryMainPages.map((picccData) =>
+        <Oneee picccData={picccData} />)}
     <script type = 'text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/parallax/3.1.0/parallax.min.js">
     </script>
     <script  type = 'text/javascript'>
