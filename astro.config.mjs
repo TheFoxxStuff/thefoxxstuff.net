@@ -3,9 +3,8 @@ import { useSanityClient } from 'astro-sanity';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import sanity from "astro-sanity";
-// import cloudflare from "@astrojs/cloudflare";
 
-import deno from "@astrojs/deno";
+import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
@@ -17,5 +16,5 @@ export default defineConfig({
         useCdn: true
     })],
     output: 'server',
-    adapter: deno()
+    adapter: cloudflare()
 });
