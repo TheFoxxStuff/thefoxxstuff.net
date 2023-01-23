@@ -8,7 +8,7 @@ import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://thefoxxstuff.net',
+    site: 'https://thefoxxstuff-net.pages.dev',
     integrations: [mdx(), sitemap(), sanity({
         projectId: 'ndh6wvwa',
         dataset: 'production',
