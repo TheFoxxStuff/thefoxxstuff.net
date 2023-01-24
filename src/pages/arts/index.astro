@@ -3,7 +3,7 @@ import Layout from '../../layouts/Page.astro'
 import ArtPreview from "../../components/Arts/ArtPreview.astro";
 import { getAllArts } from '../../lib/api.js';
 import { getSanityImageURL, formatBlogPostDate, formatMusicPerv } from '../../utils/helpers.js'
-
+import CldImage from '../../components/CldImage.astro';
 
 const allArtsData = await getAllArts();
 
@@ -51,7 +51,7 @@ const { art } = Astro.props;
         {art.images.map((image) => (
             <a href={`/arts/${image.slug.current}`}>
         <div class="photo-box">
-          {<img loading="lazy" src={getSanityImageURL(image.image).url()} />}
+          {<CldImage src={getSanityImageURL(image.image).url()} />}
         </div>
       </a>
 ))}

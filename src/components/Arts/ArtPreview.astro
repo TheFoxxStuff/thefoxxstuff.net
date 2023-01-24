@@ -3,6 +3,7 @@ import type { Image } from "../../data/types/Image";
 import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers';
 // import Artbox from "../Arts/Artbox.astro";
 import { getAllArts } from '../../lib/api.js';
+import CldImage from '../../components/CldImage.astro';
 
 export interface Props {
   image: any;
@@ -11,7 +12,7 @@ export interface Props {
 const { image } = Astro.props;
 
 ---
-<img  src={getSanityImageURL(image.cover).url()} />
+<CldImage src={getSanityImageURL(image.cover).url()} />
 <!-- <article class="post-content__article">
   {images.image && <img width="720" height="420" class="post-main__img" loading="lazy" src={getSanityImageURL(images.image).url()} />}
   <h1>{images.title}</h1>

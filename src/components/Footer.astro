@@ -1,15 +1,12 @@
 ---
-import { settings } from "../data/settings";
-import Container from "./Container.astro";
-import SocialList from './SocialList.astro';
-import LittleSticksPlug from "./LittleSticksPlug.astro";
+const currentYear = new Date().getFullYear();
 ---
 
 <footer>
   <div class="footer">
     <div class="columns-2 w-row">
         <div class="w-col w-col-6">
-            <div class="resile-text-2"><strong>©</strong> TheFoxxStuff 2022</div>
+            <div class="resile-text-2"><strong>©</strong> TheFoxxStuff {currentYear}</div>
         </div>
         <div class="column-8 w-col w-col-6">
             <a target="_blank" href="https://t.me/thefoxxstuff">

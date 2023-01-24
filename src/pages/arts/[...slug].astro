@@ -27,7 +27,8 @@
 import Layout from '../../layouts/Page.astro'
 import { getSanityImageURL } from '../../utils/helpers.js';
 import { getAllArtinner } from '../../lib/api.js';
-import SanityPortableText from '../../components/SanityPortableText.astro'
+import SanityPortableText from '../../components/SanityPortableText.astro';
+import CldImage from '../../components/CldImage.astro';
 
 const art = await getAllArtinner();
 const { slug } = Astro.params;
@@ -82,7 +83,7 @@ const seo = {
       </div>
 </div>
 <div class="con">
-{<img class="artworkscreen" width="100%" alt="" src={getSanityImageURL(image).url()} />}
+{<CldImage class="artworkscreen" width="100%" alt="" src={getSanityImageURL(image).url()} />}
 </div>
 <SanityPortableText portableText={description} />
 <br>
