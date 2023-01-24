@@ -59,6 +59,7 @@ const { title, description, image, current } = arts;
 
 const seo = {
   title: title,
+  description: `Artwork: ${title} | ${description}` ,
   description: description,
   image: getSanityImageURL(image).width(1200).url(),
 }
@@ -84,7 +85,7 @@ const seo = {
       </div>
 </div>
 <div class="con">
-{<CldImage class="artworkscreen" width="100%" alt="" src={getSanityImageURL(image).url()} />}
+{<CldImage class="artworkscreen" width="100%" alt={description} src={getSanityImageURL(image).url()} />}
 </div>
 <SanityPortableText portableText={description} />
 <br>

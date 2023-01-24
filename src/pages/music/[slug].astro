@@ -58,7 +58,7 @@ const seo = {
     <div class="w-row">
         <div class="column-3 w-col w-col-6">
           <a href={getSanityImageURL(cover).url()}>
-            <div class="div-block-4">{cover && <CldImage class="image-3" src={getSanityImageURL(cover).url()} />}</div>
+            <div class="div-block-4">{cover && <CldImage class="image-3" alt={`TheFoxxStuff - ${title} (${formatMusicPerv(released)}) the (${type}) cover`} src={getSanityImageURL(cover).url()} />}</div>
           </a>
         </div>
         <div class="column-5 w-col w-col-6">
@@ -176,7 +176,7 @@ copyButtons.forEach((button, index) => {
     gallary.map((gallary) => {
       return (
         <a href={getSanityImageURL(gallary.image).url()}>
-          <div class="photo-box">{gallary.image && <CldImage width="100%" height="100%" src={getSanityImageURL(gallary.image).url()} />}</div>
+          <div class="photo-box">{gallary.image && <CldImage width="100%" height="100%" alt={`${gallary.name} | ${gallary.description}`} src={getSanityImageURL(gallary.image).url()} />}</div>
         </a>
           );                  
     })
