@@ -3,30 +3,37 @@ import Layout from '../../layouts/Page.astro';
 import LinerNotes from '../../components/Music/LinerNotes.astro';
 import SanityPortableText from '../../components/SanityPortableText.astro'
 import { getSanityImageURL, formatBlogPostDate, formatMusicPerv } from '../../utils/helpers.js'
-import { getAllRel } from '../../lib/api.js';
+import { getAllRelinner } from '../../lib/api.js';
 export interface Props {
   music: any;
   innerText: any;
 }
-const { music, innerText } = Astro.props;
+// const { music, innerText } = Astro.props;
 // const blogPostBody = await convertBlockContentToMarkdown(post.bodyRaw);
-export async function getStaticPaths() {
-  const allMusicInfo = await getAllRel();
-  return allMusicInfo.map(music => ({ params: { slug: music.slug.current }, props: { music } }));
-}
-const seo = {
-  title: music.title,
-  description: music.title,
-  image: getSanityImageURL(music.cover).width(1200).url(),
-}
+// export async function getStaticPaths() {
+//   const allMusicInfo = await getAllRel();
+//   return allMusicInfo.map(music => ({ params: { slug: music.slug.current }, props: { music } }));
+// }
 
+
+const art = await getAllRelinner();
+const { slug } = Astro.params;
+const arts = art.find((art) => art.slug.current === slug);
+if (!arts) return Astro.redirect("/404");
+const { title, cover, numberoftracks, genre, type, released, releaseNote, productNote, price, tracklist, gallary, downloadmp3, bandcamplink } = arts;
+
+const seo = {
+  title: title,
+  description: title,
+  image: getSanityImageURL(cover).width(1200).url(),
+}
 ---
 <Layout seo={seo}>
 <div class="div-block-2"></div>
 
 <div class="dirbox">
     <div class="dirbox">
-        <h1 class="heading-isssn">{music.title} ({formatMusicPerv(music.released)})</h1>
+        <h1 class="heading-isssn">{title} ({formatMusicPerv(released)})</h1>
         <div class="dir">
             <a href="/">
                 <div id="dirdark" class="dirlink">Home</div>
@@ -41,7 +48,7 @@ const seo = {
             <img src="/img/icons/cheveron-right.svg" loading="lazy" alt="" class="rightch">
 
             <a href="/i_wanna_die/">
-                <div class="dirlink_cor">{music.title}</div>
+                <div class="dirlink_cor">{title}</div>
             </a>
         </div>
     </div>
@@ -49,28 +56,28 @@ const seo = {
 <div class="musicinner">
     <div class="w-row">
         <div class="column-3 w-col w-col-6">
-          <a href={getSanityImageURL(music.cover).url()}>
-            <div class="div-block-4">{music.cover && <img class="image-3" src={getSanityImageURL(music.cover).url()} />}</div>
+          <a href={getSanityImageURL(cover).url()}>
+            <div class="div-block-4">{cover && <img class="image-3" src={getSanityImageURL(cover).url()} />}</div>
           </a>
         </div>
         <div class="column-5 w-col w-col-6">
-            <h1 class="heading-ina">{music.title}</h1>
+            <h1 class="heading-ina">{title}</h1>
             <div>
-                Released: {formatBlogPostDate(music.released)}
-                <br> Number of tracks: {music.numberoftracks}
-                <br> Genre: {music.genre}
-                <br> Type: {music.type}
-                <br> Price: {music.price}
+                Released: {formatBlogPostDate(released)}
+                <br> Number of tracks: {numberoftracks}
+                <br> Genre: {genre}
+                <br> Type: {type}
+                <br> Price: {price}
             </div>
             <div class="ffff w-row">
                 <div class="w-col w-col-6">
-                    <a class="buttonmusic" href={music.downloadmp3}>
+                    <a class="buttonmusic" href={downloadmp3}>
                         <img src="/img/icons/bxs-download.svg.svg">
                         <div>DOWNLOAD MP3</div>
                     </a>
                 </div>
                 <div class="w-col w-col-6">
-                    <a class="buttonmusic" href={music.bandcamplink}>
+                    <a class="buttonmusic" href={bandcamplink}>
                         <img src="/img/icons/brandico_bandcamp.svg">
                         <div>DOWNLOAD FLAC</div>
                     </a>
@@ -82,8 +89,8 @@ const seo = {
 
 
     <div class="listmus">
-      {music.tracklist &&
-        music.tracklist.map((tracklist, index) => {
+      {tracklist &&
+        tracklist.map((tracklist, index) => {
           return (
             <div class="musiclist w-row">
                     <div class="column-2 w-col w-col-6">
@@ -164,8 +171,8 @@ copyButtons.forEach((button, index) => {
 </div>
 <h1 class="heading-isssn"><strong>Gallery</strong></h1>
 <div class="relises">
-  {music.gallary &&
-    music.gallary.map((gallary) => {
+  {gallary &&
+    gallary.map((gallary) => {
       return (
         <a href={getSanityImageURL(gallary.image).url()}>
           <div class="photo-box">{gallary.image && <img width="100%" height="100%" src={getSanityImageURL(gallary.image).url()} />}</div>
@@ -179,14 +186,14 @@ copyButtons.forEach((button, index) => {
         <div class="column-4 w-col w-col-6">
             <h1 class="heading-ins">Production Notes</h1>
             <div class="tas">
-              <SanityPortableText portableText={music.productNote} />         
+              <SanityPortableText portableText={productNote} />         
             </div>
         </div>
         <div class="column-9 w-col w-col-6">
             <h1 class="heading-ins">Release Notes</h1>
             <div class="text-block-4">
               <LinerNotes />
-              <SanityPortableText portableText={music.releaseNote} />
+              <SanityPortableText portableText={releaseNote} />
             </div>
         </div>
     </div>

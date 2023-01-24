@@ -25,6 +25,12 @@ export async function getAllRel() {
     return data;
 }
 
+export async function getAllRelinner() {
+    const query = `*[_type == 'music']`;
+    const data = await useSanityClient().fetch(query);
+    return data;
+}
+
 // export async function getAllArts() {
 //     const query = `*[_type == 'art']{..., "images": images[]->{slug, image, ...}} | order(publishedAt desc)`;
 //     const data = await useSanityClient().fetch(query);

@@ -57,8 +57,8 @@ const { title, description, image, current } = arts;
 // const currentImage = art.images.find(image => image.slug.current === Astro.params.slug);
 
 const seo = {
-  title: slug,
-  description: "currentImage.description"
+  title: title,
+  description: description
 }
 ---
 <Layout seo={seo}>
