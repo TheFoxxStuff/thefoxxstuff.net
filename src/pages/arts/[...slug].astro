@@ -8,17 +8,19 @@ export interface Props {
   art: any;
 }
 
-export async function getStaticPaths() {
-  const allMusicInfos = await getAllArts();
-  return allMusicInfos.map (art => art.images && art.images.map((images) => ({
-    params: {
-        slug: images.slug.current,
-    },
-    props: {
-        art
-    }
-})));
-}
+// export async function getStaticPaths() {
+//   const allMusicInfos = await getAllArts();
+//   return allMusicInfos.map (art => art.images && art.images.map((images) => ({
+//     params: {
+//         slug: images.slug.current,
+//     },
+//     props: {
+//         art
+//     }
+// })));
+// }
+
+const allMusicInfos = await getAllArts();
 
 const { art } = Astro.props;
 const currentImage = art.images.find(image => image.slug.current === Astro.params.slug);
