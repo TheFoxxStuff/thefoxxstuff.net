@@ -1,12 +1,43 @@
 ---
+
+// const pages = [
+//   {
+//     slug: undefined,
+//     title: 'Astro Store',
+//     text: 'Welcome to the Astro store!',
+//   },
+//   {
+//     slug: 'products',
+//     title: 'Astro products',
+//     text: 'We have lots of products for you',
+//   },
+//   {
+//     slug: 'products/astro-handbook',
+//     title: 'The ultimate Astro handbook',
+//     text: 'If you want to learn Astro, you must read this book.',
+//   }
+// ];
+
+// const { slug } = Astro.params;
+// const page = pages.find((page) => page.slug === slug);
+// if (!page) return Astro.redirect("/404");
+// const { title, text } = page;
+
+
 import Layout from '../../layouts/Page.astro'
-import ArtPage from '../../components/Arts/ArtPage.astro'
 import { getSanityImageURL } from '../../utils/helpers.js';
-import { getAllArts } from '../../lib/api.js';
+import { getAllArtinner } from '../../lib/api.js';
 import SanityPortableText from '../../components/SanityPortableText.astro'
-export interface Props {
-  art: any;
-}
+
+const art = await getAllArtinner();
+const { slug } = Astro.params;
+const arts = art.find((art) => art.slug.current === slug);
+if (!arts) return Astro.redirect("/404");
+const { title, description, image, current } = arts;
+
+// export interface Props {
+//   art: any;
+// }
 
 // export async function getStaticPaths() {
 //   const allMusicInfos = await getAllArts();
@@ -20,21 +51,21 @@ export interface Props {
 // })));
 // }
 
-const allMusicInfos = await getAllArts();
 
-const { art } = Astro.props;
-const currentImage = art.images.find(image => image.slug.current === Astro.params.slug);
+
+// const { art } = Astro.props;
+// const currentImage = art.images.find(image => image.slug.current === Astro.params.slug);
 
 const seo = {
-  title: currentImage.title,
-  description: currentImage.description
+  title: slug,
+  description: "currentImage.description"
 }
 ---
 <Layout seo={seo}>
 <div class="div-block-2"></div>
 <div class="dirbox">
       <div class="dirbox">
-          <h1 class="heading-isssn">{currentImage.title}</h1>
+          <h1 class="heading-isssn">{title}</h1>
           <div class="dir">
             <a href="/">
               <div id="dirdark" class="dirlink">Home</div>
@@ -44,18 +75,18 @@ const seo = {
             <div class="dirlink_cor">Art's</div>
           </a>
           <img class="rightch" src="/img/icons/cheveron-right.svg">
-          <a href={`/arts/${currentImage.slug.current}`}>
-            <div class="dirlink_cor">{currentImage.title}</div>
+          <a href={`/arts/${slug}`}>
+            <div class="dirlink_cor">{title}</div>
           </a>
           </div>
       </div>
 </div>
 <div class="con">
-{<img class="artworkscreen" width="100%" alt="" src={getSanityImageURL(currentImage.image).url()} />}
+{<img class="artworkscreen" width="100%" alt="" src={getSanityImageURL(image).url()} />}
 </div>
-<SanityPortableText portableText={currentImage.description} />
+<SanityPortableText portableText={description} />
 <br>
-<a href={getSanityImageURL(currentImage.image).url()} download="kitten" class="underline">
+<a href={getSanityImageURL(image).url()} download="kitten" class="underline">
 Download Original
 </a>
   <!-- {art.images.map((images) =>

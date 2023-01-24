@@ -37,6 +37,11 @@ export async function getAllArts() {
     return data;
 }
 
+export async function getAllArtinner() {
+    const query = `*[_type == 'arts']`;
+    const data = await useSanityClient().fetch(query);
+    return data;
+}
 
 
 
