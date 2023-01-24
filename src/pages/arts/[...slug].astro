@@ -59,7 +59,8 @@ const { title, description, image, current } = arts;
 
 const seo = {
   title: title,
-  description: description
+  description: description,
+  image: getSanityImageURL(image).width(1200).url(),
 }
 ---
 <Layout seo={seo}>

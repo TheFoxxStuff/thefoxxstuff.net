@@ -25,7 +25,7 @@ const { title, cover, numberoftracks, genre, type, released, releaseNote, produc
 
 const seo = {
   title: title,
-  description: title,
+  description: `TheFoxxStuff - ${title} (${type}) | Released: ${formatBlogPostDate(released)}` ,
   image: getSanityImageURL(cover).width(1200).url(),
 }
 ---
