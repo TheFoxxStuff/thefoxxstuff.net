@@ -86,12 +86,28 @@ const seo = {
 </div>
 <div class="con">
 {<CldImage class="artworkscreen" width="100%" alt={description} src={getSanityImageURL(image).url()} />}
+
+
+<div class="w-row">
+  <div class="column-6 w-col w-col-6">
+    <h1 class="heading-ins">Description</h1>
+    <SanityPortableText portableText={description} />
+  </div>
+  <div class="column-9 w-col w-cols w-col-6">
+    <div class="w-row">
+      <div class="column-6 w-col w-cols w-col-6">
+      </div>
+      <div class="column-6 w-col w-cols w-col-6">
+        <a href={getSanityImageURL(image).url()} download="kitten" class="buttonmusic">
+          <img class="m2" src="/img/icons/imagedown.svg">
+          <div>Download Original</div>
+      </a>
+      </div>
+    </div>
+  </div>
 </div>
-<SanityPortableText portableText={description} />
-<br>
-<a href={getSanityImageURL(image).url()} download="kitten" class="underline">
-Download Original
-</a>
+
+
   <!-- {art.images.map((images) =>
     <ArtPage art={images} />)} -->
 
@@ -122,5 +138,15 @@ Download Original
     margin-top: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
+  }
+  .buttonmusic {
+    margin-right: 0px;
+  }
+  .w-cols {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  .m2 {
+    margin-right: 4px;
   }
 </style>
