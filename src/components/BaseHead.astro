@@ -20,11 +20,13 @@ const image = new URL(Astro.props.image || 'https://res.cloudinary.com/dzrynvom0
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 <link rel="icon" type="image/svg" href="/favicon.svg" />
 <!-- Primary Meta Tags -->
 <title>{title || settings.title} | TheFoxxStuff</title>
 <meta name="title" content={title || settings.title} />
 
+<meta name="keywords" content="thefoxxstuff, furry, music, breakcore, hardcore, happyhardcore, drumandbass, yakutsk, yakutsk music, ykt music, stuff,lapfox, lapfox trax, renard lapfox, halleylabs">
 
 <link rel="stylesheet" href="https://bafybeibv4frsqi4v4htlid5yhis3e2ohmcic7nyqedzanyeuiunn2dufca.ipfs.w3s.link/reset.css">
 <link rel="stylesheet" href="https://bafybeied4lzw5rb7x46cx55byc23mjvotnhcbfjwi6ijsopfu3nv4e7ly4.ipfs.w3s.link/main.css">
@@ -33,6 +35,8 @@ const image = new URL(Astro.props.image || 'https://res.cloudinary.com/dzrynvom0
 <meta name="generator" content={Astro.generator} />
 <!-- settingsmap -->
 <link rel="sitemap" href="/sitemap.xml">
+<!-- robots -->
+<meta name="robots" content="index, follow">
 <!-- RSS -->
 <!-- <link rel="alternate" type="application/rss+xml" title={`${settings.name} Blog`} href={`${settings.url}/feed/blog.xml`}/> -->
 <!-- Canonical -->
