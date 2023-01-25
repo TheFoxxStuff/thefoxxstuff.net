@@ -2,6 +2,8 @@
 import Layout from '../layouts/Page.astro'
 import BlogPostsList from '../components/BlogPostsList.astro';
 
+const currentYear = new Date().getFullYear();
+
 const seo = {
     title: 'About',
     description: 'About TheFoxxStuff, Aytal Popov',
@@ -34,61 +36,54 @@ const seo = {
                 <img src="https://res.cloudinary.com/dzrynvom0/image/upload/v1674586057/about_ukv0pt.jpg">
             </div>
             <div class="div-block-6">
-                <h1 class="heading-ins">Ссылки</h1>
+                <h1 class="heading-ins">Contact</h1>
             </div>
-            <div class="div-block-7">
-                <div class="buttonmusic">
-                    <div>Youtube</div>
+            <div class="w-row">
+                <div class="w-col w-col-6">
+                    <div class="buttonmusic">
+                        foxx_remix@mail.ru
+                    </div>
                 </div>
-                <div class="buttonmusic">
-                    <div>Twitter</div>
-                </div>
-                <div class="buttonmusic">
-                    <div>Vk</div>
-                </div>
-                <div class="buttonmusic">
-                    <div>Telegram</div>
+                <div class=" w-col w-col-6">
+                <a href="https://t.me/createandchoose" target="_blank">
+                    <div class="buttonmusic">
+                        <img src="/img/icons/Telegram.svg" loading="lazy" alt="" class="image-4">Telegram<img src="/img/icons/external-link.svg" loading="lazy" alt="" class="image-5">
+                    </div>
+                </a>
                 </div>
             </div>
         </div>
         <div class="profff w-col w-col-6">
-            <h1 class="heading-ins">Aytal Popov</h1>
+            <h1 class="heading-ins">TheFoxxStuff</h1>
             <div class="div-block-5">
                 <div class="prof_minidata w-row">
                     <div class="left-info-prof w-col w-col-6">
-                        <div>Date of birth:</div>
+                        <div>Location:</div>
                     </div>
                     <div class="column-7 w-col w-col-6">
-                        <div>25 June 2002</div>
+                        <div><img style="position:absolute; margin-left: -26px" src="./img/icons/ykt.svg"> Republic of Sakha (Yakutia)</div>
                     </div>
                 </div>
                 <div class="prof_minidata w-row">
                     <div class="left-info-prof w-col w-col-6">
-                        <div>Zodiac sign:</div>
+                        <div>Date created:</div>
                     </div>
                     <div class="column-7 w-col w-col-6">
-                        <div>Cancer</div>
+                        <div>December 2018</div>
                     </div>
                 </div>
                 <div class="prof_minidata w-row">
                     <div class="left-info-prof w-col w-col-6">
-                        <div>From:</div>
+                        <div>Owner:</div>
                     </div>
                     <div class="column-7 w-col w-col-6">
-                        <div>Republic of Sakha (Yakutia)</div>
-                    </div>
-                </div>
-                <div class="prof_minidata w-row">
-                    <div class="left-info-prof w-col w-col-6">
-                        <div>Occupancy:</div>
-                    </div>
-                    <div class="column-7 w-col w-col-6">
-                        <div>Web Developer</div>
+                        <div>Aytal Popov</div>
                     </div>
                 </div>
             </div>
-            <div>info.
-                <br><br>info.</div>
+            <div>TheFoxxStuff is a talented musician from <a target="_blank" class="linkbio" href="https://en.wikipedia.org/wiki/Yakutsk">Yakutsk</a> who creates music in the genres of <a target="_blank" class="linkbio" href="https://en.wikipedia.org/wiki/Hardcore_(electronic_dance_music_genre)">Hardcore</a>, <a target="_blank" class="linkbio" href="https://en.wikipedia.org/wiki/Breakcore">Breakcore</a> and <a target="_blank" class="linkbio" href="https://en.wikipedia.org/wiki/Drum_and_bass">Drum'n'Bass</a>. He has his own unique style and is able to convey his character in each composition. His music is characterized by its lightness and atmosphere, a quality that is influenced by his unique place of residence - the <a target="_blank" class="linkbio" href="https://en.wikipedia.org/wiki/Sakha">Republic of Sakha (Yakutia)</a>. His roots in Yakutia and his understanding of local culture and traditions give him a special source of strength that he uses to create music with a sound and atmosphere that is extremely unique to his region.
+            <br><br>His music is filled with a wide range of emotions, from dynamic and energetic tracks to melancholic ones, which charges listeners and doesn't let them get bored. He also possesses technical nuances that make it interesting and captivating to listen to.
+            <br><br>In addition, his music is very soulful and inspiring, it penetrates the listener's soul and gives them a powerful charge of energy. His albums can be heard on many famous music platforms and he has received many positive feedbacks from listeners. If you are looking for quality music that will ignite your soul, then TheFoxxStuff is what you need.</div>
         </div>
     </div>
 
@@ -98,5 +93,8 @@ const seo = {
     .prof_img img{
         height: 100%;
         object-fit: cover;
+    }
+    .linkbio {
+        color: #88ff00;
     }
 </style>
