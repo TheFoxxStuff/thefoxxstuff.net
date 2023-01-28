@@ -51,7 +51,7 @@ const { art } = Astro.props;
         {art.images.map((image) => (
             <a href={`/arts/${image.slug.current}`}>
         <div class="photo-box">
-          {<CldImage src={getSanityImageURL(image.image).url()} />}
+          {<CldImage width="200" height="200" src={getSanityImageURL(image.image).url()} />}
         </div>
       </a>
 ))}

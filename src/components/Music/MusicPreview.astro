@@ -10,8 +10,8 @@ const { music } = Astro.props;
   <a href={`/music/${music.slug.current}`}>
       <div class="relise">
           <div class="relise-con">
-              <div class="test1">
-                <CldImage class="post-preview__img" src={getSanityImageURL(music.cover).url()}/></div>
+              <div class="test900">
+                <CldImage width="200" height="200" src={getSanityImageURL(music.cover).url()}/></div>
               <div class="resile-text-box">
                   <div class="relise-text">{music.title}</div>
                   <div class="resile-text-2">{music.price}</div>
@@ -19,3 +19,19 @@ const { music } = Astro.props;
           </div>
       </div>
   </a>
+
+<style>
+    .test900 {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background-color: #73ee0800;
+  }
+  .test900 img {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+  }
+</style>
