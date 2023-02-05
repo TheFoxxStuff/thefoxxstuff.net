@@ -10,7 +10,7 @@ let cldSrc = cld.image(src)
                 .format('auto')
                 .delivery('q_auto');
 if (props.width && props.height) {
-    cldSrc = cldSrc.resize(`c_scale,w_${props.width},h_${props.height}`);
+    cldSrc = cldSrc.resize(`c_thumb,w_${props.width},h_${props.height}`);
 }
 if ( src.startsWith('https://')) {
   cldSrc.setDeliveryType('fetch');
