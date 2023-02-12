@@ -25,23 +25,39 @@ const seo = {
         </a>
     </div>
 </div>
-<br>
-<div class="selection">
 
-<a class="link" href="https://thefoxxstuff.bandcamp.com " target="_blank ">
-    <div class="buttons ">Bandcamp</div>
-</a>
-
-<a class="link" href="https://soundcloud.com/thefoxxstuff" target="_blank ">
-    <div class="buttons ">SoundCloud</div>
-</a>
-
-<a class="link" href="https://www.youtube.com/@thefoxxstuff" target="_blank ">
-    <div class="buttons ">YouTube</div>
-</a>
-
+<div class="columns-4 w-row">
+    <div class="column-12 w-col w-col-6"><div class="l-1" style="background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.png');">
+        <div class="text-block-7">BANDCAMP</div>
+    </div><div class="l-2" style="background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.png');">
+        <div class="text-block-7">SOUNDCLOUD</div>
+    </div><div class="l-2" style="background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.png');">
+            <div class="text-block-7">VK</div>
+        </div>
+    </div>
+    <div class="column-13 w-col w-col-6"><div class="l-1" style="background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.png');">
+        <div class="text-block-7">YOUTUBE</div>
+    </div><div class="l-2" style="background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.png');">
+        <div class="text-block-7">TWITTER</div>
+    </div><div class="l-2" style="background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.jpg');">
+        <div class="text-block-7">TELEGRAM</div>
+    </div>
+</div>
 </div>
 
+<h1 class="heading-isssn" style="margin-bottom: 20px">Streaming Services</h1>
+
+<div class="relises">
+    <div class="l-photo-box">
+        <div class="text-block-7a">Spotify</div>
+    </div><div class="l-photo-box">
+        <div class="text-block-7a">iTunes</div>
+    </div><div class="l-photo-box">
+        <div class="text-block-7a">Vk Music</div>
+    </div><div class="l-photo-box">
+        <div class="text-block-7a">Yandex Music</div>
+    </div>
+</div>
 
 
 <!-- <h1 class="heading">Demo tracks</h1>
@@ -49,28 +65,117 @@ const seo = {
 
 </Layout>
 
-<style>
-    .selection {
-        margin: auto;
-        width: 600px;
-    }
-    .link {
-    height: 48px;
-    width: 100%;
-}
-.buttons {
-    padding: 13px 15px;
-    border-radius: 8px;
-    background-color: hsla(0, 0%, 100%, 0.05);
-    text-align: center;
-    line-height: inherit;
-    color: #fff;
-    margin-bottom: 10px;
-    transition: 0.2s;
-}
 
-.buttons:hover {
-    transition: 0.1s;
-    background-color: hsla(0, 0%, 100%, 0.08);
-}
+<style>
+        .text-block-7 {
+        font-family: 'DrukWideCyrMedium';
+        display: block;
+        margin-bottom: 14px;
+        margin-left: 18px;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-end;
+        font-size: 18px;
+        font-weight: 400;
+        transition: 0.2s;
+    }
+        .text-block-7a {
+        font-family: 'DrukWideCyrMedium';
+        display: block;
+        margin-bottom: 12px;
+        margin-left: 14px;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-end;
+        font-size: 16px;
+        font-weight: 400;
+        transition: 0.2s;
+    }
+    .l-2:hover .text-block-7  {
+        color: #88ff00;
+        transition: 0.2s;
+    }
+    .l-1:hover .text-block-7 {
+        color: #88ff00;
+        transition: 0.2s;
+    }
+    .l-2 {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        width: 100%;
+        height: 160px;
+        margin-top: 0px;
+        padding-top: 0px;
+        -webkit-box-align: end;
+        -webkit-align-items: flex-end;
+        -ms-flex-align: end;
+        align-items: flex-end;
+        border-radius: 8px;
+        background-color: hsla(0, 0%, 100%, 0.05);
+        background-position: 100% 100%, 0px 0px, 50% 50%;
+        background-size: contain, auto, cover;
+        background-repeat: repeat, repeat, repeat;
+        background-attachment: scroll, scroll, scroll;
+        overflow: hidden; 
+        display: inline-block;
+        transition: 0.2s;
+    }
+    .l-2:hover {
+        transition: 0.2s;
+        background-position: 100% 100%, 0px 0px, 60% 60%;
+    }
+    .l-1:hover {
+        transition: 0.2s;
+        background-position: 100% 100%, 0px 0px, 60% 60%;
+    }
+    .l-1 {
+        overflow: hidden; 
+        display: inline-block;
+        transition: 0.2s;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        width: 100%;
+        height: 160px;
+        margin-top: 0px;
+        padding-top: 0px;
+        -webkit-box-align: end;
+        -webkit-align-items: flex-end;
+        -ms-flex-align: end;
+        align-items: flex-end;
+        border-radius: 8px;
+        background-color: hsla(0, 0%, 100%, 0.05);
+        background-position: 100% 100%, 0px 0px, 50% 50%;
+        background-size: contain, auto, cover;
+        background-repeat: repeat, repeat, repeat;
+        background-attachment: scroll, scroll, scroll;
+    }
+
+    .l-photo-box:hover {
+        transition: 0.2s;
+        transform: scale(1.05);
+    }
+    
+    .l-photo-box {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 195px;
+        height: 195px;
+        -webkit-box-align: end;
+        -webkit-align-items: flex-end;
+        -ms-flex-align: end;
+        align-items: flex-end;
+        border-radius: 8px;
+        background-color: hsla(0, 0%, 100%, 0.06);
+        background-image: url('./img/dots.png'), linear-gradient(180deg, hsla(0, 0%, 100%, 0) 25%, rgba(8, 8, 8, 0.8)), url('./img/fa.png');
+        background-position: 0px 0px, 0px 0px, 0px 0px;
+        background-size: contain, auto, cover;
+        background-repeat: repeat, repeat, repeat;
+    }
 </style>

@@ -1,10 +1,11 @@
 ---
 import { getSanityImageURL, formatMusicPerv } from '../../utils/helpers'
 import CldImage from '../../components/CldImage.astro';
+import { getSanityImageURL, formatBlogPostDate } from '../../utils/helpers.js'
 export interface Props {
   music: any;
 }
-
+  
 const { music } = Astro.props;
 ---
   <a href={`/music/${music.slug.current}`}>
@@ -14,7 +15,7 @@ const { music } = Astro.props;
                 <CldImage width="200" height="200" src={getSanityImageURL(music.cover).url()}/></div>
               <div class="resile-text-box">
                   <div class="relise-text">{music.title}</div>
-                  <div class="resile-text-2">{music.price}</div>
+                  <div class="resile-text-2">{formatBlogPostDate(music.released)}</div>
               </div>
           </div>
       </div>

@@ -1,20 +1,20 @@
     @font-face {
         font-family: 'GolosUIWebRegular';
-        src: url('/fonts/Golos-Text_Regular.ttf');
+        src: url('/fonts/Golos-Text_Regular.woff2');
         font-weight: normal;
         font-style: normal;
     }
     
     @font-face {
         font-family: 'Golos-Text_Medium';
-        src: url('/fonts/Golos-Text_Medium.ttf');
+        src: url('/fonts/Golos-Text_Medium.woff2');
         font-weight: normal;
         font-style: normal;
     }
     
     @font-face {
         font-family: "DrukWideCyrMedium";
-        src: url("/fonts/Druk\ Wide\ Cyr\ Medium.ttf");
+        src: url("/fonts/DrukWideCyrMedium.woff2");
     }
     
     body {
@@ -68,7 +68,7 @@
     
     .block:hover {
         transition: 0.2;
-        background-color: #292929;
+        background-color: rgb(255, 255, 255, 0.08);
     }
     
     .image {
@@ -1428,5 +1428,62 @@ font-size: 14vw;
         }
         .photo-box {
             width: 100%;
+        }
+    }
+    
+    .l-2 {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        width: 100%;
+        height: 160px;
+        margin-top: 16px;
+        padding-top: 0px;
+        -webkit-box-align: end;
+        -webkit-align-items: flex-end;
+        -ms-flex-align: end;
+        align-items: flex-end;
+        border-radius: 8px;
+        background-color: hsla(0, 0%, 100%, 0.05);
+    }
+    
+    .columns-4 {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .column-12 {
+        padding-right: 8px;
+        padding-left: 0px;
+    }
+    
+    .column-13 {
+        padding-right: 0px;
+        padding-left: 8px;
+    }
+    
+    @media screen and (max-width: 767px) {
+        .l-2 {
+            margin-top: 8px;
+        }
+        .column-12 {
+            padding-bottom: 8px;
+        }
+        .column-13 {
+            padding-bottom: 0px;
+        }
+    }
+    
+    @media screen and (max-width: 479px) {
+        .l-photo-box {
+            width: 100%;
+            height: 150px;
+        }
+        .l-2 {
+            margin-top: 8px;
+        }
+        .column-12 {
+            padding-bottom: 8px;
         }
     }
