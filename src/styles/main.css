@@ -1431,6 +1431,14 @@ font-size: 14vw;
         }
     }
     
+    blockquote {
+        margin: 0 0 10px 0;
+        padding: 5px 10px;
+        border-left: 2px solid #E2E2E2;
+        font-size: 14px;
+        line-height: 18px;
+    }
+    
     .l-2 {
         display: -webkit-box;
         display: -webkit-flex;
