@@ -1080,6 +1080,12 @@
         align-items: center;
         border-radius: 8px;
         background-color: hsla(0, 0%, 100%, 0.05);
+        transition: 0.1s;
+    }
+
+    .div-block-9:hover{
+        transition: 0.25s;
+        background-color: hsla(0, 0%, 100%, 0.08);
     }
     
     .column-11 {
@@ -1495,3 +1501,6 @@ font-size: 14vw;
             padding-bottom: 8px;
         }
     }
+
+
+

@@ -176,7 +176,7 @@ copyButtons.forEach((button, index) => {
     gallary.map((gallary) => {
       return (
         <a href={getSanityImageURL(gallary.image).url()}>
-          <div class="photo-box">{gallary.image && <CldImage width="100%" height="100%" alt={`${gallary.name} | ${gallary.description}`} src={getSanityImageURL(gallary.image).url()} />}</div>
+          <div class="photo-box">{gallary.image && <CldImage alt={`${gallary.name} | ${gallary.description}`} src={getSanityImageURL(gallary.image).url()}  />}</div>
         </a>
           );                  
     })
@@ -225,5 +225,8 @@ copyButtons.forEach((button, index) => {
     cursor: pointer;
     transition: 0.05s;
   }
-
+  .photo-box img{
+    width: 100%;
+    height: 100%;
+  }
 </style>

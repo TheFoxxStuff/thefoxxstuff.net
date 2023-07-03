@@ -4,6 +4,7 @@ import type { Props as BaseHeadProps } from '../components/BaseHead.astro';
 import CreateCopyCodeButtons from "../components/CodeButtons/CreateCopyCodeButtons.astro";
 // import FadeIn from "../components/FadeIn.astro";
 import ThemeProvider from "../components/ThemeToggleButton/ThemeProvider.astro";
+import SmootScroll from "../components/Plugins/SmootScroll.astro";
 
 export interface Props {
 	seo?: BaseHeadProps;
@@ -19,6 +20,22 @@ const { seo } = Astro.props;
     <!-- This is and experimental global fade in animation that is being worked on, enable at your own risk of some jank -->
     <!-- <FadeIn/> -->
     <CreateCopyCodeButtons />
+    <style>
+          .cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #000;
+        mix-blend-mode: difference;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition: all 0.2s ease-out;
+      }
+    </style>
     <script>
       import '../components/CodeButtons/copy-code-button'
     </script>
@@ -32,5 +49,14 @@ const { seo } = Astro.props;
       <slot />
     </main>
     <slot name="footer" />
+    <div class="cursor"></div>
+    <SmootScroll/>
+    <script>
+        document.addEventListener("mousemove", function(e) {
+        var cursor = document.querySelector(".cursor");
+        cursor.style.left = e.clientX + "px";
+        cursor.style.top = e.clientY + "px";
+      });
+    </script>
   </body>
 </html>

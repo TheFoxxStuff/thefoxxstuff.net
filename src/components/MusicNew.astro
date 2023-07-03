@@ -6,14 +6,15 @@
     <div class="w-row">
         <div class="column-3 w-col w-col-6">
           <a href={`$a.jpg.jpg`}>
-            <div class="div-block-4"><img src={`a.jpg`} class="image-3"></div>
+            <div class="div-block-4"><img src="/img/about.jpg" class="image-3"></div>
           </a>
         </div>
         <div class="column-5 w-col w-col-6">
-            <h1 class="heading-ina">  NEW RELEASE
+            <h1 class="heading-ina">
+                <span class="newrel">NEW RELEASE</span><br>
                 GLOBAL COLLASPE</h1>
-            <div>
-                Яндекс.Переводчиком — сервисом автоматического перевода слов, фраз, текстов и веб-страниц. Сервис сопровождает переводы примерами использования и транскрипцией, озвучивает слова. В режиме сайта переводит всё текстовое содержимое страниц.
+            <div class="newrel-p">
+                "GLOBAL COLLAPSE" - это новый альбом от электронной рок-группы "thefoxxstuff", который описывает мир, столкнувшийся с глобальным кризисом и крахом общественных систем. Альбом начинается с мощной и зловещей вступительной композиции "Collapse", которая описывает падение мировой экономики и социального беспорядка.
             </div>
             <div class="ffff w-row">
                 <div class="w-col w-col-6">
@@ -27,14 +28,37 @@
                     </a>
                 </div>
             </div>
+            <div class="othlinks">
                 <a  href="">
-                    <div class="link-small">PROMO PAGE</div>
+                    <div class="link-small">PROMO PAGE<img src="/img/icons/link.svg"></div>
                 </a>
+                <a  href="">
+                    <div class="link-small">YOUTUBE<img src="/img/icons/link.svg"></div>
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
+.newrel {
+    background-color: #73EE07;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #000;
+    font-size: 18px;
+}
+.newrel::selection {
+    background-color: #000;
+    color: #fff;
+}
+.buttonmusic {
+    font-family: 'Golos-Text_Medium';
+    font-weight: bold;
+}
+.newrel-p {
+    font-family: 'Golos-Text_Medium';
+}
 .band {
     background: #01B9ED;
     color: #FFF;
@@ -42,9 +66,24 @@
 .band:hover {
     background: #00c8ff;
 }
-.link-small {
+.othlinks {
     margin-top: 20px;
+}
+.link-small {
     color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    font-family: 'Golos-Text_Medium';
+    transition: 0.4s;
+    display: inline;
+    margin-right: 12px;
+}
+.link-small img {
+    margin-left: 6px;
+}
+.link-small:hover {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration:underline;
+    transition: 0.2s;
 }
 .ass {
     margin-top: 20px;
