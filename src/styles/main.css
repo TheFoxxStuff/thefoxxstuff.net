@@ -1139,6 +1139,7 @@ font-size: 14vw;
         margin-top: -50px;
     }
     
+    /* BACKGROUND-GLOWING */
     .div-blocks {
         position: absolute;
         z-index: -1;
@@ -1147,7 +1148,8 @@ font-size: 14vw;
         top: -2px;
         background-repeat: no-repeat;
         background-position: center, top;
-        background-image: url(https://bafybeia3czuy5gces25olp6tyo2372gfmg5fmwdnofxvuejou7sjev4r5e.ipfs.w3s.link/bg-blur.avif);
+        /* background-image: url(https://bafybeia3czuy5gces25olp6tyo2372gfmg5fmwdnofxvuejou7sjev4r5e.ipfs.w3s.link/bg-blur.avif); */
+        background-image: url("../img/main/bg-blur.svg");
         animation-name: example;
         animation-duration: 4s;
         opacity: 1;
