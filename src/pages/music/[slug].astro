@@ -170,7 +170,12 @@ copyButtons.forEach((button, index) => {
   </div> -->
 
 </div>
-<h1 class="heading-isssn"><strong>Gallery</strong></h1>
+{gallary && gallary.length > 0 && (
+  <h1 class="heading-isssn">
+    <strong>Gallery</strong>
+  </h1>
+)}
+
 <div class="relises">
   {gallary &&
     gallary.map((gallary) => {
