@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Disallow: /private/
+Disallow: /restricted/
+Disallow: /admin/
+Disallow: /cgi-bin/
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /log/
+Disallow: /logs/
+
+Sitemap: https://thefoxxstuff.net/sitemap.xml
