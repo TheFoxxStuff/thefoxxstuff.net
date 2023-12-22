@@ -4,6 +4,7 @@ dist/
 # dependencies
 node_modules/
 .vscode
+.venv
 
 # logs
 npm-debug.log*
