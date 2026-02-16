@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6-alpine
+    container_name: foxx_db
+    restart: always
+    command: mongod --wiredTigerCacheSizeGB 0.25
+    volumes:
+      - mongo_data:/data/db
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+
+  backend:
+    build: ./backend
+    container_name: foxx_backend
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "127.0.0.1:8000:8000" # Доступен только локально для Nginx
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+
+  frontend:
+    build: ./frontend
+    container_name: foxx_frontend
+    restart: always
+    ports:
+      - "127.0.0.1:3000:80" # Внутренний порт фронта
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+
+volumes:
+  mongo_data:

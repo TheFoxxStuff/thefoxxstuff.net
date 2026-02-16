@@ -58,3 +58,18 @@ curl или wget — для скачивания файлов.
 git — чтобы клонировать свой проект с GitHub.
 
 apt install htop git curl -y
+
+
+
+установка докера
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+установка nginx
+sudo apt update
+sudo apt install nginx -y
+systemctl status nginx
+
+
+
+sudo certbot --nginx -d api.thefoxxstuff.net -d front.thefoxxstuff.net
