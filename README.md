@@ -33,3 +33,28 @@ FastAPI: ~150–200 МБ
 Svelte (Runtime/Nginx): ~50 МБ (но 800 МБ во время сборки!)
 Redis: ~150 МБ
 Итого: У тебя остается около 300 МБ «свободного воздуха».
+
+
+
+
+
+
+
+VPS
+
+Создание Swap-файла (если RAM < 2 Гб)
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+
+Создание нового пользователя
+adduser myusername
+usermod -aG sudo myusername
+
+
+
+Установка полезных утилит
+
+htop — красивый мониторинг ресурсов (процессор, память).
+curl или wget — для скачивания файлов.
+git — чтобы клонировать свой проект с GitHub.
+
+apt install htop git curl -y
