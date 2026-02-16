@@ -7,7 +7,7 @@
 
 <footer class="mx-auto w-full max-w-[828px] flex items-center justify-between mb-[60px] my-[20px] p-[14px_30px] bg-[--w5] rounded-[8px]">
   <div class="text-[--w60] text-[14px]">
-    © TheFoxxStuff {currentYear}
+    © TheFoxxStuff TEST {currentYear}
   </div>
 
   <div class="flex flex-row gap-2 items-center">
