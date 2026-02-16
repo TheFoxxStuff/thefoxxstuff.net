@@ -1,46 +1,140 @@
-# TheFoxxStuff Official Website
+# TheFoxxStuff
 
-Welcome to TheFoxxStuff official website repository! This repository houses the source code for my personal website, where I showcase various creative projects and "штучки" (things).
+Personal portfolio/blog website with music, arts, and blog sections.
 
-## Project Overview
+## Tech Stack
 
-- **Framework:** [Astro.Build](https://astro.build/)
-- **Back-End:** Vanilla JS
-- **Headless CMS:** [Sanity](https://www.sanity.io/)
-- **Images CDN:** [Cloudinary](https://cloudinary.com/)
-- **Files CDN:** [IPFS](https://ipfs.io/)
-- **Hosting, SSL, DDOS-Security, DNS, Email Routing:** [Cloudflare](https://www.cloudflare.com/)
+- **Frontend**: SvelteKit + TailwindCSS
+- **Backend**: FastAPI + MongoDB
+- **Deployment**: Docker + Nginx
 
-## Getting Started
+## Quick Start (Development)
 
-To set up the project locally, follow these steps:
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/TheFoxxStuff/thefoxxstuff.net.git
-    cd thefoxxstuff.net
-    ```
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-2. **Install dependencies:**
-    ```bash
-    npm install
-    ```
+## Production Deployment
 
-3. **Run the development server:**
-    ```bash
-    npm run dev
-    ```
+### Prerequisites on VPS
+- Ubuntu 20.04+
+- Docker & Docker Compose
+- Nginx
+- Domain configured (front.thefoxxstuff.net, api.thefoxxstuff.net)
 
-    This will start the development server, and you can view the website at [http://localhost:2023](http://localhost:2023).
+### Initial Setup
 
-## Licensing
+1. **SSH into your VPS and clone the repository:**
+```bash
+sudo git clone https://github.com/YOUR_USERNAME/thefoxxstuff.git /opt/thefoxxstuff
+cd /opt/thefoxxstuff
+```
 
-This project is licensed under the © All rights reserved license. 
+2. **Run the setup script:**
+```bash
+sudo chmod +x scripts/setup-vps.sh
+sudo ./scripts/setup-vps.sh
+```
 
-## Contact
+Or manually:
 
-For further inquiries or collaboration opportunities, feel free to contact me at [your.email@example.com](mailto:mail.thefoxxstuff.net).
+3. **Create environment file:**
+```bash
+cp .env.example .env
+# Edit .env and set SECRET_KEY
+nano .env
+```
 
-## Acknowledgments
+4. **Setup Nginx:**
+```bash
+sudo cp nginx/thefoxxstuff.conf /etc/nginx/sites-available/thefoxxstuff
+sudo ln -s /etc/nginx/sites-available/thefoxxstuff /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+```
 
-Special thanks to the amazing communities behind Astro.Build
+5. **Get SSL certificates:**
+```bash
+sudo certbot --nginx -d front.thefoxxstuff.net -d api.thefoxxstuff.net
+```
+
+6. **Build and start:**
+```bash
+docker compose up -d --build
+```
+
+### CI/CD Setup (GitHub Actions)
+
+Add these secrets to your GitHub repository (Settings → Secrets → Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `VPS_HOST` | Your VPS IP address or hostname |
+| `VPS_USER` | SSH username (usually `root` or your user) |
+| `VPS_SSH_KEY` | Private SSH key for authentication |
+
+To generate SSH key:
+```bash
+ssh-keygen -t ed25519 -C "github-actions"
+# Add public key to VPS: ~/.ssh/authorized_keys
+# Copy private key to GitHub secrets
+```
+
+Now every push to `main` branch will automatically deploy!
+
+## Useful Commands
+
+```bash
+# View logs
+docker compose logs -f
+
+# Restart services
+docker compose restart
+
+# Rebuild and restart
+docker compose up -d --build
+
+# Stop all
+docker compose down
+
+# Database backup
+docker exec thefoxxstuff-mongo mongodump --out /data/backup
+docker cp thefoxxstuff-mongo:/data/backup ./backup
+
+# Enter container shell
+docker exec -it thefoxxstuff-api bash
+docker exec -it thefoxxstuff-front sh
+```
+
+## Project Structure
+
+```
+thefoxxstuff/
+├── backend/           # FastAPI backend
+│   ├── routers/       # API endpoints
+│   ├── models.py      # Pydantic models
+│   ├── database.py    # MongoDB connection
+│   ├── config.py      # Settings
+│   └── Dockerfile
+├── frontend/          # SvelteKit frontend
+│   ├── src/
+│   │   ├── routes/    # Pages
+│   │   └── lib/       # Components, stores, API
+│   └── Dockerfile
+├── nginx/             # Nginx configs
+├── scripts/           # Deployment scripts
+├── docker-compose.yml
+└── .github/workflows/ # CI/CD
+```

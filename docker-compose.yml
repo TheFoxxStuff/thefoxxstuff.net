@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: thefoxxstuff-mongo
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - thefoxxstuff-network
+    environment:
+      - MONGO_INITDB_DATABASE=thefoxxstuff
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: thefoxxstuff-api
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - thefoxxstuff-network
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=thefoxxstuff
+      - SECRET_KEY=${SECRET_KEY}
+      - FRONTEND_URL=https://front.thefoxxstuff.net
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE=https://api.thefoxxstuff.net/api
+    container_name: thefoxxstuff-front
+    restart: unless-stopped
+    networks:
+      - thefoxxstuff-network
+    ports:
+      - "127.0.0.1:3000:80"
+
+volumes:
+  mongodb_data:
+  uploads_data:
+
+networks:
+  thefoxxstuff-network:
+    driver: bridge
