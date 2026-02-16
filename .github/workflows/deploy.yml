@@ -1,9 +1,8 @@
-name: Deploy to VPS
-
 on:
   push:
     branches:
       - main
+      - migration-to-svelte-deploy
   workflow_dispatch:
 
 jobs:
@@ -21,24 +20,22 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /opt/thefoxxstuff
+            cd ~/thefoxxstuff.net
+            
+            # Fix DNS if needed
+            grep -q "8.8.8.8" /etc/resolv.conf || echo "nameserver 8.8.8.8" > /etc/resolv.conf
             
             # Pull latest changes
-            git pull origin main
+            git pull origin migration-to-svelte-deploy
             
-            # Create .env if not exists
-            if [ ! -f .env ]; then
-              cp .env.example .env
-              echo "SECRET_KEY=$(openssl rand -hex 32)" >> .env
-            fi
+            # Build frontend
+            cd frontend
+            npm install
+            NODE_OPTIONS="--max-old-space-size=1024" VITE_API_BASE=https://api.thefoxxstuff.net/api npm run build
+            cd ..
             
-            # Build and restart containers
-            docker compose down
-            docker compose build --no-cache
+            # Rebuild backend
+            docker compose build --no-cache backend
             docker compose up -d
             
-            # Cleanup old images
-            docker image prune -f
-            
-            # Show status
-            docker compose ps
+            echo "Deploy complete!"
