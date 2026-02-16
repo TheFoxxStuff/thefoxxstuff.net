@@ -1,46 +1,35 @@
-# TheFoxxStuff Official Website
+# TheFoxxStuff Website
 
-Welcome to TheFoxxStuff official website repository! This repository houses the source code for my personal website, where I showcase various creative projects and "штучки" (things).
+Fullstack-приложение: **FastAPI** (Backend) + **Svelte** (Frontend).
 
-## Project Overview
+## 📂 Структура проекта
+* `backend/` — API на Python (FastAPI).
+* `frontend/` — Интерфейс на Svelte.
+* `docker-compose.yml` — Конфигурация для быстрого развертывания.
 
-- **Framework:** [Astro.Build](https://astro.build/)
-- **Back-End:** Vanilla JS
-- **Headless CMS:** [Sanity](https://www.sanity.io/)
-- **Images CDN:** [Cloudinary](https://cloudinary.com/)
-- **Files CDN:** [IPFS](https://ipfs.io/)
-- **Hosting, SSL, DDOS-Security, DNS, Email Routing:** [Cloudflare](https://www.cloudflare.com/)
+---
 
-## Getting Started
+cd backend
+python -m venv venv
+source venv/bin/activate  # Для Windows: venv\Scripts\activate
+pip install -r requirements.txt
+# Создайте .env файл на основе .env.example
+cp .env.example .env 
+python main.py
 
-To set up the project locally, follow these steps:
+pip freeze > requirements.txt - создание requirements.txt
+python version 3.14.0
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/TheFoxxStuff/thefoxxstuff.net.git
-    cd thefoxxstuff.net
-    ```
+choco install ffmpeg
 
-2. **Install dependencies:**
-    ```bash
-    npm install
-    ```
 
-3. **Run the development server:**
-    ```bash
-    npm run dev
-    ```
 
-    This will start the development server, and you can view the website at [http://localhost:2023](http://localhost:2023).
 
-## Licensing
+VPS (Beget 1GB)
+Считаем математику потребления:
 
-This project is licensed under the © All rights reserved license. 
-
-## Contact
-
-For further inquiries or collaboration opportunities, feel free to contact me at [your.email@example.com](mailto:mail.thefoxxstuff.net).
-
-## Acknowledgments
-
-Special thanks to the amazing communities behind Astro.Build
+ОС Linux: ~200–300 МБ
+FastAPI: ~150–200 МБ
+Svelte (Runtime/Nginx): ~50 МБ (но 800 МБ во время сборки!)
+Redis: ~150 МБ
+Итого: У тебя остается около 300 МБ «свободного воздуха».
