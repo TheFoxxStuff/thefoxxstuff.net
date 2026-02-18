@@ -6,14 +6,16 @@ RUN npm install
 
 COPY . .
 
-ARG VITE_API_BASE=https://api.thefoxxstuff.net/api
+# Эти аргументы позволят прокидывать URL API во время сборки
+ARG VITE_API_BASE
 ENV VITE_API_BASE=$VITE_API_BASE
-ENV NODE_OPTIONS="--max-old-space-size=1024"
 
 RUN npm run build
 
 FROM nginx:alpine
-COPY --from=builder /app/build /usr/share/nginx/html
+# Проверь, как называется папка после билда в Svelte/Vite. 
+# Обычно это 'dist', а не 'build'. Если SvelteKit — может быть 'build'.
+COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

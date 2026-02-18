@@ -20,23 +20,16 @@ jobs:
           username: ${{ vars.VPS_USER }}
           key: ${{ vars.VPS_SSH_KEY }}
           script: |
-            cd ~/thefoxxstuff.net
-            
-            # Fix DNS if needed
-            grep -q "8.8.8.8" /etc/resolv.conf || echo "nameserver 8.8.8.8" > /etc/resolv.conf
-            
-            # Pull latest changes
-            git pull origin migration-to-svelte-deploy
-            
-            # Build frontend
-            cd frontend
-            npm install
-            NODE_OPTIONS="--max-old-space-size=1024" VITE_API_BASE=https://api.thefoxxstuff.net/api npm run build
-            cd ..
-            
-            # Rebuild backend and restart all
-            docker compose build --no-cache backend
-            docker compose up -d
-            docker compose restart frontend
-            
-            echo "Deploy complete!"
+                      cd ~/thefoxxstuff.net
+                      
+                      # Обновляем код
+                      git pull origin migration-to-svelte-deploy
+                      
+                      # Собираем и запускаем всё одной командой.
+                      # --build заставит Docker пересобрать фронт и бэк, если файлы изменились.
+                      docker compose up -d --build
+                      
+                      # Чистим старые образы, чтобы не забивать место на VPS
+                      docker image prune -f
+                      
+                      echo "Deploy complete!"
