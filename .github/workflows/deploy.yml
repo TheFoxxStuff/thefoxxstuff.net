@@ -8,11 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -21,15 +19,7 @@ jobs:
           key: ${{ vars.VPS_SSH_KEY }}
           script: |
                       cd ~/thefoxxstuff.net
-                      
-                      # Обновляем код
                       git pull origin migration-to-svelte-deploy
-                      
-                      # Собираем и запускаем всё одной командой.
-                      # --build заставит Docker пересобрать фронт и бэк, если файлы изменились.
                       docker compose up -d --build
-                      
-                      # Чистим старые образы, чтобы не забивать место на VPS
                       docker image prune -f
-                      
                       echo "Deploy complete!"
