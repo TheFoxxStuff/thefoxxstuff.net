@@ -41,7 +41,6 @@ services:
     build: ./backend
     container_name: thefoxxstuff-api
     restart: unless-stopped
-    user: "1001:1001"
     depends_on:
       - mongodb
       - redis
