@@ -19,7 +19,8 @@ jobs:
           key: ${{ vars.VPS_SSH_KEY }}
           script: |
                       cd ~/thefoxxstuff.net
-                      git pull origin migration-to-svelte-deploy
-                      docker compose up -d --build
+                      git fetch origin
+                      git reset --hard origin/migration-to-svelte-deploy
+                      docker compose up -d --build --force-recreate
                       docker image prune -f
-                      echo "Deploy complete!"
+                      echo "Deploy complete and branches synced!"
