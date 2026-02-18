@@ -41,4 +41,4 @@ USER appuser
 EXPOSE 8000
 
 # 2 воркера — оптимум для 2GB VPS
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--log-config", "/dev/null"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
