@@ -5,12 +5,35 @@ services:
     restart: unless-stopped
     volumes:
       - mongodb_data:/data/db
+    # Limit mongo RAM on 2GB VPS
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  redis:
+    image: redis:7-alpine
+    container_name: thefoxxstuff-redis
+    restart: unless-stopped
+    # Limit to 64MB, evict least-recently-used keys when full
+    command: >
+      redis-server
+      --maxmemory 64mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    deploy:
+      resources:
+        limits:
+          memory: 80m
+
   backend:
     build: ./backend
     container_name: thefoxxstuff-api
     restart: unless-stopped
     depends_on:
       - mongodb
+      - redis
     volumes:
       - uploads_data:/app/uploads
     ports:
@@ -20,17 +43,29 @@ services:
       - DATABASE_NAME=thefoxxstuff
       - SECRET_KEY=${SECRET_KEY}
       - FRONTEND_URL=https://front.thefoxxstuff.net
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=INFO
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
   frontend:
-      build:
-        context: ./frontend
-        args:
-          - VITE_API_BASE=https://api.thefoxxstuff.net/api
-      container_name: thefoxxstuff-front
-      restart: unless-stopped
-      volumes:
-        - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      ports:
-        - "127.0.0.1:3000:80"
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE=https://api.thefoxxstuff.net/api
+    container_name: thefoxxstuff-front
+    restart: unless-stopped
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:3000:80"
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
 volumes:
   mongodb_data:
   uploads_data:

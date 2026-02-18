@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     medium_size: tuple = (1200, 1200)
     allowed_extensions: set = {"jpg", "jpeg", "png", "gif", "webp"}
 
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+
+    # Cache TTLs (seconds)
+    cache_ttl_list: int = 60        # paginated lists
+    cache_ttl_item: int = 120       # individual items / slugs
+    cache_ttl_static: int = 300     # links, banner, about (rarely change)
+
     class Config:
         env_file = str(Path(__file__).parent.parent / ".env")
 
