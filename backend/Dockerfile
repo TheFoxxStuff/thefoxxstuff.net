@@ -34,7 +34,9 @@ RUN mkdir -p /app/uploads
 
 # Запускаем не от root — безопасность
 RUN adduser --disabled-password --gecos '' --uid 1001 appuser \
-    && chown -R appuser:appuser /app
+    && chown -R appuser:appuser /app \
+    && mkdir -p /app/uploads \
+    && chown -R appuser:appuser /app/uploads
 
 USER appuser
 
