@@ -43,6 +43,10 @@ async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
     return slug
 
 
+async def _invalidate():
+    await cache_delete_pattern("blog:*")
+
+
 async def enrich_post(db, post: dict) -> dict:
     """Обогащает один пост данными cover_image_info и og_image_info."""
     from bson import ObjectId
@@ -53,7 +57,6 @@ async def enrich_post(db, post: dict) -> dict:
             if img:
                 post[info_field] = serialize(dict(img))
     return post
-    await cache_delete_pattern("blog:*")
 
 
 async def enrich_posts_batch(db, posts: list) -> list:

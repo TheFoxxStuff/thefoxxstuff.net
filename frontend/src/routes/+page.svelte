@@ -73,7 +73,6 @@
   <Banner
     {banner}
     {currentSlide}
-    {api}
     {getImageUrl}
     {nextSlide}
     {prevSlide}

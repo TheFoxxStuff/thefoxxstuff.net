@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends, Response
 from database import get_db
 from models import ArtWorkCreate, PaginatedResponse
 from auth import get_current_admin
-from cache import cache_get_or_set, cache_delete_pattern, increment_view_buffer
+from cache import cache_get_or_set, cache_delete_pattern
 from config import settings
 
 logger = logging.getLogger(__name__)

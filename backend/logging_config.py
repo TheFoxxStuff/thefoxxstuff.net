@@ -38,9 +38,14 @@ def setup_logging() -> None:
         "websockets",
         "multipart",
         "python_multipart",
-        "uvicorn.access",   # access log is already handled by uvicorn
     ):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+    # Полностью отключаем uvicorn access лог:
+    # он пишет URL как есть, включая ?token=<JWT> для WebSocket соединений
+    access_logger = logging.getLogger("uvicorn.access")
+    access_logger.setLevel(logging.WARNING)
+    access_logger.propagate = False  # не передавать root handler'у
 
     # Keep uvicorn error logs visible
     logging.getLogger("uvicorn.error").setLevel(logging.INFO)

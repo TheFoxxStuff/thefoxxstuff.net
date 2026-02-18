@@ -90,7 +90,7 @@ async def rate_limit_middleware(request: Request, call_next):
         or (request.client.host if request.client else "0.0.0.0")
     )
 
-    if await is_rate_limited(client_ip, limit=120, window=60):
+    if await is_rate_limited(client_ip, limit=300, window=60):
         logger.warning("Rate limited: %s %s", client_ip, request.url.path)
         return JSONResponse(status_code=429, content={"detail": "Too many requests"})
 

@@ -20,6 +20,28 @@ def serialize(doc):
     return doc
 
 
+async def enrich_banner(db, banner: dict) -> dict:
+    """Добавляет image_url к каждому слайду чтобы фронтенд не делал getInfo."""
+    from bson import ObjectId
+    slides = banner.get("slides", [])
+    if not slides:
+        return banner
+    image_ids = [
+        ObjectId(s["image"]) for s in slides
+        if s.get("image") and ObjectId.is_valid(s["image"])
+    ]
+    images_map = {}
+    if image_ids:
+        async for img in db.images.find({"_id": {"$in": image_ids}}):
+            images_map[str(img["_id"])] = serialize(dict(img))
+    for slide in slides:
+        img_id = slide.get("image")
+        if img_id and img_id in images_map:
+            slide["image_info"] = images_map[img_id]
+    banner["slides"] = slides
+    return banner
+
+
 @router.get("")
 async def get_banner(response: Response):
     response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_static}"
@@ -31,7 +53,8 @@ async def get_banner(response: Response):
             default = {"slides": []}
             await db.banner.insert_one(default)
             banner = await db.banner.find_one()
-        return serialize(dict(banner))
+        banner = serialize(dict(banner))
+        return await enrich_banner(db, banner)
 
     return await cache_get_or_set(CACHE_KEY, fetch, settings.cache_ttl_static)
 

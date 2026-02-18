@@ -1,29 +1,39 @@
 <script>
   import { Image } from 'lucide-svelte';
-  
-  // Принимаем данные баннера и функции управления как пропсы
-  let { 
-    banner = { slides: [] }, 
+
+  let {
+    banner = { slides: [] },
     currentSlide = 0,
-    api,
     getImageUrl,
     nextSlide,
     prevSlide,
-    goToSlide 
-  } = $props(); // Используем Svelte 5 синтаксис ($props). Если у вас Svelte 4, используйте export let.
+    goToSlide
+  } = $props();
+
+  // Бэкенд теперь отдаёт image_info в каждом слайде (батч $in запрос).
+  // api.upload.getInfo() внутри компонента убран.
+  function slideImageUrl(slide) {
+    if (slide.image_info) return getImageUrl(slide.image_info, 'original');
+    return null;
+  }
 </script>
 
 <section class="relative h-72 md:h-96 bg-dark-900 rounded-2xl overflow-hidden">
   {#if banner.slides.length > 0}
     {#each banner.slides as slide, i}
-      <div 
+      <div
         class="absolute inset-0 transition-opacity duration-500 {i === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
       >
-        {#await api.upload.getInfo(slide.image) then imgInfo}
-          <img loading="lazy" src={getImageUrl(imgInfo, 'original')} alt={slide.title} class="w-full h-full object-cover" />
-        {:catch}
+        {#if slideImageUrl(slide)}
+          <img
+            loading={i === 0 ? 'eager' : 'lazy'}
+            src={slideImageUrl(slide)}
+            alt={slide.title}
+            class="w-full h-full object-cover"
+          />
+        {:else}
           <div class="w-full h-full bg-gradient-to-r from-accent-green/10 to-accent-cyan/10"></div>
-        {/await}
+        {/if}
 
         <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 via-transparent to-dark-950/30"></div>
 
@@ -37,20 +47,19 @@
         </div>
       </div>
     {/each}
-    
+
     {#if banner.slides.length > 1}
       <div class="absolute right-[19px] bottom-[14px] flex gap-2 z-20">
-        <button 
-          onclick={prevSlide} 
+        <button
+          onclick={prevSlide}
           class="w-[36px] h-[36px] flex items-center justify-center bg-dark-900/60 hover:bg-dark-800 rounded-[10px] text-white/60 transition-colors backdrop-blur-[2px]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-
-        <button 
-          onclick={nextSlide} 
+        <button
+          onclick={nextSlide}
           class="w-[36px] h-[36px] flex items-center justify-center bg-dark-900/60 hover:bg-dark-800 rounded-[10px] text-white/60 transition-colors backdrop-blur-[2px]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -61,8 +70,8 @@
 
       <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {#each banner.slides as _, i}
-          <button 
-            onclick={() => goToSlide(i)} 
+          <button
+            onclick={() => goToSlide(i)}
             class="w-2 h-2 rounded-full transition-colors {i === currentSlide ? 'bg-white' : 'bg-dark-500 hover:bg-dark-400'}"
             aria-label="Go to slide {i + 1}"
           ></button>

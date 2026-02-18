@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends, Response
 from database import get_db
 from models import MusicReleaseCreate, PaginatedResponse
 from auth import get_current_admin
-from cache import cache_get, cache_set, cache_delete_pattern, cache_get_or_set, increment_view_buffer
+from cache import cache_delete_pattern, cache_get_or_set
 from config import settings
 
 logger = logging.getLogger(__name__)
