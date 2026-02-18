@@ -28,25 +28,20 @@
     const diff = now - d;
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
-    
-    if (mins < 1) return 'now';
+    if (mins < 1) return 'just now';
     if (mins < 60) return `${mins}m ago`;
     if (hours < 24) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Group consecutive messages from same user (within 5 min)
   function groupMessages(msgs) {
     const groups = [];
     for (let i = 0; i < msgs.length; i++) {
       const msg = msgs[i];
       const prev = i > 0 ? msgs[i - 1] : null;
-
       const sameUser = prev && prev.username === msg.username;
       const withinTime = prev && (new Date(msg.created_at) - new Date(prev.created_at)) < 300000;
-
       if (sameUser && withinTime) {
-        // Append to last group
         groups[groups.length - 1].messages.push(msg);
       } else {
         groups.push({
@@ -67,22 +62,12 @@
   function connect() {
     const token = $auth?.token;
     const url = `${WS_BASE}/chat/ws${token ? `?token=${token}` : ''}`;
+    try { ws = new WebSocket(url); } catch { return; }
 
-    try {
-      ws = new WebSocket(url);
-    } catch {
-      return;
-    }
-
-    ws.onopen = () => {
-      connected = true;
-      error = '';
-    };
-
+    ws.onopen = () => { connected = true; error = ''; };
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-
         if (data.type === 'history') {
           messages = data.messages || [];
           tick().then(scrollToBottom);
@@ -97,18 +82,11 @@
         }
       } catch {}
     };
-
     ws.onclose = () => {
       connected = false;
-      // Reconnect after 3s
-      setTimeout(() => {
-        if (!ws || ws.readyState === WebSocket.CLOSED) connect();
-      }, 3000);
+      setTimeout(() => { if (!ws || ws.readyState === WebSocket.CLOSED) connect(); }, 3000);
     };
-
-    ws.onerror = () => {
-      connected = false;
-    };
+    ws.onerror = () => { connected = false; };
   }
 
   function sendMessage() {
@@ -118,16 +96,12 @@
       setTimeout(() => error = '', 3000);
       return;
     }
-
     ws.send(JSON.stringify({ type: 'message', text: inputText.trim() }));
     inputText = '';
   }
 
   function handleKeydown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
   function handleScroll() {
@@ -143,59 +117,54 @@
     }
   }
 
-  function getRoleColor(role) {
-    if (role === 'admin') return 'text-accent-green';
-    return 'text-[--w]';
-  }
-
-  onMount(() => {
-    connect();
-  });
-
-  onDestroy(() => {
-    if (ws) {
-      ws.onclose = null;
-      ws.close();
-    }
-  });
+  onMount(() => { connect(); });
+  onDestroy(() => { if (ws) { ws.onclose = null; ws.close(); } });
 </script>
 
-<section class="card overflow-hidden">
+<div class="rounded-[14px] overflow-hidden" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
   <!-- Header -->
   <button
-    class="w-full flex items-center justify-between px-5 py-3.5 bg-[--w5] border-b border-[--w8] cursor-pointer hover:bg-[--w8] transition select-none"
+    class="w-full flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-[--w5] transition-colors select-none"
     onclick={() => collapsed = !collapsed}
+    style="border-bottom: {collapsed ? 'none' : '1px solid rgba(255,255,255,0.06)'};"
   >
     <div class="flex items-center gap-2.5">
-      <MessageCircle size={18} class="text-accent-green" />
-      <span class="font-display text-sm tracking-wide">Guest Chat</span>
-      <span class="text-xs text-[--w60] bg-[--w8] px-2 py-0.5 rounded-full">{messages.length}</span>
+      <div class="w-7 h-7 rounded-[7px] flex items-center justify-center" style="background: rgba(115,238,7,0.1);">
+        <MessageCircle size={14} style="color: #73EE07;" />
+      </div>
+      <span class="font-display text-[13px] tracking-wide text-[--w]">Live Chat</span>
+      {#if messages.length > 0}
+        <span class="text-[11px] px-1.5 py-[2px] rounded-full" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5);">{messages.length}</span>
+      {/if}
     </div>
     <div class="flex items-center gap-3">
-      <div class="flex items-center gap-1.5 text-xs text-[--w60]">
-        <div class="w-2 h-2 rounded-full {connected ? 'bg-accent-green' : 'bg-accent-red'} animate-pulse"></div>
-        <Users size={12} />
-        {onlineCount}
+      <div class="flex items-center gap-1.5">
+        <div class="w-1.5 h-1.5 rounded-full {connected ? 'bg-[--green]' : 'bg-red-500'}" style="box-shadow: {connected ? '0 0 6px rgba(115,238,7,0.5)' : 'none'};"></div>
+        <div class="flex items-center gap-1" style="color: rgba(255,255,255,0.4);">
+          <Users size={11} />
+          <span class="text-[11px]">{onlineCount}</span>
+        </div>
       </div>
-      <ChevronDown size={16} class="text-[--w60] transition-transform {collapsed ? '-rotate-90' : ''}" />
+      <ChevronDown size={15} style="color: rgba(255,255,255,0.4); transition: transform 200ms; transform: rotate({collapsed ? '-90deg' : '0deg'});" />
     </div>
   </button>
 
   {#if !collapsed}
-    <!-- Messages Area -->
+    <!-- Messages -->
     <div
       bind:this={messagesContainer}
       onscroll={handleScroll}
-      class="h-[360px] overflow-y-auto px-2 py-2 space-y-0 chat-scroll"
+      class="overflow-y-auto px-2 py-2 chat-scroll"
+      style="height: 340px;"
     >
       {#if messages.length === 0}
-        <div class="flex flex-col items-center justify-center h-full text-dark-500 text-sm gap-2">
-          <MessageCircle size={32} />
-          <span>No messages yet. Start the conversation!</span>
+        <div class="flex flex-col items-center justify-center h-full gap-3" style="color: rgba(255,255,255,0.2);">
+          <MessageCircle size={28} />
+          <span class="text-[13px]">No messages yet. Be the first!</span>
         </div>
       {:else}
-        {#each grouped as group}
-          <div class="flex gap-3 px-3 py-1.5 rounded-lg hover:bg-[--w5] transition group/msg">
+        {#each grouped as group, gi}
+          <div class="flex gap-3 px-3 py-2 rounded-[10px] hover:bg-[--w5] transition-colors group/msg">
             <!-- Avatar -->
             <div class="flex-shrink-0 mt-0.5">
               {#if group.avatar_thumb}
@@ -203,11 +172,11 @@
                   <img
                     src={getAvatarUrl(group.avatar_thumb)}
                     alt={group.username}
-                    class="w-9 h-9 rounded-full object-cover"
+                    class="w-8 h-8 rounded-full object-cover"
                   />
                 </a>
               {:else}
-                <a href="/profile/{group.username}" class="block w-9 h-9 rounded-full bg-dark-800 flex items-center justify-center text-dark-500 text-xs font-bold uppercase">
+                <a href="/profile/{group.username}" class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold uppercase block" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);">
                   {group.username.charAt(0)}
                 </a>
               {/if}
@@ -215,48 +184,57 @@
 
             <!-- Content -->
             <div class="flex-1 min-w-0">
-              <div class="flex items-baseline gap-2">
-                <a href="/profile/{group.username}" class="font-medium text-sm {getRoleColor(group.role)} hover:underline">
+              <div class="flex items-center gap-1.5 mb-[3px]">
+                <a
+                  href="/profile/{group.username}"
+                  class="text-[13px] font-semibold hover:underline {group.role === 'admin' ? 'text-[--green]' : 'text-[--w]'}"
+                >
                   {group.display_name || group.username}
                 </a>
                 {#if group.role === 'admin'}
-                  <span class="inline-flex items-center gap-0.5 text-[10px] text-accent-green bg-accent-green/10 px-1.5 py-0 rounded">
-                    <Shield size={9} />
-                    ADMIN
+                  <span class="inline-flex items-center gap-[3px] text-[9px] font-bold px-1.5 py-[1px] rounded-[4px]" style="background: rgba(115,238,7,0.1); color: #73EE07;">
+                    <Shield size={8} />ADMIN
                   </span>
                 {/if}
-                <span class="text-[11px] text-dark-500">{formatTime(group.created_at)}</span>
+                <span class="text-[11px]" style="color: rgba(255,255,255,0.25);">{formatTime(group.created_at)}</span>
               </div>
-              {#each group.messages as msg, idx}
-                <div class="text-sm text-[--w60] leading-[1.4] {idx > 0 ? 'mt-0.5' : 'mt-0'} break-words">{msg.text}</div>
+              {#each group.messages as msg}
+                <p class="text-[13px] leading-[1.45] break-words" style="color: rgba(255,255,255,0.65);">{msg.text}</p>
               {/each}
             </div>
           </div>
         {/each}
       {/if}
+    </div>
 
-      {#if !isAtBottom && messages.length > 0}
+    <!-- New messages scroll button -->
+    {#if !isAtBottom && messages.length > 0}
+      <div class="flex justify-center pb-1">
         <button
           onclick={scrollToBottom}
-          class="sticky bottom-2 left-1/2 -translate-x-1/2 bg-dark-800 border border-[--w12] text-xs text-[--w60] px-3 py-1 rounded-full hover:text-[--w] transition z-10"
+          class="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full transition-all hover:bg-[--w8] animate-fade-in"
+          style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5);"
         >
-          ↓ New messages
+          <ChevronDown size={12} />
+          New messages
         </button>
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     <!-- Error -->
     {#if error}
-      <div class="px-4 py-1.5 text-xs text-accent-red bg-accent-red/10">{error}</div>
+      <div class="px-4 py-2 text-[12px] text-red-400 animate-fade-in" style="background: rgba(239,68,68,0.08);">{error}</div>
     {/if}
 
-    <!-- Input Area -->
-    <div class="px-3 py-2.5 border-t border-[--w8]">
+    <!-- Input -->
+    <div class="px-3 py-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
       {#if $auth?.token}
         <div class="flex items-center gap-2">
           <input
             type="text"
-            class="flex-1 bg-[--w5] border border-[--w8] rounded-lg px-3 py-2 text-sm text-[--w] placeholder-dark-500 focus:outline-none focus:border-[--w18] transition"
+            class="flex-1 rounded-[10px] px-3 py-2 text-[13px] text-[--w] placeholder-[--w40] focus:outline-none transition-all"
+            style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);"
+            style:border-color={inputText ? 'rgba(115,238,7,0.3)' : undefined}
             placeholder="Type a message..."
             maxlength="500"
             bind:value={inputText}
@@ -265,32 +243,24 @@
           <button
             onclick={sendMessage}
             disabled={!inputText.trim() || sending}
-            class="p-2 rounded-lg bg-accent-green text-dark-950 hover:bg-accent-green/90 disabled:opacity-30 transition"
+            class="w-9 h-9 flex items-center justify-center rounded-[10px] transition-all hover:scale-105 active:scale-95 disabled:opacity-30"
+            style="background: {inputText.trim() ? '#73EE07' : 'rgba(115,238,7,0.3)'}; color: black;"
           >
-            <Send size={16} />
+            <Send size={15} />
           </button>
         </div>
       {:else}
-        <div class="text-center py-2">
-          <a href="/auth/login" class="text-sm text-accent-green hover:underline">Login to send messages</a>
+        <div class="text-center py-1.5">
+          <a href="/auth/login" class="text-[13px] hover:underline" style="color: #73EE07;">Login to join the chat</a>
         </div>
       {/if}
     </div>
   {/if}
-</section>
+</div>
 
 <style>
-  .chat-scroll::-webkit-scrollbar {
-    width: 6px;
-  }
-  .chat-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .chat-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 3px;
-  }
-  .chat-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.2);
-  }
+  .chat-scroll::-webkit-scrollbar { width: 4px; }
+  .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+  .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+  .chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 </style>

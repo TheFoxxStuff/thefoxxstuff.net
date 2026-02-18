@@ -21,7 +21,7 @@
   .admin-link { @apply flex items-center gap-3 px-4 py-3 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors; }
   .admin-link-active { @apply bg-dark-800 text-white; }
   .filter { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-50 bg-[--w5] text-[--w60] hover:text-[--w] hover:bg-[--w8]; }
-  .search { @apply  w-full focus:outline-none focus:border-[--w];}
+  .search { @apply w-full focus:outline-none focus:border-[--w];}
 }
 
 @layer utilities {
@@ -45,42 +45,112 @@
 }
 
 :root {
-  --bg: rgb(17, 17, 17);
+  --bg: rgb(10, 10, 10);
   --w: #FFFFFF;
   --w60: hsl(0, 0%, 100%, 60%);
+  --w40: hsl(0, 0%, 100%, 40%);
   --w18: hsl(0, 0%, 100%, 18%);
   --w12: hsl(0, 0%, 100%, 12%);
   --w8: hsl(0, 0%, 100%, 8%);
   --w5: hsl(0, 0%, 100%, 5%);
-  --header: rgba(6, 6, 6, 0.8);
+  --w3: hsl(0, 0%, 100%, 3%);
+  --header: rgba(6, 6, 6, 0.88);
   --purple: #6D07EE;
   --green: #73EE07;
+  --green-dim: rgba(115, 238, 7, 0.15);
   --blue: #47ADFF;
   --b: #202020;
-  --select: rgba(6, 6, 6, 0.86);
+  --select: rgba(6, 6, 6, 0.94);
   --none: rgba(0, 0, 0, 0);
 }
 
 html {
   scrollbar-gutter: stable;
 }
+
+body {
+  background: var(--bg);
+}
+
 ::selection {
-  background: rgb(255, 255, 255, 0.10);
+  background: rgba(115, 238, 7, 0.15);
   color: #88ff00;
-  background-color: #88ff001f;
   text-shadow: none;
 }
 
-*::-webkit-scrollbar {
-  width: 12px;
+/* Scrollbar */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: #0a0a0a; }
+*::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.12); border-radius: 99px; }
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.22); }
+
+/* Keyframes */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes slide-in-bottom {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-*::-webkit-scrollbar-track {
-  background: #111;
+.animate-fade-in-up { animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-in { animation: fadeIn 0.3s ease both; }
+.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-slide-in-bottom { animation: slide-in-bottom 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.delay-50 { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+/* Shimmer skeleton */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 8px;
 }
 
-*::-webkit-scrollbar-thumb {
-  background-color: #7e7e7e;
-  border-radius: 20px;
-  border: 3px solid #111;
+/* Focus */
+:focus-visible {
+  outline: 2px solid rgba(115, 238, 7, 0.45);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Glow utilities */
+.glow-green { box-shadow: 0 0 24px rgba(115, 238, 7, 0.18); }
+.text-glow { text-shadow: 0 0 18px rgba(115, 238, 7, 0.35); }
+
+/* Card hover lift */
+.card-lift {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+}
+.card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }

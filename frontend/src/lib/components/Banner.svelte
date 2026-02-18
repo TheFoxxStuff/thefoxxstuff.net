@@ -1,5 +1,5 @@
 <script>
-  import { Image } from 'lucide-svelte';
+  import { Image, ChevronLeft, ChevronRight } from 'lucide-svelte';
 
   let {
     banner = { slides: [] },
@@ -10,19 +10,18 @@
     goToSlide
   } = $props();
 
-  // Бэкенд теперь отдаёт image_info в каждом слайде (батч $in запрос).
-  // api.upload.getInfo() внутри компонента убран.
   function slideImageUrl(slide) {
     if (slide.image_info) return getImageUrl(slide.image_info, 'original');
     return null;
   }
 </script>
 
-<section class="relative h-72 md:h-96 bg-dark-900 rounded-2xl overflow-hidden">
+<section class="relative rounded-[16px] overflow-hidden bg-dark-900" style="height: clamp(200px, 38vw, 340px);">
   {#if banner.slides.length > 0}
     {#each banner.slides as slide, i}
       <div
-        class="absolute inset-0 transition-opacity duration-500 {i === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+        class="absolute inset-0 transition-all duration-600 ease-in-out"
+        style="opacity: {i === currentSlide ? 1 : 0}; pointer-events: {i === currentSlide ? 'auto' : 'none'};"
       >
         {#if slideImageUrl(slide)}
           <img
@@ -32,54 +31,62 @@
             class="w-full h-full object-cover"
           />
         {:else}
-          <div class="w-full h-full bg-gradient-to-r from-accent-green/10 to-accent-cyan/10"></div>
+          <div class="w-full h-full" style="background: linear-gradient(135deg, rgba(35,130,120,0.2) 0%, rgba(70,40,120,0.2) 100%)"></div>
         {/if}
 
-        <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 via-transparent to-dark-950/30"></div>
+        <!-- Gradient overlays -->
+        <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.25) 100%)"></div>
 
-        <div class="absolute left-[19px] bottom-[14px] z-10">
-          <div class="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-dark-900/60 rounded-lg text-sm text-white/60 backdrop-blur-[2px]">
-            <Image size={20} class="shrink-0" />
-            <span class="text-dark-300 leading-[20px] flex items-center">
-              {slide.title ?? 'Banner'}
-            </span>
+        <!-- Title label -->
+        {#if slide.title}
+          <div class="absolute left-4 bottom-4 z-10">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-[8px] backdrop-blur-md" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);">
+              <Image size={14} class="text-[--w60] shrink-0" />
+              <span class="text-[13px] text-[--w60]">{slide.title}</span>
+            </div>
           </div>
-        </div>
+        {/if}
       </div>
     {/each}
 
     {#if banner.slides.length > 1}
-      <div class="absolute right-[19px] bottom-[14px] flex gap-2 z-20">
-        <button
-          onclick={prevSlide}
-          class="w-[36px] h-[36px] flex items-center justify-center bg-dark-900/60 hover:bg-dark-800 rounded-[10px] text-white/60 transition-colors backdrop-blur-[2px]"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <button
-          onclick={nextSlide}
-          class="w-[36px] h-[36px] flex items-center justify-center bg-dark-900/60 hover:bg-dark-800 rounded-[10px] text-white/60 transition-colors backdrop-blur-[2px]"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
-      </div>
+      <!-- Prev/Next buttons -->
+      <button
+        onclick={prevSlide}
+        class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-150 hover:scale-105"
+        style="background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.12);"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft size={18} class="text-white" />
+      </button>
+      <button
+        onclick={nextSlide}
+        class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-150 hover:scale-105"
+        style="background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.12);"
+        aria-label="Next slide"
+      >
+        <ChevronRight size={18} class="text-white" />
+      </button>
 
-      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+      <!-- Dots -->
+      <div class="absolute bottom-4 right-4 flex gap-1.5 z-20">
         {#each banner.slides as _, i}
           <button
             onclick={() => goToSlide(i)}
-            class="w-2 h-2 rounded-full transition-colors {i === currentSlide ? 'bg-white' : 'bg-dark-500 hover:bg-dark-400'}"
-            aria-label="Go to slide {i + 1}"
+            class="h-[3px] rounded-full transition-all duration-300 {i === currentSlide ? 'w-6 bg-white' : 'w-2 bg-white/35 hover:bg-white/55'}"
+            aria-label="Slide {i + 1}"
           ></button>
         {/each}
       </div>
     {/if}
   {:else}
-    <div class="absolute inset-0 bg-gradient-to-r from-accent-green/10 to-accent-cyan/10"></div>
-    <div class="absolute bottom-4 left-4 text-sm text-dark-400">No banner slides</div>
+    <!-- Empty state -->
+    <div class="absolute inset-0 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(35,130,120,0.12) 0%, rgba(70,40,120,0.12) 100%)">
+      <p class="text-[13px] text-[--w40]">No banner slides</p>
+    </div>
   {/if}
 </section>
+
+<style>
+  .duration-600 { transition-duration: 600ms; }
+</style>
