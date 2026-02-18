@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - migration-to-svelte-deploy
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
 
             cd ~/thefoxxstuff.net
             git fetch origin
-            git reset --hard origin/main
+            git reset --hard origin/migration-to-svelte-deploy
 
             # Пересобираем только backend (frontend пересобирается только если изменился)
             docker compose build backend
