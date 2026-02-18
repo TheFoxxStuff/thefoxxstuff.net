@@ -12,7 +12,6 @@
     { href: '/arts', label: 'Arts' },
     { href: '/links', label: 'Links' },
     { href: '/about', label: 'About' },
-    { href: '/Fa', label: 'Fa' },
   ];
 
   const isActive = (href, pathname) => href === '/' ? pathname === '/' : pathname.startsWith(href);
