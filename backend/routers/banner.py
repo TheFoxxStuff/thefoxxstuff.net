@@ -1,11 +1,11 @@
 import logging
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 
 from database import get_db
 from models import BannerCreate
 from auth import get_current_admin
-from cache import cache_get, cache_set, cache_delete
+from cache import cache_get_or_set, cache_delete
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -21,20 +21,19 @@ def serialize(doc):
 
 
 @router.get("")
-async def get_banner():
-    cached = await cache_get(CACHE_KEY)
-    if cached is not None:
-        return cached
+async def get_banner(response: Response):
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_static}"
 
-    db = get_db()
-    banner = await db.banner.find_one()
-    if not banner:
-        default = {"slides": []}
-        await db.banner.insert_one(default)
+    async def fetch():
+        db = get_db()
         banner = await db.banner.find_one()
-    result = serialize(dict(banner))
-    await cache_set(CACHE_KEY, result, settings.cache_ttl_static)
-    return result
+        if not banner:
+            default = {"slides": []}
+            await db.banner.insert_one(default)
+            banner = await db.banner.find_one()
+        return serialize(dict(banner))
+
+    return await cache_get_or_set(CACHE_KEY, fetch, settings.cache_ttl_static)
 
 
 @router.put("")

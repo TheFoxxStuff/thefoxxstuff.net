@@ -1,10 +1,10 @@
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from database import get_db
 from models import AboutInfo
 from auth import get_current_admin
-from cache import cache_get, cache_set, cache_delete
+from cache import cache_get_or_set, cache_delete
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -20,20 +20,19 @@ def serialize(doc):
 
 
 @router.get("")
-async def get_about():
-    cached = await cache_get(CACHE_KEY)
-    if cached is not None:
-        return cached
+async def get_about(response: Response):
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_static}"
 
-    db = get_db()
-    about = await db.about.find_one()
-    if not about:
-        default = AboutInfo().model_dump()
-        await db.about.insert_one(default)
+    async def fetch():
+        db = get_db()
         about = await db.about.find_one()
-    result = serialize(dict(about))
-    await cache_set(CACHE_KEY, result, settings.cache_ttl_static)
-    return result
+        if not about:
+            default = AboutInfo().model_dump()
+            await db.about.insert_one(default)
+            about = await db.about.find_one()
+        return serialize(dict(about))
+
+    return await cache_get_or_set(CACHE_KEY, fetch, settings.cache_ttl_static)
 
 
 @router.put("")

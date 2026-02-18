@@ -4,12 +4,12 @@ from math import ceil
 from datetime import datetime
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Response
 
 from database import get_db
 from models import ArtWorkCreate, PaginatedResponse
 from auth import get_current_admin
-from cache import cache_get, cache_set, cache_delete_pattern
+from cache import cache_get_or_set, cache_delete_pattern, increment_view_buffer
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,27 @@ async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
     return slug
 
 
+async def enrich_artworks_batch(db, artworks: list) -> list:
+    """N+1 fix: загружает все изображения для списка артов одним $in запросом."""
+    image_ids = [
+        ObjectId(a["image"]) for a in artworks
+        if a.get("image") and ObjectId.is_valid(a["image"])
+    ]
+    images_map = {}
+    if image_ids:
+        async for img in db.images.find({"_id": {"$in": image_ids}}):
+            images_map[str(img["_id"])] = serialize(dict(img))
+
+    for artwork in artworks:
+        img_id = artwork.get("image")
+        if img_id and img_id in images_map:
+            artwork["image_info"] = images_map[img_id]
+
+    return artworks
+
+
 async def enrich_with_image(db, artwork):
+    """Для одного элемента."""
     if artwork.get("image") and ObjectId.is_valid(artwork["image"]):
         image = await db.images.find_one({"_id": ObjectId(artwork["image"])})
         if image:
@@ -55,113 +75,107 @@ async def _invalidate():
     await cache_delete_pattern("arts:*")
 
 
-# ─── GET (cached) ─────────────────────────────────────────────────────────────
+# ─── GET (cached + Cache-Control) ────────────────────────────────────────────
 
 @router.get("")
 async def get_artworks(
+    response: Response,
     page: int = Query(1, ge=1),
     limit: int = Query(12, ge=1, le=100),
     year: int = Query(None),
     sort: str = Query("newest"),
 ):
+    response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
     key = f"arts:list:{page}:{limit}:{year}:{sort}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
 
-    db = get_db()
-    query = {}
-    if year:
-        query["year"] = year
+    async def fetch():
+        db = get_db()
+        query = {}
+        if year:
+            query["year"] = year
+        sort_map = {"newest": ("created_at", -1), "oldest": ("created_at", 1), "views": ("views", -1)}
+        sort_field, sort_order = sort_map.get(sort, ("created_at", -1))
+        skip = (page - 1) * limit
+        total = await db.arts.count_documents(query)
+        cursor = db.arts.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
+        items = [serialize(dict(doc)) async for doc in cursor]
+        items = await enrich_artworks_batch(db, items)   # N+1 fix
+        pages = ceil(total / limit) if total > 0 else 1
+        return PaginatedResponse(
+            items=items, total=total, page=page, pages=pages,
+            has_next=page < pages, has_prev=page > 1,
+        ).model_dump()
 
-    sort_map = {"newest": ("created_at", -1), "oldest": ("created_at", 1), "views": ("views", -1)}
-    sort_field, sort_order = sort_map.get(sort, ("created_at", -1))
-
-    skip = (page - 1) * limit
-    total = await db.arts.count_documents(query)
-    cursor = db.arts.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
-    items = []
-    async for doc in cursor:
-        artwork = serialize(dict(doc))
-        artwork = await enrich_with_image(db, artwork)
-        items.append(artwork)
-    pages = ceil(total / limit) if total > 0 else 1
-    result = PaginatedResponse(
-        items=items, total=total, page=page, pages=pages,
-        has_next=page < pages, has_prev=page > 1,
-    ).model_dump()
-    await cache_set(key, result, settings.cache_ttl_list)
-    return result
+    return await cache_get_or_set(key, fetch, settings.cache_ttl_list)
 
 
 @router.get("/years")
-async def get_years():
-    cached = await cache_get("arts:years")
-    if cached is not None:
-        return cached
-    db = get_db()
-    years = sorted(await db.arts.distinct("year"), reverse=True)
-    await cache_set("arts:years", years, settings.cache_ttl_list)
-    return years
+async def get_years(response: Response):
+    response.headers["Cache-Control"] = "public, max-age=120"
+
+    async def fetch():
+        db = get_db()
+        return sorted(await db.arts.distinct("year"), reverse=True)
+
+    return await cache_get_or_set("arts:years", fetch, settings.cache_ttl_list)
 
 
 @router.get("/grouped")
-async def get_grouped_artworks(limit_per_year: int = Query(7)):
+async def get_grouped_artworks(response: Response, limit_per_year: int = Query(7)):
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
     key = f"arts:grouped:{limit_per_year}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
 
-    db = get_db()
-    years = sorted(await db.arts.distinct("year"), reverse=True)
-    result = {}
-    for year in years:
-        cursor = db.arts.find({"year": year}).sort("created_at", -1).limit(limit_per_year)
-        artworks = []
-        async for doc in cursor:
-            artwork = serialize(dict(doc))
-            artwork = await enrich_with_image(db, artwork)
-            artworks.append(artwork)
-        result[str(year)] = artworks
-    await cache_set(key, result, settings.cache_ttl_list)
-    return result
+    async def fetch():
+        db = get_db()
+        years = sorted(await db.arts.distinct("year"), reverse=True)
+        result = {}
+        for year in years:
+            cursor = db.arts.find({"year": year}).sort("created_at", -1).limit(limit_per_year)
+            artworks = [serialize(dict(doc)) async for doc in cursor]
+            artworks = await enrich_artworks_batch(db, artworks)  # N+1 fix
+            result[str(year)] = artworks
+        return result
+
+    return await cache_get_or_set(key, fetch, settings.cache_ttl_list)
 
 
 @router.get("/by-slug/{slug}")
-async def get_artwork_by_slug(slug: str):
-    key = f"arts:item:slug:{slug}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_artwork_by_slug(slug: str, response: Response):
+    response.headers["Cache-Control"] = "public, max-age=60"
 
-    db = get_db()
-    artwork = await db.arts.find_one({"slug": slug})
-    if not artwork:
+    async def fetch():
+        db = get_db()
+        artwork = await db.arts.find_one({"slug": slug})
+        if not artwork:
+            return None
+        artwork = serialize(dict(artwork))
+        return await enrich_with_image(db, artwork)
+
+    result = await cache_get_or_set(f"arts:item:slug:{slug}", fetch, settings.cache_ttl_item)
+    if result is None:
         raise HTTPException(status_code=404, detail="Not found")
-    artwork = serialize(dict(artwork))
-    artwork = await enrich_with_image(db, artwork)
-    await cache_set(key, artwork, settings.cache_ttl_item)
-    return artwork
+    return result
 
 
 @router.get("/{artwork_id}")
-async def get_artwork(artwork_id: str):
-    key = f"arts:item:{artwork_id}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_artwork(artwork_id: str, response: Response):
+    response.headers["Cache-Control"] = "public, max-age=60"
 
-    db = get_db()
-    if ObjectId.is_valid(artwork_id):
-        artwork = await db.arts.find_one({"_id": ObjectId(artwork_id)})
-    else:
-        artwork = await db.arts.find_one({"slug": artwork_id})
-    if not artwork:
+    async def fetch():
+        db = get_db()
+        if ObjectId.is_valid(artwork_id):
+            artwork = await db.arts.find_one({"_id": ObjectId(artwork_id)})
+        else:
+            artwork = await db.arts.find_one({"slug": artwork_id})
+        if not artwork:
+            return None
+        artwork = serialize(dict(artwork))
+        return await enrich_with_image(db, artwork)
+
+    result = await cache_get_or_set(f"arts:item:{artwork_id}", fetch, settings.cache_ttl_item)
+    if result is None:
         raise HTTPException(status_code=404, detail="Not found")
-    artwork = serialize(dict(artwork))
-    artwork = await enrich_with_image(db, artwork)
-    await cache_set(key, artwork, settings.cache_ttl_item)
-    return artwork
+    return result
 
 
 # ─── Mutations ────────────────────────────────────────────────────────────────

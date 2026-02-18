@@ -3,17 +3,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from pathlib import Path
+import asyncio
+import logging
 
 from logging_config import setup_logging
-setup_logging()  # must be first
+setup_logging()  # первым делом
 
-import logging
-from database import connect_db, close_db
-from cache import init_cache, close_cache, is_rate_limited
+from database import connect_db, close_db, get_db
+from cache import init_cache, close_cache, is_rate_limited, flush_view_buffers
 from config import settings
 from routers import music, blog, arts, links, auth, stats, upload, banner, views, profile, chat
 
 logger = logging.getLogger(__name__)
+
+
+async def _view_flush_loop():
+    """Фоновая задача: сбрасывает буфер просмотров из Redis → MongoDB каждые 30 сек."""
+    while True:
+        await asyncio.sleep(30)
+        try:
+            db = get_db()
+            await flush_view_buffers(db)
+        except Exception as exc:
+            logger.warning("View flush loop error: %s", exc)
 
 
 @asynccontextmanager
@@ -21,8 +33,24 @@ async def lifespan(app: FastAPI):
     await connect_db()
     await init_cache()
     Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+
+    flush_task = asyncio.create_task(_view_flush_loop())
     logger.info("TheFoxxStuff API started")
+
     yield
+
+    flush_task.cancel()
+    try:
+        await flush_task
+    except asyncio.CancelledError:
+        pass
+
+    # Финальный flush перед выключением
+    try:
+        await flush_view_buffers(get_db())
+    except Exception:
+        pass
+
     await close_cache()
     await close_db()
     logger.info("TheFoxxStuff API stopped")
@@ -50,9 +78,10 @@ app.add_middleware(
 )
 
 
-# Rate limiting via Redis (falls back to allow when Redis is down)
+# Rate limiting через Redis
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
+    # Статические файлы не лимитируем
     if request.url.path.startswith("/api/upload/file/"):
         return await call_next(request)
 
@@ -62,7 +91,7 @@ async def rate_limit_middleware(request: Request, call_next):
     )
 
     if await is_rate_limited(client_ip, limit=120, window=60):
-        logger.warning("Rate limit hit: %s %s", client_ip, request.url.path)
+        logger.warning("Rate limited: %s %s", client_ip, request.url.path)
         return JSONResponse(status_code=429, content={"detail": "Too many requests"})
 
     return await call_next(request)
@@ -93,5 +122,5 @@ if __name__ == "__main__":
         host=settings.api_host,
         port=settings.api_port,
         reload=True,
-        log_config=None,  # use our logging_config
+        log_config=None,
     )

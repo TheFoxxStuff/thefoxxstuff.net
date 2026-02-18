@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - main
-      - migration-to-svelte-deploy
   workflow_dispatch:
 
 jobs:
@@ -11,16 +10,40 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ vars.VPS_HOST }}
           username: ${{ vars.VPS_USER }}
-          key: ${{ vars.VPS_SSH_KEY }}
+          key: ${{ secrets.VPS_SSH_KEY }}   # secrets, не vars!
           script: |
-                      cd ~/thefoxxstuff.net
-                      git fetch origin
-                      git reset --hard origin/migration-to-svelte-deploy
-                      docker compose up -d --build --force-recreate
-                      docker image prune -f
-                      echo "Deploy complete and branches synced!"
+            set -e   # любая ошибка = немедленный fail
+
+            cd ~/thefoxxstuff.net
+            git fetch origin
+            git reset --hard origin/main
+
+            # Пересобираем только backend (frontend пересобирается только если изменился)
+            docker compose build backend
+
+            # Плавный рестарт: MongoDB и Redis не трогаем, только backend
+            docker compose up -d --no-deps backend
+
+            # Healthcheck: ждём готовности (макс 40 сек)
+            echo "Waiting for backend healthcheck..."
+            timeout 40 bash -c 'until curl -sf http://localhost:8000/api/health > /dev/null; do
+              sleep 2
+              echo "  still waiting..."
+            done'
+
+            echo "Backend is healthy!"
+
+            # Пересобираем frontend только если он изменился
+            docker compose build frontend
+            docker compose up -d --no-deps frontend
+
+            # Чистим старые образы
+            docker image prune -f
+
+            echo "Deploy complete!"

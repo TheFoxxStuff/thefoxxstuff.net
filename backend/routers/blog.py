@@ -4,12 +4,12 @@ from math import ceil
 from datetime import datetime
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Response
 
 from database import get_db
 from models import BlogPostCreate, PaginatedResponse
 from auth import get_current_admin
-from cache import cache_get, cache_set, cache_delete_pattern
+from cache import cache_get_or_set, cache_delete_pattern
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -47,83 +47,82 @@ async def _invalidate():
     await cache_delete_pattern("blog:*")
 
 
-# ─── GET (cached) ─────────────────────────────────────────────────────────────
+# ─── GET (cached + Cache-Control) ────────────────────────────────────────────
 
 @router.get("")
 async def get_posts(
+    response: Response,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: str = Query(""),
     sort: str = Query("newest"),
 ):
-    key = f"blog:list:{page}:{limit}:{search}:{sort}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
-
-    db = get_db()
-    query = {}
+    # Поисковые запросы не кэшируем в браузере
     if search:
-        query["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"content": {"$regex": search, "$options": "i"}},
-        ]
+        response.headers["Cache-Control"] = "no-cache"
+    else:
+        response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
 
-    sort_map = {"newest": ("created_at", -1), "oldest": ("created_at", 1), "views": ("views", -1)}
-    sort_field, sort_order = sort_map.get(sort, ("created_at", -1))
+    key = f"blog:list:{page}:{limit}:{search}:{sort}"
+    ttl = 15 if search else settings.cache_ttl_list
 
-    skip = (page - 1) * limit
-    total = await db.blog.count_documents(query)
-    cursor = db.blog.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
-    items = [serialize(dict(doc)) async for doc in cursor]
-    pages = ceil(total / limit) if total > 0 else 1
-    result = PaginatedResponse(
-        items=items, total=total, page=page, pages=pages,
-        has_next=page < pages, has_prev=page > 1,
-    ).model_dump()
+    async def fetch():
+        db = get_db()
+        query = {}
+        if search:
+            query["$or"] = [
+                {"title": {"$regex": search, "$options": "i"}},
+                {"content": {"$regex": search, "$options": "i"}},
+            ]
+        sort_map = {"newest": ("created_at", -1), "oldest": ("created_at", 1), "views": ("views", -1)}
+        sort_field, sort_order = sort_map.get(sort, ("created_at", -1))
+        skip = (page - 1) * limit
+        total = await db.blog.count_documents(query)
+        cursor = db.blog.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
+        items = [serialize(dict(doc)) async for doc in cursor]
+        pages = ceil(total / limit) if total > 0 else 1
+        return PaginatedResponse(
+            items=items, total=total, page=page, pages=pages,
+            has_next=page < pages, has_prev=page > 1,
+        ).model_dump()
 
-    # Only cache non-search queries to avoid bloating Redis
-    ttl = settings.cache_ttl_list if not search else 15
-    await cache_set(key, result, ttl)
-    return result
+    return await cache_get_or_set(key, fetch, ttl)
 
 
 @router.get("/by-slug/{slug}")
-async def get_post_by_slug(slug: str):
-    key = f"blog:item:slug:{slug}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_post_by_slug(slug: str, response: Response):
+    response.headers["Cache-Control"] = "public, max-age=60"
 
-    db = get_db()
-    post = await db.blog.find_one({"slug": slug})
-    if not post:
+    async def fetch():
+        db = get_db()
+        post = await db.blog.find_one({"slug": slug})
+        return serialize(dict(post)) if post else None
+
+    result = await cache_get_or_set(f"blog:item:slug:{slug}", fetch, settings.cache_ttl_item)
+    if result is None:
         raise HTTPException(status_code=404, detail="Not found")
-    result = serialize(dict(post))
-    await cache_set(key, result, settings.cache_ttl_item)
     return result
 
 
 @router.get("/{post_id}")
-async def get_post(post_id: str):
-    key = f"blog:item:{post_id}"
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_post(post_id: str, response: Response):
+    response.headers["Cache-Control"] = "public, max-age=60"
 
-    db = get_db()
-    if ObjectId.is_valid(post_id):
-        post = await db.blog.find_one({"_id": ObjectId(post_id)})
-    else:
-        post = await db.blog.find_one({"slug": post_id})
-    if not post:
+    async def fetch():
+        db = get_db()
+        if ObjectId.is_valid(post_id):
+            post = await db.blog.find_one({"_id": ObjectId(post_id)})
+        else:
+            post = await db.blog.find_one({"slug": post_id})
+        return serialize(dict(post)) if post else None
+
+    result = await cache_get_or_set(f"blog:item:{post_id}", fetch, settings.cache_ttl_item)
+    if result is None:
         raise HTTPException(status_code=404, detail="Not found")
-    result = serialize(dict(post))
-    await cache_set(key, result, settings.cache_ttl_item)
     return result
 
 
-# ─── Mutations (invalidate) ───────────────────────────────────────────────────
+# ─── Mutations ────────────────────────────────────────────────────────────────
 
 @router.post("")
 async def create_post(post: BlogPostCreate, admin: dict = Depends(get_current_admin)):

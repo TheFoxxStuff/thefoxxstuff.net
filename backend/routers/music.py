@@ -4,18 +4,18 @@ from math import ceil
 from datetime import datetime
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Response
 
 from database import get_db
 from models import MusicReleaseCreate, PaginatedResponse
 from auth import get_current_admin
-from cache import cache_get, cache_set, cache_delete_pattern
+from cache import cache_get, cache_set, cache_delete_pattern, cache_get_or_set, increment_view_buffer
 from config import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/music", tags=["music"])
 
-# Cache key helpers
+
 def _list_key(page: int, limit: int) -> str:
     return f"music:list:{page}:{limit}"
 
@@ -53,21 +53,8 @@ async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
     return slug
 
 
-async def record_view(db, entity_type: str, entity_id: str):
-    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    await db.view_records.update_one(
-        {"entity_type": entity_type, "entity_id": entity_id, "date": today},
-        {"$inc": {"count": 1}, "$setOnInsert": {"entity_type": entity_type, "entity_id": entity_id, "date": today}},
-        upsert=True,
-    )
-    await db.daily_views.update_one(
-        {"entity_type": entity_type, "date": today},
-        {"$inc": {"count": 1}, "$setOnInsert": {"entity_type": entity_type, "date": today}},
-        upsert=True,
-    )
-
-
 async def enrich_with_images(db, release):
+    """Обогащает один релиз данными изображения."""
     if release.get("cover_image") and ObjectId.is_valid(release["cover_image"]):
         image = await db.images.find_one({"_id": ObjectId(release["cover_image"])})
         if image:
@@ -87,98 +74,122 @@ async def enrich_with_images(db, release):
                     img_info["gallery_name"] = name
                     gallery_images.append(img_info)
         release["gallery_images"] = gallery_images
-
     return release
 
 
-async def _invalidate_music_cache():
+async def enrich_releases_batch(db, releases: list) -> list:
+    """
+    N+1 fix: загружает все обложки одним $in запросом.
+    Gallery по-прежнему требует отдельных запросов (сложная структура).
+    """
+    cover_ids = [
+        ObjectId(r["cover_image"]) for r in releases
+        if r.get("cover_image") and ObjectId.is_valid(r["cover_image"])
+    ]
+    images_map = {}
+    if cover_ids:
+        async for img in db.images.find({"_id": {"$in": cover_ids}}):
+            images_map[str(img["_id"])] = serialize(dict(img))
+
+    for release in releases:
+        cid = release.get("cover_image")
+        if cid and cid in images_map:
+            release["cover_image_info"] = images_map[cid]
+        # gallery остаётся через обычный enrich (редко вызывается в списках)
+
+    return releases
+
+
+async def _invalidate():
     deleted = await cache_delete_pattern("music:*")
     logger.debug("Invalidated %d music cache keys", deleted)
 
 
-# ─── GET endpoints (cached) ───────────────────────────────────────────────────
+# ─── GET (cached + Cache-Control) ────────────────────────────────────────────
 
 @router.get("")
-async def get_releases(page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=100)):
-    key = _list_key(page, limit)
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_releases(
+    response: Response,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+):
+    response.headers["Cache-Control"] = f"public, max-age=30, stale-while-revalidate=60"
 
-    db = get_db()
-    skip = (page - 1) * limit
-    total = await db.music.count_documents({})
-    cursor = db.music.find().sort("release_date", -1).skip(skip).limit(limit)
-    items = []
-    async for doc in cursor:
-        release = serialize(dict(doc))
-        release = await enrich_with_images(db, release)
-        items.append(release)
-    pages = ceil(total / limit) if total > 0 else 1
-    result = PaginatedResponse(
-        items=items, total=total, page=page, pages=pages,
-        has_next=page < pages, has_prev=page > 1,
-    ).model_dump()
-    await cache_set(key, result, settings.cache_ttl_list)
-    return result
+    key = _list_key(page, limit)
+
+    async def fetch():
+        db = get_db()
+        skip = (page - 1) * limit
+        total = await db.music.count_documents({})
+        cursor = db.music.find().sort("release_date", -1).skip(skip).limit(limit)
+        items = [serialize(dict(doc)) async for doc in cursor]
+        items = await enrich_releases_batch(db, items)
+        pages = ceil(total / limit) if total > 0 else 1
+        return PaginatedResponse(
+            items=items, total=total, page=page, pages=pages,
+            has_next=page < pages, has_prev=page > 1,
+        ).model_dump()
+
+    return await cache_get_or_set(key, fetch, settings.cache_ttl_list)
 
 
 @router.get("/featured")
-async def get_featured():
-    key = _featured_key()
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_featured(response: Response):
+    response.headers["Cache-Control"] = f"public, max-age=60, stale-while-revalidate=120"
 
-    db = get_db()
-    release = await db.music.find_one({"is_new": True}, sort=[("release_date", -1)])
-    if not release:
-        release = await db.music.find_one(sort=[("release_date", -1)])
-    if release:
-        release = serialize(dict(release))
-        release = await enrich_with_images(db, release)
-    await cache_set(key, release, settings.cache_ttl_item)
-    return release
+    async def fetch():
+        db = get_db()
+        release = await db.music.find_one({"is_new": True}, sort=[("release_date", -1)])
+        if not release:
+            release = await db.music.find_one(sort=[("release_date", -1)])
+        if release:
+            release = serialize(dict(release))
+            release = await enrich_with_images(db, release)
+        return release
+
+    return await cache_get_or_set(_featured_key(), fetch, settings.cache_ttl_item)
 
 
 @router.get("/by-slug/{slug}")
-async def get_release_by_slug(slug: str):
-    key = _item_key(f"slug:{slug}")
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_release_by_slug(slug: str, response: Response):
+    response.headers["Cache-Control"] = f"public, max-age=60"
 
-    db = get_db()
-    release = await db.music.find_one({"slug": slug})
-    if not release:
+    async def fetch():
+        db = get_db()
+        release = await db.music.find_one({"slug": slug})
+        if not release:
+            return None
+        release = serialize(dict(release))
+        return await enrich_with_images(db, release)
+
+    result = await cache_get_or_set(_item_key(f"slug:{slug}"), fetch, settings.cache_ttl_item)
+    if result is None:
         raise HTTPException(status_code=404, detail="Not found")
-    release = serialize(dict(release))
-    release = await enrich_with_images(db, release)
-    await cache_set(key, release, settings.cache_ttl_item)
-    return release
+    return result
 
 
 @router.get("/{release_id}")
-async def get_release(release_id: str):
-    key = _item_key(release_id)
-    cached = await cache_get(key)
-    if cached is not None:
-        return cached
+async def get_release(release_id: str, response: Response):
+    response.headers["Cache-Control"] = "public, max-age=60"
 
-    db = get_db()
-    if ObjectId.is_valid(release_id):
-        release = await db.music.find_one({"_id": ObjectId(release_id)})
-    else:
-        release = await db.music.find_one({"slug": release_id})
-    if not release:
+    async def fetch():
+        db = get_db()
+        if ObjectId.is_valid(release_id):
+            release = await db.music.find_one({"_id": ObjectId(release_id)})
+        else:
+            release = await db.music.find_one({"slug": release_id})
+        if not release:
+            return None
+        release = serialize(dict(release))
+        return await enrich_with_images(db, release)
+
+    result = await cache_get_or_set(_item_key(release_id), fetch, settings.cache_ttl_item)
+    if result is None:
         raise HTTPException(status_code=404, detail="Not found")
-    release = serialize(dict(release))
-    release = await enrich_with_images(db, release)
-    await cache_set(key, release, settings.cache_ttl_item)
-    return release
+    return result
 
 
-# ─── Mutation endpoints (invalidate cache) ────────────────────────────────────
+# ─── Mutations ────────────────────────────────────────────────────────────────
 
 @router.post("")
 async def create_release(release: MusicReleaseCreate, admin: dict = Depends(get_current_admin)):
@@ -196,7 +207,7 @@ async def create_release(release: MusicReleaseCreate, admin: dict = Depends(get_
     result = await db.music.insert_one(doc)
     created = serialize(dict(await db.music.find_one({"_id": result.inserted_id})))
     created = await enrich_with_images(db, created)
-    await _invalidate_music_cache()
+    await _invalidate()
     return created
 
 
@@ -218,7 +229,7 @@ async def update_release(release_id: str, release: MusicReleaseCreate, admin: di
         raise HTTPException(status_code=404, detail="Not found")
     updated = serialize(dict(await db.music.find_one({"_id": ObjectId(release_id)})))
     updated = await enrich_with_images(db, updated)
-    await _invalidate_music_cache()
+    await _invalidate()
     return updated
 
 
@@ -230,5 +241,5 @@ async def delete_release(release_id: str, admin: dict = Depends(get_current_admi
     result = await db.music.delete_one({"_id": ObjectId(release_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Not found")
-    await _invalidate_music_cache()
+    await _invalidate()
     return {"deleted": True}
