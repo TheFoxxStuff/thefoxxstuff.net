@@ -16,9 +16,9 @@ async function request(endpoint, options = {}) {
   const token = getToken();
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  
+
   const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-  
+
   if (response.status === 401) {
     if (browser) {
       auth.logout();
@@ -26,12 +26,12 @@ async function request(endpoint, options = {}) {
     }
     throw new Error('Not authenticated');
   }
-  
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Request failed' }));
     throw new Error(error.detail || `Error: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -39,61 +39,45 @@ async function uploadFile(endpoint, file, params = {}) {
   const token = getToken();
   const formData = new FormData();
   formData.append('file', file);
-  
-  // Build URL with query params
+
   const url = new URL(`${API_BASE}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== null && value !== undefined) {
-      url.searchParams.append(key, value);
-    }
+    if (value !== null && value !== undefined) url.searchParams.append(key, value);
   });
-  
+
   const headers = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  
-  const response = await fetch(url.toString(), {
-    method: 'POST',
-    headers,
-    body: formData
-  });
-  
+
+  const response = await fetch(url.toString(), { method: 'POST', headers, body: formData });
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
     throw new Error(error.detail || `Error: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
 async function uploadFiles(endpoint, files, params = {}) {
   const token = getToken();
   const formData = new FormData();
-  for (const file of files) {
-    formData.append('files', file);
-  }
-  
-  // Build URL with query params
+  for (const file of files) formData.append('files', file);
+
   const url = new URL(`${API_BASE}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== null && value !== undefined) {
-      url.searchParams.append(key, value);
-    }
+    if (value !== null && value !== undefined) url.searchParams.append(key, value);
   });
-  
+
   const headers = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  
-  const response = await fetch(url.toString(), {
-    method: 'POST',
-    headers,
-    body: formData
-  });
-  
+
+  const response = await fetch(url.toString(), { method: 'POST', headers, body: formData });
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
     throw new Error(error.detail || `Error: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -154,9 +138,9 @@ export const api = {
     removeSlide: (slideId) => request(`/banner/slide/${slideId}`, { method: 'DELETE' })
   },
   upload: {
-    image: (file, category = 'markdown', customName = null, parentId = null, isGallery = false) => 
+    image: (file, category = 'markdown', customName = null, parentId = null, isGallery = false) =>
       uploadFile('/upload', file, { category, custom_name: customName, parent_id: parentId, is_gallery: isGallery }),
-    images: (files, category = 'markdown', parentId = null, isGallery = false) => 
+    images: (files, category = 'markdown', parentId = null, isGallery = false) =>
       uploadFiles('/upload/multiple', files, { category, parent_id: parentId, is_gallery: isGallery }),
     markdown: (file) => uploadFile('/upload/markdown', file),
     getInfo: (id) => request(`/upload/${id}`),
@@ -168,8 +152,7 @@ export const api = {
       return request(url);
     },
     cleanup: () => request('/upload/cleanup', { method: 'POST' }),
-    getUrl: (path, variant = 'medium') => `${API_BASE}/upload/file/${path}`,
-    // Audio
+    getUrl: (path) => `${API_BASE}/upload/file/${path}`,
     audio: (file, customName = null, generateMp3128 = false) =>
       uploadFile('/upload/audio', file, { custom_name: customName, generate_mp3_128: generateMp3128 }),
     audioInfo: (id) => request(`/upload/audio/${id}`),
@@ -178,7 +161,7 @@ export const api = {
     audioFileUrl: (path) => `${API_BASE}/upload/file/${path}`,
     writeMetadata: (data) => request('/upload/audio/write-metadata', { method: 'POST', body: JSON.stringify(data) })
   },
-  stats: { 
+  stats: {
     get: () => request('/stats'),
     viewsChart: (days = 30) => request(`/stats/views/chart?days=${days}`),
     top: (limit = 5) => request(`/stats/top?limit=${limit}`),
@@ -186,7 +169,10 @@ export const api = {
     search: (q) => request(`/stats/search?q=${encodeURIComponent(q)}`)
   },
   views: {
-    record: (entityType, entityId) => request(`/views/record?entity_type=${entityType}&entity_id=${entityId}`, { method: 'POST' }),
+    // fire-and-forget: не блокирует рендер, ошибки игнорируются
+    record: (entityType, entityId) => {
+      request(`/views/record?entity_type=${entityType}&entity_id=${entityId}`, { method: 'POST' }).catch(() => {});
+    },
     map: (days = 30) => request(`/views/map?days=${days}`),
     recent: (page = 1, limit = 50) => request(`/views/recent?page=${page}&limit=${limit}`)
   },
@@ -200,14 +186,13 @@ export const api = {
     update: (data) => request('/profile/me', { method: 'PUT', body: JSON.stringify(data) }),
     uploadAvatar: (file, cropX = 0, cropY = 0, cropSize = 0) =>
       uploadFile('/profile/me/avatar', file, { crop_x: cropX, crop_y: cropY, crop_size: cropSize }),
-    deleteAvatar: () => request('/profile/me/avatar', { method: 'DELETE' }),
+    deleteAvatar: () => request('/profile/me/avatar', { method: 'DELETE' })
   },
   chat: {
-    messages: (limit = 50) => request(`/chat/messages?limit=${limit}`),
+    messages: (limit = 50) => request(`/chat/messages?limit=${limit}`)
   }
 };
 
-// Helper to get image URL from image object or ID
 export function getImageUrl(imageInfo, variant = 'medium') {
   if (!imageInfo) return null;
   if (typeof imageInfo === 'string') return imageInfo;
@@ -216,7 +201,6 @@ export function getImageUrl(imageInfo, variant = 'medium') {
   return `${API_BASE}/upload/file/${path}`;
 }
 
-// Helper to generate SEO-friendly slug
 export function generateSlug(title) {
   return title
     .toLowerCase()

@@ -57,20 +57,17 @@
   onMount(async () => {
     try {
       artwork = await api.arts.get($page.params.id);
-      
-      // Record view with IP tracking
-      if (artwork._id) {
-        api.views.record('arts', artwork._id).catch(() => {});
-      }
-      
+
+      // fire-and-forget: не блокирует рендер (api.views.record уже void)
+      if (artwork._id) api.views.record('arts', artwork._id);
+
+      // image_info уже в ответе — дополнительный запрос не нужен
       if (artwork.image_info) {
         imageUrl = getImageUrl(artwork.image_info, 'original');
-      }
-      if (artwork.og_image) {
-        try {
-          const imgInfo = await api.upload.getInfo(artwork.og_image);
-          ogImageUrl = getImageUrl(imgInfo, 'original');
-        } catch {}
+        // og_image fallback: используем основное изображение если og_image_info нет
+        ogImageUrl = artwork.og_image_info
+          ? getImageUrl(artwork.og_image_info, 'original')
+          : imageUrl;
       }
     } catch (e) {
       console.error(e);

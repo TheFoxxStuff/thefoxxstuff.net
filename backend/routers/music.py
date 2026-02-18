@@ -54,11 +54,17 @@ async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
 
 
 async def enrich_with_images(db, release):
-    """Обогащает один релиз данными изображения."""
-    if release.get("cover_image") and ObjectId.is_valid(release["cover_image"]):
-        image = await db.images.find_one({"_id": ObjectId(release["cover_image"])})
-        if image:
-            release["cover_image_info"] = serialize(dict(image))
+    """Обогащает один релиз данными изображений включая og_image и gallery."""
+    # Обложка и OG-изображение
+    for field, info_field in [
+        ("cover_image", "cover_image_info"),
+        ("og_image", "og_image_info"),
+    ]:
+        val = release.get(field)
+        if val and ObjectId.is_valid(val):
+            image = await db.images.find_one({"_id": ObjectId(val)})
+            if image:
+                release[info_field] = serialize(dict(image))
 
     if release.get("gallery"):
         gallery_images = []

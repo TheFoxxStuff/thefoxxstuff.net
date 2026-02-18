@@ -82,19 +82,14 @@
   onMount(async () => {
     try {
       release = await api.music.get($page.params.id);
-      if (release.cover_image_info) {
-        coverImageUrl = getImageUrl(release.cover_image_info, 'medium');
-      }
-      if (release.og_image) {
-        try {
-          const imgInfo = await api.upload.getInfo(release.og_image);
-          ogImageUrl = getImageUrl(imgInfo, 'original');
-        } catch {}
-      }
-      // Record view with IP tracking
-      if (release._id) {
-        api.views.record('music', release._id).catch(() => {});
-      }
+
+      if (release.cover_image_info) coverImageUrl = getImageUrl(release.cover_image_info, 'medium');
+      // og_image_info приходит с бэкенда — доп. запрос не нужен
+      if (release.og_image_info) ogImageUrl = getImageUrl(release.og_image_info, 'original');
+      else if (coverImageUrl) ogImageUrl = coverImageUrl;
+
+      // fire-and-forget
+      if (release._id) api.views.record('music', release._id);
     } catch (e) {
       console.error(e);
     } finally {

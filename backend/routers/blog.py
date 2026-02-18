@@ -43,8 +43,37 @@ async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
     return slug
 
 
-async def _invalidate():
+async def enrich_post(db, post: dict) -> dict:
+    """Обогащает один пост данными cover_image_info и og_image_info."""
+    from bson import ObjectId
+    for field, info_field in [("cover_image", "cover_image_info"), ("og_image", "og_image_info")]:
+        val = post.get(field)
+        if val and ObjectId.is_valid(val):
+            img = await db.images.find_one({"_id": ObjectId(val)})
+            if img:
+                post[info_field] = serialize(dict(img))
+    return post
     await cache_delete_pattern("blog:*")
+
+
+async def enrich_posts_batch(db, posts: list) -> list:
+    """N+1 fix: загружает все обложки постов одним $in запросом."""
+    from bson import ObjectId
+    cover_ids = [
+        ObjectId(p["cover_image"]) for p in posts
+        if p.get("cover_image") and ObjectId.is_valid(p["cover_image"])
+    ]
+    images_map = {}
+    if cover_ids:
+        async for img in db.images.find({"_id": {"$in": cover_ids}}):
+            images_map[str(img["_id"])] = serialize(dict(img))
+
+    for post in posts:
+        cid = post.get("cover_image")
+        if cid and cid in images_map:
+            post["cover_image_info"] = images_map[cid]
+
+    return posts
 
 
 # ─── GET (cached + Cache-Control) ────────────────────────────────────────────
@@ -80,6 +109,7 @@ async def get_posts(
         total = await db.blog.count_documents(query)
         cursor = db.blog.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
         items = [serialize(dict(doc)) async for doc in cursor]
+        items = await enrich_posts_batch(db, items)  # N+1 fix
         pages = ceil(total / limit) if total > 0 else 1
         return PaginatedResponse(
             items=items, total=total, page=page, pages=pages,
@@ -96,7 +126,10 @@ async def get_post_by_slug(slug: str, response: Response):
     async def fetch():
         db = get_db()
         post = await db.blog.find_one({"slug": slug})
-        return serialize(dict(post)) if post else None
+        if not post:
+            return None
+        post = serialize(dict(post))
+        return await enrich_post(db, post)
 
     result = await cache_get_or_set(f"blog:item:slug:{slug}", fetch, settings.cache_ttl_item)
     if result is None:
@@ -114,7 +147,10 @@ async def get_post(post_id: str, response: Response):
             post = await db.blog.find_one({"_id": ObjectId(post_id)})
         else:
             post = await db.blog.find_one({"slug": post_id})
-        return serialize(dict(post)) if post else None
+        if not post:
+            return None
+        post = serialize(dict(post))
+        return await enrich_post(db, post)
 
     result = await cache_get_or_set(f"blog:item:{post_id}", fetch, settings.cache_ttl_item)
     if result is None:

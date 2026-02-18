@@ -46,25 +46,13 @@
   onMount(async () => {
     try {
       post = await api.blog.get($page.params.id);
-      
-      // Record view with IP tracking
-      if (post._id) {
-        api.views.record('blog', post._id).catch(() => {});
-      }
-      
-      // Load images for SEO
-      if (post.cover_image) {
-        try {
-          const imgInfo = await api.upload.getInfo(post.cover_image);
-          coverImageUrl = getImageUrl(imgInfo, 'original');
-        } catch {}
-      }
-      if (post.og_image) {
-        try {
-          const imgInfo = await api.upload.getInfo(post.og_image);
-          ogImageUrl = getImageUrl(imgInfo, 'original');
-        } catch {}
-      }
+
+      // fire-and-forget: не блокирует рендер
+      if (post._id) api.views.record('blog', post._id);
+
+      // cover_image_info и og_image_info уже приходят с бэкенда
+      if (post.cover_image_info) coverImageUrl = getImageUrl(post.cover_image_info, 'original');
+      if (post.og_image_info)    ogImageUrl    = getImageUrl(post.og_image_info, 'original');
     } catch (e) {
       console.error(e);
     } finally {
@@ -123,18 +111,6 @@
       {#if coverImageUrl}
         <div class="aspect-video bg-dark-800 overflow-hidden">
           <img loading="lazy" src={coverImageUrl} alt={post.title} class="w-full h-full object-cover" />
-        </div>
-      {:else if post.cover_image}
-        <div class="aspect-video bg-dark-800 overflow-hidden">
-          {#await api.upload.getInfo(post.cover_image) then imgInfo}
-            <img loading="lazy" src={getImageUrl(imgInfo, 'original')} alt={post.title} class="w-full h-full object-cover" />
-          {:catch}
-            <div class="w-full h-full flex items-center justify-center text-dark-600">
-              <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1" />
-              </svg>
-            </div>
-          {/await}
         </div>
       {/if}
       

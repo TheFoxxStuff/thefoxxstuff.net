@@ -1,37 +1,37 @@
 <script>
-  import { api, getImageUrl } from '$lib/api';
+  import { getImageUrl } from '$lib/api';
   import { Calendar, Eye } from 'lucide-svelte';
 
   let { post } = $props();
 
-  const formatDate = (d) => 
-    new Date(d).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+  // cover_image_info отдаётся бэкендом — убран api.upload.getInfo() внутри компонента.
+  // Это был N+1 на фронтенде: при 2 постах на главной = 2 лишних запроса.
+  const coverUrl = $derived.by(() => {
+    if (post.cover_image_info) return getImageUrl(post.cover_image_info, 'medium');
+    return null;
+  });
+
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 </script>
 
-<a href="/blog/{post._id}" class="group flex flex-col h-full bg-[--w5] rounded-[12px] overflow-hidden transition-all duration-300 hover:bg-[--w8]">
-  
+<a href="/blog/{post.slug || post._id}" class="group flex flex-col h-full bg-[--w5] rounded-[12px] overflow-hidden transition-all duration-300 hover:bg-[--w8]">
+
   <div class="px-[18px] pt-[18px]">
     <div class="aspect-[16/10] bg-[--w12] rounded-[8px] overflow-hidden">
-      {#if post.cover_image}
-        {#await api.upload.getInfo(post.cover_image) then imgInfo}
-          <img
-            loading="lazy" 
-            src={getImageUrl(imgInfo, 'medium')} 
-            alt={post.title} 
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-          />
-        {:catch}
-          <div class="w-full h-full flex items-center justify-center text-[--w60] bg-[--w60]">
-           <Calendar size={14} />
-           </div>
-        {/await}
+      {#if coverUrl}
+        <img
+          loading="lazy"
+          src={coverUrl}
+          alt={post.title}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
       {:else}
-        <div class="w-full h-full flex items-center justify-center text-[--w60] bg-[--w60]">
-           <Eye size={14} />
+        <div class="w-full h-full flex items-center justify-center text-[--w30] bg-[--w8]">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
         </div>
       {/if}
     </div>
@@ -41,7 +41,7 @@
     <h3 class="font-bold text-[18px] leading-tight text-[--w] mb-[4px] transition-colors line-clamp-2">
       {post.title}
     </h3>
-    
+
     {#if post.excerpt}
       <p class="text-[14px] leading-relaxed text-[--w60] mb-[8px] line-clamp-2">
         {post.excerpt}
@@ -53,7 +53,6 @@
         <Calendar size={14} />
         <span class="text-[14px] font-medium">{formatDate(post.created_at)}</span>
       </div>
-      
       <div class="flex items-center gap-[6px] text-[--w60]">
         <Eye size={14} />
         <span class="text-[14px]">{post.views} views</span>
