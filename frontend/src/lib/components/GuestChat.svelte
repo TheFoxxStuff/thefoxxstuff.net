@@ -13,7 +13,15 @@
   let messagesContainer;
   let isAtBottom = $state(true);
   let sending = $state(false);
-  let collapsed = $state(false);
+
+  // Чат изначально свёрнут — WS не открывается до первого раскрытия
+  let collapsed = $state(true);
+  let everOpened = $state(false);
+
+  // Таймер переподключения
+  let reconnectTimer = null;
+  // Флаг «пользователь закрыл вкладку / уничтожил компонент»
+  let destroyed = false;
 
   const WS_BASE = API_BASE.replace('http', 'ws');
 
@@ -28,25 +36,20 @@
     const diff = now - d;
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
-    
     if (mins < 1) return 'now';
     if (mins < 60) return `${mins}m ago`;
     if (hours < 24) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Group consecutive messages from same user (within 5 min)
   function groupMessages(msgs) {
     const groups = [];
     for (let i = 0; i < msgs.length; i++) {
       const msg = msgs[i];
       const prev = i > 0 ? msgs[i - 1] : null;
-
       const sameUser = prev && prev.username === msg.username;
-      const withinTime = prev && (new Date(msg.created_at) - new Date(prev.created_at)) < 300000;
-
+      const withinTime = prev && (new Date(msg.created_at) - new Date(prev.created_at)) < 300_000;
       if (sameUser && withinTime) {
-        // Append to last group
         groups[groups.length - 1].messages.push(msg);
       } else {
         groups.push({
@@ -64,25 +67,30 @@
 
   let grouped = $derived(groupMessages(messages));
 
+  function scheduleReconnect() {
+    if (destroyed) return;
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+      if (!destroyed && (!ws || ws.readyState === WebSocket.CLOSED)) connect();
+    }, 3000);
+  }
+
   function connect() {
+    if (destroyed) return;
     const token = $auth?.token;
     const url = `${WS_BASE}/chat/ws${token ? `?token=${token}` : ''}`;
-
     try {
       ws = new WebSocket(url);
     } catch {
+      scheduleReconnect();
       return;
     }
 
-    ws.onopen = () => {
-      connected = true;
-      error = '';
-    };
+    ws.onopen = () => { connected = true; error = ''; };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-
         if (data.type === 'history') {
           messages = data.messages || [];
           tick().then(scrollToBottom);
@@ -98,17 +106,27 @@
       } catch {}
     };
 
-    ws.onclose = () => {
-      connected = false;
-      // Reconnect after 3s
-      setTimeout(() => {
-        if (!ws || ws.readyState === WebSocket.CLOSED) connect();
-      }, 3000);
-    };
+    ws.onclose = () => { connected = false; scheduleReconnect(); };
+    ws.onerror = () => { connected = false; };
+  }
 
-    ws.onerror = () => {
-      connected = false;
-    };
+  function disconnect() {
+    clearTimeout(reconnectTimer);
+    if (ws) {
+      ws.onclose = null; // отключаем авто-переподключение
+      ws.close();
+      ws = null;
+    }
+    connected = false;
+  }
+
+  function toggleCollapsed() {
+    collapsed = !collapsed;
+    if (!collapsed && !everOpened) {
+      // Первое раскрытие — подключаем WS
+      everOpened = true;
+      connect();
+    }
   }
 
   function sendMessage() {
@@ -118,16 +136,12 @@
       setTimeout(() => error = '', 3000);
       return;
     }
-
     ws.send(JSON.stringify({ type: 'message', text: inputText.trim() }));
     inputText = '';
   }
 
   function handleKeydown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
   function handleScroll() {
@@ -144,19 +158,12 @@
   }
 
   function getRoleColor(role) {
-    if (role === 'admin') return 'text-accent-green';
-    return 'text-[--w]';
+    return role === 'admin' ? 'text-accent-green' : 'text-[--w]';
   }
 
-  onMount(() => {
-    connect();
-  });
-
   onDestroy(() => {
-    if (ws) {
-      ws.onclose = null;
-      ws.close();
-    }
+    destroyed = true;
+    disconnect();
   });
 </script>
 
@@ -164,7 +171,7 @@
   <!-- Header -->
   <button
     class="w-full flex items-center justify-between px-5 py-3.5 bg-[--w5] border-b border-[--w8] cursor-pointer hover:bg-[--w8] transition select-none"
-    onclick={() => collapsed = !collapsed}
+    onclick={toggleCollapsed}
   >
     <div class="flex items-center gap-2.5">
       <MessageCircle size={18} class="text-accent-green" />
@@ -172,11 +179,13 @@
       <span class="text-xs text-[--w60] bg-[--w8] px-2 py-0.5 rounded-full">{messages.length}</span>
     </div>
     <div class="flex items-center gap-3">
-      <div class="flex items-center gap-1.5 text-xs text-[--w60]">
-        <div class="w-2 h-2 rounded-full {connected ? 'bg-accent-green' : 'bg-accent-red'} animate-pulse"></div>
-        <Users size={12} />
-        {onlineCount}
-      </div>
+      {#if everOpened}
+        <div class="flex items-center gap-1.5 text-xs text-[--w60]">
+          <div class="w-2 h-2 rounded-full {connected ? 'bg-accent-green' : 'bg-accent-red'} animate-pulse"></div>
+          <Users size={12} />
+          {onlineCount}
+        </div>
+      {/if}
       <ChevronDown size={16} class="text-[--w60] transition-transform {collapsed ? '-rotate-90' : ''}" />
     </div>
   </button>
@@ -191,7 +200,7 @@
       {#if messages.length === 0}
         <div class="flex flex-col items-center justify-center h-full text-dark-500 text-sm gap-2">
           <MessageCircle size={32} />
-          <span>No messages yet. Start the conversation!</span>
+          <span>{connected ? 'No messages yet. Start the conversation!' : 'Connecting...'}</span>
         </div>
       {:else}
         {#each grouped as group}
@@ -201,6 +210,7 @@
               {#if group.avatar_thumb}
                 <a href="/profile/{group.username}" class="block">
                   <img
+                    loading="lazy"
                     src={getAvatarUrl(group.avatar_thumb)}
                     alt={group.username}
                     class="w-9 h-9 rounded-full object-cover"
@@ -280,17 +290,8 @@
 </section>
 
 <style>
-  .chat-scroll::-webkit-scrollbar {
-    width: 6px;
-  }
-  .chat-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .chat-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 3px;
-  }
-  .chat-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.2);
-  }
+  .chat-scroll::-webkit-scrollbar { width: 6px; }
+  .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+  .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  .chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 </style>

@@ -1,4 +1,5 @@
 <script>
+  import { browser } from '$app/environment';
   import { Image } from 'lucide-svelte';
 
   let {
@@ -10,11 +11,15 @@
     goToSlide
   } = $props();
 
-  // Бэкенд теперь отдаёт image_info в каждом слайде (батч $in запрос).
-  // api.upload.getInfo() внутри компонента убран.
+  /**
+   * Адаптивная загрузка: mobile → large, desktop → original.
+   * Это экономит 2–5 МБ на мобильных слайдах.
+   */
   function slideImageUrl(slide) {
-    if (slide.image_info) return getImageUrl(slide.image_info, 'original');
-    return null;
+    if (!slide.image_info) return null;
+    if (!browser) return getImageUrl(slide.image_info, 'large');
+    const variant = window.innerWidth <= 768 ? 'large' : 'original';
+    return getImageUrl(slide.image_info, variant);
   }
 </script>
 

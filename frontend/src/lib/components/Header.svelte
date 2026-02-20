@@ -24,6 +24,7 @@
   let searchOpen = $state(false);
   let searchQuery = $state('');
   let isInitialLoad = true;
+  let authChecking = $state(true); // скелетон в хедере пока проверяем сессию
 
   function avatarUrl(path) { return path ? `${API_BASE}/upload/file/${path}` : null; }
 
@@ -41,7 +42,12 @@
 
   onMount(() => {
     if ($auth.token && $auth.user) {
-      api.profile.me().then(p => auth.updateUser({ avatar_thumb: p.avatar_thumb, avatar_original: p.avatar_original, display_name: p.display_name })).catch(() => {});
+      api.profile.me()
+        .then(p => auth.updateUser({ avatar_thumb: p.avatar_thumb, avatar_original: p.avatar_original, display_name: p.display_name }))
+        .catch(() => {})
+        .finally(() => { authChecking = false; });
+    } else {
+      authChecking = false;
     }
     const i = navItems.findIndex(item => isActive(item.href, $page.url.pathname));
     activeIndex = i;
@@ -131,7 +137,10 @@
           <button onclick={() => searchOpen = true} class="text-[--w60] hover:text-[--w] p-1.5 rounded-[8px] hover:bg-[--w8] transition" title="Search"><Search size={16} /></button>
         {/if}
 
-        {#if $auth.user}
+        {#if authChecking}
+          <!-- Скелетон: пока проверяем сессию -->
+          <div class="w-[60px] h-[28px] rounded-[8px] bg-[--w8] animate-pulse"></div>
+        {:else if $auth.user}
           <div class="relative" bind:this={userMenuElement}>
             <button onclick={toggleUser} class="select-none flex items-center gap-2 rounded-[8px] px-2 py-1 transition hover:bg-[--w8] cursor-pointer">
               {#if $auth.user.avatar_thumb}
