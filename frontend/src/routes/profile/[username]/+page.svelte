@@ -2,21 +2,26 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { api, API_BASE } from '$lib/api';
-  import { User, Calendar, Shield } from 'lucide-svelte';
+  import { auth } from '$lib/stores/auth.js';
+  import { Shield, Settings, Calendar, ChevronRight } from 'lucide-svelte';
 
-  let profile = $state(null);
-  let loading = $state(true);
-  let error = $state('');
+  let profile      = $state(null);
+  let loading      = $state(true);
+  let error        = $state('');
+  let isOwnProfile = $state(false);
 
-  function getAvatarUrl(path) {
-    if (!path) return null;
-    return `${API_BASE}/upload/file/${path}`;
+  function avUrl(p) { return p ? `${API_BASE}/upload/file/${p}` : null; }
+
+  function nameHue(name) {
+    let h = 0;
+    for (let i = 0; i < (name||'').length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return h;
   }
 
-  function formatDate(date) {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric'
+  function formatDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric'
     });
   }
 
@@ -24,75 +29,297 @@
     const username = $page.params.username;
     try {
       profile = await api.profile.get(username);
-    } catch (e) {
-      error = e.message;
-    } finally {
-      loading = false;
-    }
+      isOwnProfile = $auth.user?.username === username;
+    } catch (e) { error = e.message; }
+    finally { loading = false; }
   });
 </script>
 
 <svelte:head>
-  <title>{profile ? `@${profile.username}` : 'Profile'} | TheFoxxStuff</title>
+  <title>{profile ? (profile.display_name || `@${profile.username}`) : 'Profile'} | TheFoxxStuff</title>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
+<div class="page-wrap">
+
   {#if loading}
-    <div class="card p-8">
-      <div class="animate-pulse space-y-4">
-        <div class="w-28 h-28 rounded-full bg-dark-800 mx-auto"></div>
-        <div class="h-5 bg-dark-800 rounded w-1/3 mx-auto"></div>
-        <div class="h-16 bg-dark-800 rounded w-2/3 mx-auto"></div>
-      </div>
+    <div class="profile-card">
+      <div class="sk-avatar"></div>
+      <div class="sk-line" style="width:160px;height:22px"></div>
+      <div class="sk-line" style="width:100px;height:14px;opacity:.45"></div>
+      <div class="sk-line" style="width:280px;height:13px;margin-top:8px"></div>
     </div>
+
   {:else if error}
-    <div class="card p-8 text-center">
-      <User size={48} class="mx-auto text-dark-500 mb-4" />
-      <div class="text-[--w60]">User not found</div>
+    <div class="profile-card">
+      <div class="error-icon">?</div>
+      <p class="error-text">User not found</p>
     </div>
-  {:else if profile}
-    <div class="card p-8 flex flex-col items-center text-center space-y-4">
-      <!-- Avatar -->
-      {#if profile.avatar_original}
-        <img
-          src={getAvatarUrl(profile.avatar_original)}
-          alt={profile.username}
-          class="w-28 h-28 rounded-full object-cover ring-2 ring-[--w12]"
-        />
-      {:else}
-        <div class="w-28 h-28 rounded-full bg-dark-800 flex items-center justify-center ring-2 ring-[--w12]">
-          <User size={40} class="text-[--w60]" />
-        </div>
-      {/if}
 
-      <!-- Name & Username -->
-      <div>
-        {#if profile.display_name}
-          <h1 class="font-display text-xl tracking-wide">{profile.display_name}</h1>
+  {:else if profile}
+    {@const hue = nameHue(profile.username)}
+    {@const img = avUrl(profile.avatar_original || profile.avatar_thumb)}
+
+    <div class="profile-card">
+
+      <!-- Avatar -->
+      <div class="avatar-wrap" class:admin={profile.role === 'admin'}>
+        {#if img}
+          <img src={img} alt={profile.username} class="avatar-img" />
+        {:else}
+          <div class="avatar-placeholder" style="--hue:{hue}">
+            {(profile.display_name || profile.username || '?').slice(0,2).toUpperCase()}
+          </div>
         {/if}
-        <div class="text-[--w60] text-sm mt-1">@{profile.username}</div>
       </div>
 
-      <!-- Role badge -->
+      <!-- Name block -->
+      <div class="name-block">
+        <h1 class="display-name">
+          {profile.display_name || profile.username}
+        </h1>
+        <div class="username">@{profile.username}</div>
+      </div>
+
+      <!-- Admin badge -->
       {#if profile.role === 'admin'}
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-accent-green/10 text-accent-green border border-accent-green/20">
-          <Shield size={12} />
-          Admin
-        </div>
+        <div class="admin-badge"><Shield size={11}/> Administrator</div>
       {/if}
 
       <!-- Bio -->
       {#if profile.bio}
-        <p class="text-[--w60] text-sm leading-relaxed max-w-md">{profile.bio}</p>
+        <p class="bio">{profile.bio}</p>
       {/if}
 
-      <!-- Member since -->
+      <!-- Joined -->
       {#if profile.created_at}
-        <div class="flex items-center gap-2 text-xs text-dark-500">
-          <Calendar size={12} />
+        <div class="meta-joined">
+          <Calendar size={12}/>
           Joined {formatDate(profile.created_at)}
         </div>
       {/if}
+
+      <!-- Own profile CTA -->
+      {#if isOwnProfile}
+        <div class="own-actions">
+          <a href="/profile/settings" class="settings-btn">
+            <Settings size={14}/>
+            Edit profile
+          </a>
+        </div>
+      {/if}
+
     </div>
+
+    <!-- Settings card (own only) -->
+    {#if isOwnProfile}
+      <a href="/profile/settings" class="settings-cta">
+        <div class="cta-inner">
+          <div class="cta-icon"><Settings size={16}/></div>
+          <div class="cta-text">
+            <div class="cta-title">Profile Settings</div>
+            <div class="cta-desc">Change display name, bio, avatar photo</div>
+          </div>
+        </div>
+        <ChevronRight size={16} class="cta-chevron"/>
+      </a>
+    {/if}
+
   {/if}
+
 </div>
+
+<style>
+  .page-wrap {
+    max-width: 828px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  @media(min-width: 829px) { .page-wrap { padding-left: 0; padding-right: 0; } }
+
+  /* ── Profile card ── */
+  .profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 48px 32px 40px;
+    background: var(--w5);
+    border: 1px solid var(--w8);
+    border-radius: 18px;
+  }
+
+  /* ── Avatar ── */
+  .avatar-wrap {
+    position: relative;
+    margin-bottom: 4px;
+  }
+  .avatar-wrap.admin::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid #4ade80;
+    pointer-events: none;
+  }
+  .avatar-img, .avatar-placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: block;
+  }
+  .avatar-img {
+    object-fit: cover;
+    border: 3px solid var(--w12);
+  }
+  .avatar-placeholder {
+    background: hsl(var(--hue), 42%, 20%);
+    border: 3px solid hsl(var(--hue), 42%, 28%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: DrukWideCyr, sans-serif;
+    font-size: 28px;
+    color: hsl(var(--hue), 55%, 72%);
+  }
+
+  /* ── Name ── */
+  .name-block { display: flex; flex-direction: column; gap: 4px; }
+  .display-name {
+    font-family: DrukWideCyr, sans-serif;
+    font-size: 26px;
+    letter-spacing: 0.03em;
+    color: var(--w);
+    line-height: 1.1;
+  }
+  .username { font-size: 14px; color: var(--w60); }
+
+  /* ── Admin badge ── */
+  .admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: DrukWideCyr, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: #4ade80;
+    background: rgba(74,222,128,0.09);
+    border: 1px solid rgba(74,222,128,0.22);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── Bio ── */
+  .bio {
+    font-size: 14px;
+    color: var(--w60);
+    line-height: 1.65;
+    max-width: 380px;
+    margin: 4px 0 0;
+  }
+
+  /* ── Meta ── */
+  .meta-joined {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--w30);
+    margin-top: 2px;
+  }
+
+  /* ── Own profile button ── */
+  .own-actions { margin-top: 8px; }
+  .settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    border-radius: 9px;
+    border: 1px solid var(--w12);
+    background: var(--w8);
+    color: var(--w60);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .settings-btn:hover {
+    background: var(--w12);
+    border-color: var(--w18);
+    color: var(--w);
+  }
+
+  /* ── Settings CTA row ── */
+  .settings-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--w5);
+    border: 1px solid var(--w8);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background .12s, border-color .12s;
+    cursor: pointer;
+  }
+  .settings-cta:hover {
+    background: var(--w8);
+    border-color: var(--w12);
+  }
+  .cta-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cta-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: var(--w8);
+    border: 1px solid var(--w12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--w60);
+    flex-shrink: 0;
+  }
+  .cta-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--w);
+    line-height: 1.2;
+  }
+  .cta-desc {
+    font-size: 12px;
+    color: var(--w30);
+    margin-top: 2px;
+  }
+  :global(.cta-chevron) { color: var(--w30); flex-shrink: 0; }
+
+  /* ── Skeleton ── */
+  .sk-avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: var(--w8);
+    animation: skpulse 1.5s ease-in-out infinite;
+  }
+  .sk-line {
+    background: var(--w8);
+    border-radius: 6px;
+    animation: skpulse 1.5s ease-in-out infinite;
+  }
+  @keyframes skpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── Error ── */
+  .error-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--w8);
+    display: flex; align-items: center; justify-content: center;
+    font-family: DrukWideCyr, sans-serif;
+    font-size: 28px; color: var(--w30);
+  }
+  .error-text { font-size: 14px; color: var(--w60); }
+</style>

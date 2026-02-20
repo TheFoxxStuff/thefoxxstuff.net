@@ -1,4 +1,4 @@
-<!-- <script>
+<script>
   import { onMount, onDestroy } from 'svelte';
 
   let container;
@@ -99,4 +99,4 @@
       height: 290px;
     }
   }
-</style> -->
+</style>

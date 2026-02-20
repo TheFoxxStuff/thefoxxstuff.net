@@ -360,15 +360,24 @@
 
               {#if userMenuVisible}
                 <div class="absolute right-0 top-full mt-2 w-52 bg-[--select] backdrop-blur-xl border border-[--w12] rounded-xl p-1.5 shadow-2xl z-[10000]">
-                  <div class="px-3 py-2 border-b border-[--w8] mb-1.5">
-                    <div class="text-sm text-[--w] font-medium truncate">
-                      {$auth.user.display_name || $auth.user.username}
+                  <!-- Header: user info + avatar -->
+                  <a href="/profile/{$auth.user.username}" onclick={() => userMenuVisible = false}
+                    class="flex items-center gap-3 px-2.5 py-2.5 rounded-[10px] mb-1 transition hover:bg-[--w8] border-b border-[--w8] pb-3 mb-2 no-underline">
+                    {#if $auth.user.avatar_thumb}
+                      <img src={avatarUrl($auth.user.avatar_thumb)} alt="" class="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-[--w12]"/>
+                    {:else}
+                      <div class="w-9 h-9 rounded-full bg-[--w12] flex items-center justify-center flex-shrink-0">
+                        <span class="text-sm text-[--w60] font-medium">{($auth.user.display_name || $auth.user.username || '?')[0].toUpperCase()}</span>
+                      </div>
+                    {/if}
+                    <div class="min-w-0">
+                      <div class="text-sm text-[--w] font-medium truncate leading-tight">{$auth.user.display_name || $auth.user.username}</div>
+                      <div class="text-xs text-[--w60] truncate leading-tight mt-0.5">@{$auth.user.username}</div>
                     </div>
-                    <div class="text-xs text-[--w60]">@{$auth.user.username}</div>
-                  </div>
-                  <a href="/profile" onclick={() => userMenuVisible = false}
+                  </a>
+                  <a href="/profile/settings" onclick={() => userMenuVisible = false}
                     class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] transition hover:bg-[--w8] hover:text-[--w]">
-                    <Settings size={16} /> Profile
+                    <Settings size={16} /> Settings
                   </a>
                   {#if isAdmin($auth.user)}
                     <a href="/admin" onclick={() => userMenuVisible = false}

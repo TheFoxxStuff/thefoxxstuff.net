@@ -1,4 +1,4 @@
-<!-- <script>
+<script>
   import { onMount } from 'svelte';
   
   export let containerId = "particles-js";
@@ -102,4 +102,4 @@
     width: 100% !important;
     height: 100% !important;
   }
-</style> -->
+</style>
