@@ -221,28 +221,24 @@
     #logo { transform-origin: center; transition: transform 350ms cubic-bezier(.22,1,.36,1); }
     #nav-indicator { will-change: transform, width, opacity; transform-origin: left center; }
 
-    /* ── Блок «разделитель + auth» — уезжает влево при поиске ── */
-    .nav-right-collapse {
+    /* ── Nav-items + разделитель — уезжают влево при поиске ── */
+    .nav-left-collapse {
       display: flex;
       align-items: center;
       overflow: hidden;
-      /* max-width анимирует «схлопывание» блока */
-      max-width: 260px;
+      max-width: 320px; /* с запасом под все пункты меню */
       opacity: 1;
       transition:
-        max-width 320ms cubic-bezier(.4,0,.2,1),
-        opacity   200ms cubic-bezier(.4,0,.2,1),
-        margin    320ms cubic-bezier(.4,0,.2,1);
+        max-width 300ms cubic-bezier(.4,0,.2,1),
+        opacity   200ms cubic-bezier(.4,0,.2,1);
     }
-    .nav-right-collapse.hidden {
+    .nav-left-collapse.hidden {
       max-width: 0;
       opacity: 0;
       pointer-events: none;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
     }
 
-    /* ── Строка поиска — выезжает справа ── */
+    /* ── Строка поиска — выезжает на место nav-items ── */
     .search-input-wrap {
       display: flex;
       align-items: center;
@@ -250,11 +246,11 @@
       max-width: 0;
       opacity: 0;
       transition:
-        max-width 320ms cubic-bezier(.4,0,.2,1),
-        opacity   220ms cubic-bezier(.4,0,.2,1);
+        max-width 300ms cubic-bezier(.4,0,.2,1),
+        opacity   220ms 60ms cubic-bezier(.4,0,.2,1); /* чуть с задержкой — после ухода nav */
     }
     .search-input-wrap.open {
-      max-width: 180px;
+      max-width: 220px;
       opacity: 1;
     }
 
@@ -283,38 +279,65 @@
       </a>
 
       <!-- Навбар -->
+      <!--
+        Структура navbar:
+          normal: [nav-items] [|] [инпут-поиска(скрыт)] [🔍] [auth]
+          search: [nav-items(скрыт)] [|(скрыт)] [инпут-поиска] [X] [auth]
+
+        nav-items + разделитель схлопываются влево, инпут выезжает на их место.
+        Auth (Login/Profile) всегда остаётся справа.
+      -->
       <nav class="flex items-center gap-[5px] rounded-[8px] bg-[--header] px-[16px] py-[6px] backdrop-blur-[5px]">
 
-        <!-- Пункты навигации -->
-        <div bind:this={navElement} id="nav" class="relative flex items-center gap-[5px]">
-          <div bind:this={indicatorElement} id="nav-indicator"
-            class="pointer-events-none absolute top-0 left-0 h-full rounded-[8px] bg-[--w8] shadow-inner">
+        <!-- Nav-items: схлопываются при открытом поиске -->
+        <div class="nav-left-collapse {searchOpen ? 'hidden' : ''}">
+          <div bind:this={navElement} id="nav" class="relative flex items-center gap-[5px]">
+            <div bind:this={indicatorElement} id="nav-indicator"
+              class="pointer-events-none absolute top-0 left-0 h-full rounded-[8px] bg-[--w8] shadow-inner">
+            </div>
+            {#each navItems as item}
+              <a href={item.href}
+                class="nav-item select-none text-sm leading-5 rounded-[8px] relative z-10 px-2 py-1.5 transition
+                  {isActive(item.href, $page.url.pathname) ? 'text-[--w]' : 'text-[--w60] hover:bg-[--w8] hover:text-[--w]'}">
+                {item.label}
+              </a>
+            {/each}
           </div>
-          {#each navItems as item}
-            <a href={item.href}
-              class="nav-item select-none text-sm leading-5 rounded-[8px] relative z-10 px-2 py-1.5 transition
-                {isActive(item.href, $page.url.pathname) ? 'text-[--w]' : 'text-[--w60] hover:bg-[--w8] hover:text-[--w]'}">
-              {item.label}
-            </a>
-          {/each}
         </div>
 
-        <!--
-          Правая часть navbar: [  | auth  ] [🔍/X]
-          При открытом поиске:
-            — "| auth" схлопывается влево (max-width → 0)
-            — инпут выезжает влево от кнопки (max-width → 180px)
-            — кнопка остаётся на месте, меняет иконку
-        -->
+        <!-- Разделитель: тоже скрывается -->
+        <div class="nav-left-collapse {searchOpen ? 'hidden' : ''}">
+          <span class="h-5 w-px bg-[--w18] mx-1 shrink-0"></span>
+        </div>
 
-        <!-- Разделитель + auth -->
-        <div class="nav-right-collapse {searchOpen ? 'hidden' : ''} ml-[5px]">
-          <span class="h-5 w-px bg-[--w18] shrink-0 mx-1"></span>
+        <!-- Инпут поиска: выезжает на место nav-items -->
+        <div class="search-input-wrap {searchOpen ? 'open' : ''}">
+          <input
+            bind:this={searchInputElement}
+            type="text"
+            bind:value={searchQuery}
+            onkeydown={doSearch}
+            placeholder="Search..."
+            class="w-[200px] bg-transparent border-b border-[--w18] text-sm text-[--w] outline-none px-1 py-1 placeholder:text-[--w30]"
+          />
+        </div>
 
+        <!-- Кнопка поиска / закрытия -->
+        <button
+          onclick={searchOpen ? closeSearch : openSearch}
+          class="relative w-[28px] h-[28px] flex items-center justify-center text-[--w60] hover:text-[--w] rounded-[8px] hover:bg-[--w8] transition-colors shrink-0"
+          title={searchOpen ? 'Close search' : 'Search'}
+        >
+          <span class="search-btn-icon {searchOpen ? 'hidden-icon' : ''}"><Search size={16} /></span>
+          <span class="search-btn-icon {searchOpen ? '' : 'hidden-icon'}"><X size={16} /></span>
+        </button>
+
+        <!-- Auth: всегда виден -->
+        <div class="flex items-center shrink-0 ml-[3px]">
           {#if authChecking}
-            <div class="w-[60px] h-[28px] rounded-[8px] bg-[--w8] animate-pulse shrink-0"></div>
+            <div class="w-[60px] h-[28px] rounded-[8px] bg-[--w8] animate-pulse"></div>
           {:else if $auth.user}
-            <div class="relative shrink-0" bind:this={userMenuElement}>
+            <div class="relative" bind:this={userMenuElement}>
               <button onclick={toggleUser}
                 class="select-none flex items-center gap-2 rounded-[8px] px-2 py-1 transition hover:bg-[--w8] cursor-pointer">
                 {#if $auth.user.avatar_thumb}
@@ -363,37 +386,10 @@
             </div>
           {:else}
             <a href="/auth/login"
-              class="shrink-0 select-none text-sm leading-5 rounded-[8px] border border-[--w12] px-2 py-1.5 text-[--w60] transition hover:border-[--w18] hover:text-[--w]">
+              class="select-none text-sm leading-5 rounded-[8px] border border-[--w12] px-2 py-1.5 text-[--w60] transition hover:border-[--w18] hover:text-[--w]">
               Login
             </a>
           {/if}
-        </div>
-
-        <!-- Поиск: инпут выезжает ВЛЕВО от кнопки, кнопка — крайняя справа -->
-        <div class="flex items-center shrink-0 ml-[5px]">
-
-          <!-- Инпут выезжает влево -->
-          <div class="search-input-wrap {searchOpen ? 'open' : ''}">
-            <input
-              bind:this={searchInputElement}
-              type="text"
-              bind:value={searchQuery}
-              onkeydown={doSearch}
-              placeholder="Search..."
-              class="w-[148px] bg-transparent border-b border-[--w18] text-sm text-[--w] outline-none px-1 py-1 placeholder:text-[--w30]"
-            />
-          </div>
-
-          <!-- Кнопка: Search ↔ X -->
-          <button
-            onclick={searchOpen ? closeSearch : openSearch}
-            class="relative w-[28px] h-[28px] flex items-center justify-center text-[--w60] hover:text-[--w] rounded-[8px] hover:bg-[--w8] transition-colors ml-1"
-            title={searchOpen ? 'Close search' : 'Search'}
-          >
-            <span class="search-btn-icon {searchOpen ? 'hidden-icon' : ''}"><Search size={16} /></span>
-            <span class="search-btn-icon {searchOpen ? '' : 'hidden-icon'}"><X size={16} /></span>
-          </button>
-
         </div>
 
       </nav>
