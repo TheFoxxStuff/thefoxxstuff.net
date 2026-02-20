@@ -57,14 +57,21 @@
 
   {:else if profile}
     {@const hue = nameHue(profile.username)}
-    {@const img = avUrl(profile.avatar_original || profile.avatar_thumb)}
+    {@const thumb = avUrl(profile.avatar_thumb)}
+    {@const original = avUrl(profile.avatar_original)}
 
     <div class="profile-card">
 
-      <!-- Avatar -->
+      <!-- Avatar: thumb shown, original opens by click -->
       <div class="avatar-wrap" class:admin={profile.role === 'admin'}>
-        {#if img}
-          <img src={img} alt={profile.username} class="avatar-img" />
+        {#if thumb}
+          {#if original}
+            <a href={original} target="_blank" rel="noreferrer" class="av-link" title="View full photo">
+              <img src={thumb} alt={profile.username} class="avatar-img av-clickable" />
+            </a>
+          {:else}
+            <img src={thumb} alt={profile.username} class="avatar-img" />
+          {/if}
         {:else}
           <div class="avatar-placeholder" style="--hue:{hue}">
             {(profile.display_name || profile.username || '?').slice(0,2).toUpperCase()}
@@ -174,6 +181,14 @@
   .avatar-img {
     object-fit: cover;
     border: 3px solid var(--w12);
+  }
+  .av-link { display: block; border-radius: 50%; }
+  .av-clickable {
+    transition: filter 0.15s, transform 0.15s;
+  }
+  .av-clickable:hover {
+    filter: brightness(1.1);
+    transform: scale(1.03);
   }
   .avatar-placeholder {
     background: hsl(var(--hue), 42%, 20%);

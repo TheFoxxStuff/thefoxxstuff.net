@@ -67,7 +67,9 @@
       const img = new window.Image();
       img.onload = () => {
         imgNW = img.naturalWidth; imgNH = img.naturalHeight;
-        scale = V / Math.min(imgNW, imgNH); panX = 0; panY = 0;
+        // Начальный scale: меньшая сторона = V (заполняет canvas)
+        scale = V / Math.min(imgNW, imgNH);
+        panX = 0; panY = 0;
       };
       img.src = ev.target.result;
     };
@@ -76,36 +78,51 @@
 
   function closeCrop() { showCropper = false; avatarFile = null; avatarPreview = null; }
 
+  // Минимальный scale: чтобы изображение всегда заполняло canvas по ОБЕИМ осям
+  function minScale() { return V / Math.min(imgNW, imgNH); }
+  function maxScale() { return minScale() * 5; }
+
   function clamp() {
-    const iw = imgNW*scale, ih = imgNH*scale;
-    const mx = Math.max(0,(iw-V)/2), my = Math.max(0,(ih-V)/2);
+    // Scale не может быть меньше minScale (иначе в canvas будут пустые полосы)
+    scale = Math.max(minScale(), Math.min(maxScale(), scale));
+    // Pan clamp: не даём изображению выходить за края canvas
+    const iw = imgNW * scale, ih = imgNH * scale;
+    const mx = Math.max(0, (iw - V) / 2);
+    const my = Math.max(0, (ih - V) / 2);
     panX = Math.max(-mx, Math.min(mx, panX));
     panY = Math.max(-my, Math.min(my, panY));
   }
 
-  function zoomIn()  { scale = Math.min(scale*1.15, V/Math.min(imgNW,imgNH)*5); clamp(); }
-  function zoomOut() { scale = Math.max(scale/1.15, V/Math.max(imgNW,imgNH)); clamp(); }
+  function zoomIn()  { scale = Math.min(scale * 1.15, maxScale()); clamp(); }
+  function zoomOut() { scale = Math.max(scale / 1.15, minScale()); clamp(); }
   function wheel(e)  { e.preventDefault(); e.deltaY < 0 ? zoomIn() : zoomOut(); }
 
   function dragStart(e) {
     e.preventDefault(); dragging = true;
-    const ev = e.touches?.[0] ?? e;
-    dsx=ev.clientX; dsy=ev.clientY; dpx=panX; dpy=panY;
+    // Поддержка и мыши, и тача
+    const ev = e.touches ? e.touches[0] : e;
+    dsx = ev.clientX; dsy = ev.clientY; dpx = panX; dpy = panY;
   }
   function dragMove(e) {
     if (!dragging) return;
-    const ev = e.touches?.[0] ?? e;
-    panX = dpx+(ev.clientX-dsx); panY = dpy+(ev.clientY-dsy); clamp();
+    const ev = e.touches ? e.touches[0] : e;
+    panX = dpx + (ev.clientX - dsx);
+    panY = dpy + (ev.clientY - dsy);
+    clamp();
   }
   function dragEnd() { dragging = false; }
 
   function getCrop() {
-    const iw=imgNW*scale, ih=imgNH*scale;
-    const il=(V-iw)/2+panX, it=(V-ih)/2+panY;
-    const cx = Math.round(Math.max(0,-il/scale));
-    const cy = Math.round(Math.max(0,-it/scale));
-    let cs = Math.round(V/scale);
-    cs = Math.min(cs, imgNW-cx, imgNH-cy);
+    // Позиция левого-верхнего угла изображения в координатах canvas
+    const imgLeft = (V - imgNW * scale) / 2 + panX;
+    const imgTop  = (V - imgNH * scale) / 2 + panY;
+    // Координаты кропа в оригинальных пикселях изображения
+    const cx = Math.max(0, Math.round(-imgLeft / scale));
+    const cy = Math.max(0, Math.round(-imgTop  / scale));
+    // Размер кропа: сколько оригинальных пикселей помещается в V px canvas
+    let cs = Math.round(V / scale);
+    // Убедимся что не выходим за границы изображения
+    cs = Math.min(cs, imgNW - cx, imgNH - cy);
     return { cx, cy, cs };
   }
 
@@ -176,8 +193,8 @@
         <!-- Preview -->
         <div class="av-preview-wrap">
           <label class="av-preview" title="Change avatar">
-            {#if original || thumb}
-              <img src={original || thumb} alt="" class="av-img" />
+            {#if thumb}
+              <img src={thumb} alt="" class="av-img" />
             {:else}
               <div class="av-placeholder" style="--hue:{hue}">
                 {(profile.display_name || profile.username || '?').slice(0,2).toUpperCase()}
@@ -303,8 +320,8 @@
       <div class="crop-zoom">
         <button class="crop-zoom-btn" onclick={zoomOut}><ZoomOut size={16}/></button>
         <input type="range"
-          min={V/Math.max(imgNW,imgNH)}
-          max={V/Math.min(imgNW,imgNH)*5}
+          min={imgNW && imgNH ? V / Math.min(imgNW, imgNH) : 0.1}
+          max={imgNW && imgNH ? (V / Math.min(imgNW, imgNH)) * 5 : 5}
           step="0.001"
           bind:value={scale}
           oninput={clamp}
