@@ -114,20 +114,16 @@
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <!-- Breadcrumb всегда виден — нет layout shift при загрузке -->
-  <Breadcrumb
-    items={[{ href: '/arts', label: 'Arts' }, { href: '#', label: artwork?.title ?? '' }]}
-    loading={loading || !artwork}
-  />
-
   {#if loading}
-    <div class="animate-pulse space-y-6 mt-4">
+    <div class="animate-pulse space-y-6">
+      <div class="h-8 w-48 bg-white/5 rounded"></div>
       <div class="w-full bg-white/5 rounded-xl aspect-square"></div>
     </div>
   {:else if artwork}
-    <a href="/arts" class="inline-flex items-center text-[--w60] hover:text-[--w] transition-all duration-100 gap-2 px-4 py-2 bg-[--w5] hover:bg-[--w8] rounded-lg text-sm mb-2 mt-2">
+    <a href="/arts" class="inline-flex items-center text-[--w60] hover:text-[--w] transition-all duration-100 gap-2 px-4 py-2 bg-[--w5] hover:bg-[--w8] rounded-lg text-sm mb-2">
       ← Back to arts
     </a>
+    <Breadcrumb items={[{ href: '/arts', label: 'Arts' }, { href: `/arts/${artwork.slug || artwork._id}`, label: artwork.title }]} />
     
     <div class="flex flex-col mt-[20px] gap-[12px]">
       <div 

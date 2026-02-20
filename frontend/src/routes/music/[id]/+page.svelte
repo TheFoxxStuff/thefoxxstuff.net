@@ -121,16 +121,11 @@
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <!-- Breadcrumb всегда виден — нет layout shift при загрузке -->
-  <Breadcrumb
-    items={[{ href: '/music', label: 'Music' }, { href: '#', label: release?.title ?? '' }]}
-    loading={loading || !release}
-  />
-
   {#if loading}
-    <div class="animate-pulse mt-4"><div class="h-8 w-64 bg-dark-800 rounded mb-8"></div></div>
+    <div class="animate-pulse"><div class="h-8 w-64 bg-dark-800 rounded mb-8"></div></div>
   {:else if release}
-    <h1 class="font-display text-3xl tracking-wide mb-2 mt-4">{release.title} ({new Date(release.release_date).getFullYear()})</h1>
+    <h1 class="font-display text-3xl tracking-wide mb-2">{release.title} ({new Date(release.release_date).getFullYear()})</h1>
+    <Breadcrumb items={[{ href: '/music', label: 'Music' }, { href: `/music/${release.slug || release._id}`, label: release.title }]} />
     
     <div class="mt-8 flex flex-col md:flex-row gap-8">
       <!-- Cover Image -->
