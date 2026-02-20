@@ -98,13 +98,18 @@
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
+  <!-- Breadcrumb всегда виден — нет layout shift при загрузке -->
+  <Breadcrumb
+    items={[{ href: '/blog', label: 'Blog' }, { href: '#', label: post?.title ?? '' }]}
+    loading={loading || !post}
+  />
+
   {#if loading}
-    <div class="animate-pulse"><div class="h-8 w-48 bg-dark-800 rounded"></div></div>
+    <div class="animate-pulse mt-2"><div class="h-8 w-48 bg-dark-800 rounded"></div></div>
   {:else if post}
     <a href="/blog" class="inline-flex items-center text-[--w60] hover:text-[--w] transition-all duration-100 gap-2 px-4 py-2 bg-[--w5] hover:bg-[--w8] rounded-lg text-sm mb-2">
       ← Back to the blog
     </a>
-    <Breadcrumb items={[{ href: '/blog', label: 'Blog' }, { href: `/blog/${post.slug || post._id}`, label: post.title }]} />
     
     <article class="card mt-8 overflow-hidden">
       <!-- Cover Image -->
