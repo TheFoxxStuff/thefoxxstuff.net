@@ -169,8 +169,8 @@
         </div>
         
         <!-- SEO Section -->
-        <div class="border-t border-dark-800 pt-6">
-          <button type="button" onclick={() => showSeo = !showSeo} class="flex items-center gap-2 text-dark-400 hover:text-white transition-colors">
+        <div class="border-t border-[--w8] pt-6">
+          <button type="button" onclick={() => showSeo = !showSeo} class="flex items-center gap-2 text-[--w60] hover:text-white transition-colors">
             <svg class="w-5 h-5 transition-transform {showSeo ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -182,14 +182,14 @@
               <div>
                 <label class="label">Meta Title</label>
                 <input type="text" bind:value={form.meta_title} class="input" placeholder="Custom title for search engines" />
-                <p class="text-xs text-dark-500 mt-1">Leave empty to use post title</p>
+                <p class="text-xs text-[--w30] mt-1">Leave empty to use post title</p>
               </div>
               
               <div>
                 <label class="label">Meta Description</label>
                 <textarea bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines (150-160 characters recommended)"></textarea>
                 {#if form.meta_description}
-                  <p class="text-xs text-dark-500 mt-1">{form.meta_description.length}/160 characters</p>
+                  <p class="text-xs text-[--w30] mt-1">{form.meta_description.length}/160 characters</p>
                 {/if}
               </div>
               
@@ -205,7 +205,7 @@
                 category="blog"
                 customName={form.title ? `${form.title}-og` : null}
               />
-              <p class="text-xs text-dark-500 -mt-2">Image shown when sharing on social media (1200x630 recommended)</p>
+              <p class="text-xs text-[--w30] -mt-2">Image shown when sharing on social media (1200x630 recommended)</p>
             </div>
           {/if}
         </div>
@@ -221,7 +221,7 @@
   {#if loading}
     <div class="space-y-4">
       {#each Array(5) as _}
-        <div class="h-16 bg-dark-800 rounded-xl animate-pulse"></div>
+        <div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>
       {/each}
     </div>
   {:else}
@@ -229,24 +229,24 @@
       {#each posts as post}
         <div class="card p-4 flex justify-between items-center">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-12 bg-dark-800 rounded-lg flex items-center justify-center overflow-hidden">
+            <div class="w-16 h-12 bg-[--w8] rounded-lg flex items-center justify-center overflow-hidden">
               {#if post.cover_image}
                 {#await api.upload.getInfo(post.cover_image) then imgInfo}
                   <img src={getImageUrl(imgInfo, 'thumb')} alt="" class="w-full h-full object-cover" />
                 {:catch}
-                  <svg class="w-6 h-6 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-6 h-6 text-[--w30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1" />
                   </svg>
                 {/await}
               {:else}
-                <svg class="w-6 h-6 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-[--w30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1" />
                 </svg>
               {/if}
             </div>
             <div>
               <h3 class="font-medium">{post.title}</h3>
-              <p class="text-sm text-dark-400">
+              <p class="text-sm text-[--w60]">
                 {#if post.slug}<span class="text-accent-green">/blog/{post.slug}</span> • {/if}
                 {new Date(post.created_at).toLocaleDateString()} • {post.views} views
               </p>

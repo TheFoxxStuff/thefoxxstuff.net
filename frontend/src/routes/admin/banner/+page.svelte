@@ -149,41 +149,41 @@
   {#if loading}
     <div class="space-y-4">
       {#each Array(3) as _}
-        <div class="h-32 bg-dark-800 rounded-xl animate-pulse"></div>
+        <div class="h-32 bg-[--w8] rounded-xl animate-pulse"></div>
       {/each}
     </div>
   {:else if banner.slides.length === 0}
     <div class="card p-12 text-center">
-      <svg class="w-16 h-16 mx-auto text-dark-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-16 h-16 mx-auto text-[--w30] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
       </svg>
-      <p class="text-dark-400">No banner slides yet. Add your first slide!</p>
+      <p class="text-[--w60]">No banner slides yet. Add your first slide!</p>
     </div>
   {:else}
     <div class="space-y-3">
       {#each banner.slides as slide, i}
         <div class="card p-4 flex items-center gap-4">
           <div class="flex flex-col gap-1">
-            <button onclick={() => moveSlide(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-dark-700 rounded disabled:opacity-30">
+            <button onclick={() => moveSlide(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
             </button>
-            <button onclick={() => moveSlide(i, i + 1)} disabled={i === banner.slides.length - 1} class="p-1 hover:bg-dark-700 rounded disabled:opacity-30">
+            <button onclick={() => moveSlide(i, i + 1)} disabled={i === banner.slides.length - 1} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
           </div>
           
-          <div class="w-48 h-24 bg-dark-800 rounded-lg overflow-hidden flex-shrink-0">
+          <div class="w-48 h-24 bg-[--w8] rounded-lg overflow-hidden flex-shrink-0">
             {#await api.upload.getInfo(slide.image) then imgInfo}
               <img src={getImageUrl(imgInfo, 'medium')} alt="" class="w-full h-full object-cover" />
             {:catch}
-              <div class="w-full h-full flex items-center justify-center text-dark-600">No image</div>
+              <div class="w-full h-full flex items-center justify-center text-[--w30]">No image</div>
             {/await}
           </div>
           
           <div class="flex-1">
             <h3 class="font-medium">{slide.title || 'Untitled'}</h3>
             {#if slide.link}
-              <p class="text-sm text-dark-400">Link: {slide.link}</p>
+              <p class="text-sm text-[--w60]">Link: {slide.link}</p>
             {/if}
           </div>
           

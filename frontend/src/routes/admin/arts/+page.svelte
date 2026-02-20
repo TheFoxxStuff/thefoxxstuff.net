@@ -184,11 +184,11 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="label">Dimensions (auto-filled)</label>
-            <input type="text" bind:value={form.dimensions} class="input bg-dark-900" readonly />
+            <input type="text" bind:value={form.dimensions} class="input bg-[--w5]" readonly />
           </div>
           <div>
             <label class="label">File Size (auto-filled)</label>
-            <input type="text" bind:value={form.file_size} class="input bg-dark-900" readonly />
+            <input type="text" bind:value={form.file_size} class="input bg-[--w5]" readonly />
           </div>
         </div>
         
@@ -198,8 +198,8 @@
         </div>
         
         <!-- SEO Section -->
-        <div class="border-t border-dark-800 pt-6">
-          <button type="button" onclick={() => showSeo = !showSeo} class="flex items-center gap-2 text-dark-400 hover:text-white transition-colors">
+        <div class="border-t border-[--w8] pt-6">
+          <button type="button" onclick={() => showSeo = !showSeo} class="flex items-center gap-2 text-[--w60] hover:text-white transition-colors">
             <svg class="w-5 h-5 transition-transform {showSeo ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -217,7 +217,7 @@
                 <label class="label">Meta Description</label>
                 <textarea bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines"></textarea>
                 {#if form.meta_description}
-                  <p class="text-xs text-dark-500 mt-1">{form.meta_description.length}/160 characters</p>
+                  <p class="text-xs text-[--w30] mt-1">{form.meta_description.length}/160 characters</p>
                 {/if}
               </div>
               
@@ -248,14 +248,14 @@
   {#if loading}
     <div class="grid grid-cols-4 gap-4">
       {#each Array(8) as _}
-        <div class="aspect-square bg-dark-800 rounded-xl animate-pulse"></div>
+        <div class="aspect-square bg-[--w8] rounded-xl animate-pulse"></div>
       {/each}
     </div>
   {:else}
     <div class="grid grid-cols-4 gap-4">
       {#each artworks as artwork}
         <div class="card p-2 group relative">
-          <div class="aspect-square bg-dark-800 rounded-lg overflow-hidden mb-2">
+          <div class="aspect-square bg-[--w8] rounded-lg overflow-hidden mb-2">
             {#if artwork.image_info}
               <img src={getImageUrl(artwork.image_info, 'thumb')} alt="" class="w-full h-full object-cover" />
             {:else if artwork.image}
@@ -263,29 +263,29 @@
                 <img src={getImageUrl(imgInfo, 'thumb')} alt="" class="w-full h-full object-cover" />
               {:catch}
                 <div class="w-full h-full flex items-center justify-center">
-                  <svg class="w-8 h-8 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-8 h-8 text-[--w30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16" />
                   </svg>
                 </div>
               {/await}
             {:else}
               <div class="w-full h-full flex items-center justify-center">
-                <svg class="w-8 h-8 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-8 h-8 text-[--w30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16" />
                 </svg>
               </div>
             {/if}
           </div>
           <p class="text-sm truncate">{artwork.title}</p>
-          <p class="text-xs text-dark-400">{artwork.year} {artwork.slug ? `• /${artwork.slug}` : ''}</p>
+          <p class="text-xs text-[--w60]">{artwork.year} {artwork.slug ? `• /${artwork.slug}` : ''}</p>
           <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-            <a href="/arts/{artwork.slug || artwork._id}" target="_blank" class="p-1 bg-dark-800 rounded hover:bg-dark-700" aria-label="View">
+            <a href="/arts/{artwork.slug || artwork._id}" target="_blank" class="p-1 bg-[--w8] rounded hover:bg-[--w12]" aria-label="View">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </a>
-            <button onclick={() => editArtwork(artwork)} class="p-1 bg-dark-800 rounded hover:bg-dark-700" aria-label="Edit">
+            <button onclick={() => editArtwork(artwork)} class="p-1 bg-[--w8] rounded hover:bg-[--w12]" aria-label="Edit">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" />
               </svg>

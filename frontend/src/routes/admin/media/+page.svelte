@@ -86,49 +86,49 @@
       <option value="banner">Banner</option>
       <option value="markdown">Markdown</option>
     </select>
-    <label class="flex items-center gap-2 text-sm text-dark-400 cursor-pointer">
+    <label class="flex items-center gap-2 text-sm text-[--w60] cursor-pointer">
       <input type="checkbox" bind:checked={unusedOnly} onchange={applyFilter} class="accent-green-400" />
       Unused only
     </label>
-    <span class="text-sm text-dark-500 ml-auto">{images.total} images</span>
+    <span class="text-sm text-[--w30] ml-auto">{images.total} images</span>
   </div>
 
   {#if loading}
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-      {#each Array(12) as _}<div class="aspect-square bg-dark-800 rounded-lg animate-pulse"></div>{/each}
+      {#each Array(12) as _}<div class="aspect-square bg-[--w8] rounded-lg animate-pulse"></div>{/each}
     </div>
   {:else}
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
       {#each images.items as img}
         <button
           onclick={() => selectedImage = selectedImage?._id === img._id ? null : img}
-          class="group aspect-square bg-dark-800 rounded-lg overflow-hidden relative border-2 transition {selectedImage?._id === img._id ? 'border-accent-green' : 'border-transparent hover:border-dark-600'}"
+          class="group aspect-square bg-[--w8] rounded-lg overflow-hidden relative border-2 transition {selectedImage?._id === img._id ? 'border-accent-green' : 'border-transparent hover:border-dark-600'}"
         >
           {#if thumbUrl(img)}
             <img src={thumbUrl(img)} alt="" class="w-full h-full object-cover" loading="lazy" />
           {:else}
-            <div class="w-full h-full flex items-center justify-center text-dark-600 text-xs">No preview</div>
+            <div class="w-full h-full flex items-center justify-center text-[--w30] text-xs">No preview</div>
           {/if}
           <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition">
             <div class="text-xs text-white truncate">{img.custom_name || img.filename || 'Untitled'}</div>
-            <div class="text-[10px] text-dark-400">{formatSize(img.size)}</div>
+            <div class="text-[10px] text-[--w60]">{formatSize(img.size)}</div>
           </div>
           {#if img.category}
-            <span class="absolute top-1 left-1 px-1.5 py-0.5 text-[10px] bg-dark-900/80 text-dark-300 rounded">{img.category}</span>
+            <span class="absolute top-1 left-1 px-1.5 py-0.5 text-[10px] bg-[--w5]/80 text-dark-300 rounded">{img.category}</span>
           {/if}
         </button>
       {/each}
     </div>
 
     {#if images.items.length === 0}
-      <div class="text-center text-dark-500 py-12">No images found</div>
+      <div class="text-center text-[--w30] py-12">No images found</div>
     {/if}
 
     <!-- Pagination -->
     {#if images.pages > 1}
       <div class="flex items-center justify-center gap-2 mt-6">
         {#each Array(images.pages) as _, i}
-          <button onclick={() => changePage(i+1)} class="px-3 py-1 text-sm rounded-lg {page === i+1 ? 'bg-accent-green text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-white'}">{i+1}</button>
+          <button onclick={() => changePage(i+1)} class="px-3 py-1 text-sm rounded-lg {page === i+1 ? 'bg-accent-green text-dark-950' : 'bg-[--w8] text-[--w60] hover:text-white'}">{i+1}</button>
         {/each}
       </div>
     {/if}
@@ -138,16 +138,16 @@
   {#if selectedImage}
     <div class="card p-4 mt-4">
       <div class="flex gap-4">
-        <div class="w-32 h-32 bg-dark-800 rounded-lg overflow-hidden flex-shrink-0">
+        <div class="w-32 h-32 bg-[--w8] rounded-lg overflow-hidden flex-shrink-0">
           {#if thumbUrl(selectedImage)}<img src={thumbUrl(selectedImage)} alt="" class="w-full h-full object-cover" />{/if}
         </div>
         <div class="flex-1 text-sm space-y-1">
           <div class="text-[--w] font-medium">{selectedImage.custom_name || selectedImage.filename || 'Untitled'}</div>
-          <div class="text-dark-400">Category: {selectedImage.category || '—'}</div>
-          <div class="text-dark-400">Size: {formatSize(selectedImage.size)}</div>
-          <div class="text-dark-400">Dimensions: {selectedImage.width}×{selectedImage.height}</div>
-          <div class="text-dark-400">Uploaded: {formatDate(selectedImage.created_at)}</div>
-          <div class="text-dark-500 text-xs break-all mt-2">ID: {selectedImage._id}</div>
+          <div class="text-[--w60]">Category: {selectedImage.category || '—'}</div>
+          <div class="text-[--w60]">Size: {formatSize(selectedImage.size)}</div>
+          <div class="text-[--w60]">Dimensions: {selectedImage.width}×{selectedImage.height}</div>
+          <div class="text-[--w60]">Uploaded: {formatDate(selectedImage.created_at)}</div>
+          <div class="text-[--w30] text-xs break-all mt-2">ID: {selectedImage._id}</div>
           <button onclick={() => deleteImage(selectedImage._id)} class="btn btn-danger text-sm mt-2">Delete Image</button>
         </div>
       </div>

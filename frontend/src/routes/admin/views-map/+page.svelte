@@ -54,16 +54,16 @@
 <div>
   <div class="flex items-center justify-between mb-6">
     <h1 class="font-display text-3xl tracking-wide">Views Map</h1>
-    <div class="flex items-center gap-2">{#each [7,30,90,365] as d}<button onclick={() => changeDays(d)} class="px-3 py-1.5 text-sm rounded-lg transition-colors {days===d?'bg-accent-green text-dark-950 font-medium':'bg-dark-800 text-dark-400 hover:text-white'}">{d===365?'1Y':`${d}D`}</button>{/each}</div>
+    <div class="flex items-center gap-2">{#each [7,30,90,365] as d}<button onclick={() => changeDays(d)} class="px-3 py-1.5 text-sm rounded-lg transition-colors {days===d?'bg-accent-green text-dark-950 font-medium':'bg-[--w8] text-[--w60] hover:text-white'}">{d===365?'1Y':`${d}D`}</button>{/each}</div>
   </div>
-  {#if loading}<div class="card p-8 animate-pulse"><div class="h-[400px] bg-dark-800 rounded-lg"></div></div>
+  {#if loading}<div class="card p-8 animate-pulse"><div class="h-[400px] bg-[--w8] rounded-lg"></div></div>
   {:else if mapData}
     <div class="grid grid-cols-3 gap-[4px] mb-6">
-      <div class="card p-4"><div class="text-dark-400 text-sm">Unique Views</div><div class="text-2xl font-bold">{mapData.total_unique_views?.toLocaleString()}</div></div>
-      <div class="card p-4"><div class="text-dark-400 text-sm">Countries</div><div class="text-2xl font-bold">{mapData.countries?.length||0}</div></div>
-      <div class="card p-4"><div class="text-dark-400 text-sm">Cities</div><div class="text-2xl font-bold">{mapData.locations?.length||0}</div></div>
+      <div class="card p-4"><div class="text-[--w60] text-sm">Unique Views</div><div class="text-2xl font-bold">{mapData.total_unique_views?.toLocaleString()}</div></div>
+      <div class="card p-4"><div class="text-[--w60] text-sm">Countries</div><div class="text-2xl font-bold">{mapData.countries?.length||0}</div></div>
+      <div class="card p-4"><div class="text-[--w60] text-sm">Cities</div><div class="text-2xl font-bold">{mapData.locations?.length||0}</div></div>
     </div>
-    <div class="card p-4 mb-6"><div bind:this={mapContainer} class="relative w-full overflow-hidden rounded-lg bg-dark-950" style="aspect-ratio:2/1;">
+    <div class="card p-4 mb-6"><div bind:this={mapContainer} class="relative w-full overflow-hidden rounded-lg bg-[--bg]" style="aspect-ratio:2/1;">
       <svg viewBox="0 0 {MAP_W} {MAP_H}" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
         <rect x="0" y="0" width={MAP_W} height={MAP_H} fill="#0a0a0a" />
         {#if worldPaths}<path d={worldPaths} fill="#1a1f1a" stroke="#2a3a2a" stroke-width="0.5" />{/if}
@@ -74,13 +74,13 @@
           <circle cx={pos.x} cy={pos.y} r="1.5" fill="#4ade80" />
         {/each}
       </svg>
-      {#if tooltip.visible}<div class="absolute pointer-events-none bg-dark-900 border border-dark-700 rounded-lg px-3 py-1.5 text-xs text-white shadow-lg whitespace-nowrap z-10" style="left:{tooltip.x}px;top:{tooltip.y}px;">{tooltip.text}</div>{/if}
+      {#if tooltip.visible}<div class="absolute pointer-events-none bg-[--w5] border border-[--w12] rounded-lg px-3 py-1.5 text-xs text-white shadow-lg whitespace-nowrap z-10" style="left:{tooltip.x}px;top:{tooltip.y}px;">{tooltip.text}</div>{/if}
     </div></div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-[4px]">
-      <div class="card"><div class="px-4 py-3 border-b border-dark-800 flex items-center justify-between"><h3 class="font-medium text-sm">Countries</h3>{#if selectedCountry}<button onclick={() => selectedCountry=null} class="text-xs text-accent-green hover:underline">Show all</button>{/if}</div>
-        <div class="max-h-[400px] overflow-y-auto">{#each topCountries as c}<button onclick={() => selectedCountry=selectedCountry===c.country?null:c.country} class="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-dark-800 transition-colors border-b border-dark-800/50 {selectedCountry===c.country?'bg-dark-800 text-accent-green':'text-dark-300'}"><span class="flex items-center gap-2"><span class="text-base">{flag(c.country_code)}</span><span>{c.country}</span></span><span class="font-mono text-dark-400">{c.count}</span></button>{/each}{#if topCountries.length===0}<div class="px-4 py-8 text-center text-dark-500 text-sm">No data</div>{/if}</div></div>
-      <div class="card"><div class="px-4 py-3 border-b border-dark-800"><h3 class="font-medium text-sm">{selectedCountry?`Cities in ${selectedCountry}`:'Top Cities'}</h3></div>
-        <div class="max-h-[400px] overflow-y-auto">{#each filteredLocs.slice(0,30) as loc}<div class="flex items-center justify-between px-4 py-2.5 text-sm border-b border-dark-800/50"><span class="text-dark-300"><span class="text-dark-500">{loc.country_code}</span> · {loc.city}</span><div class="flex items-center gap-3"><span class="font-mono text-dark-400">{loc.count}</span><div class="w-16 h-1.5 bg-dark-800 rounded-full overflow-hidden"><div class="h-full bg-accent-green/60 rounded-full" style="width:{Math.min(100,(loc.count/(mapData.locations[0]?.count||1))*100)}%"></div></div></div></div>{/each}{#if filteredLocs.length===0}<div class="px-4 py-8 text-center text-dark-500 text-sm">No data</div>{/if}</div></div>
+      <div class="card"><div class="px-4 py-3 border-b border-[--w8] flex items-center justify-between"><h3 class="font-medium text-sm">Countries</h3>{#if selectedCountry}<button onclick={() => selectedCountry=null} class="text-xs text-accent-green hover:underline">Show all</button>{/if}</div>
+        <div class="max-h-[400px] overflow-y-auto">{#each topCountries as c}<button onclick={() => selectedCountry=selectedCountry===c.country?null:c.country} class="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-[--w8] transition-colors border-b border-[--w8]/50 {selectedCountry===c.country?'bg-[--w8] text-accent-green':'text-dark-300'}"><span class="flex items-center gap-2"><span class="text-base">{flag(c.country_code)}</span><span>{c.country}</span></span><span class="font-mono text-[--w60]">{c.count}</span></button>{/each}{#if topCountries.length===0}<div class="px-4 py-8 text-center text-[--w30] text-sm">No data</div>{/if}</div></div>
+      <div class="card"><div class="px-4 py-3 border-b border-[--w8]"><h3 class="font-medium text-sm">{selectedCountry?`Cities in ${selectedCountry}`:'Top Cities'}</h3></div>
+        <div class="max-h-[400px] overflow-y-auto">{#each filteredLocs.slice(0,30) as loc}<div class="flex items-center justify-between px-4 py-2.5 text-sm border-b border-[--w8]/50"><span class="text-dark-300"><span class="text-[--w30]">{loc.country_code}</span> · {loc.city}</span><div class="flex items-center gap-3"><span class="font-mono text-[--w60]">{loc.count}</span><div class="w-16 h-1.5 bg-[--w8] rounded-full overflow-hidden"><div class="h-full bg-accent-green/60 rounded-full" style="width:{Math.min(100,(loc.count/(mapData.locations[0]?.count||1))*100)}%"></div></div></div></div>{/each}{#if filteredLocs.length===0}<div class="px-4 py-8 text-center text-[--w30] text-sm">No data</div>{/if}</div></div>
     </div>
   {/if}
 </div>

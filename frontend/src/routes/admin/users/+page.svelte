@@ -12,16 +12,16 @@
 <svelte:head><title>Users Admin - TheFoxxStuff</title></svelte:head>
 <div>
   <h1 class="font-display text-3xl tracking-wide mb-8">Users</h1>
-  {#if loading}<div class="space-y-4">{#each Array(3) as _}<div class="h-16 bg-dark-800 rounded-xl animate-pulse"></div>{/each}</div>
+  {#if loading}<div class="space-y-4">{#each Array(3) as _}<div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>{/each}</div>
   {:else}<div class="space-y-2">{#each users as user}
     <div class="card p-4 flex justify-between items-center">
       <div>
         <h3 class="font-medium flex items-center gap-2">
           {user.username}
           {#if user.role === 'admin'}<span class="px-2 py-0.5 text-xs bg-accent-green text-dark-950 rounded">ADMIN</span>{/if}
-          {#if user._id === $auth.user?._id}<span class="text-dark-400 text-sm">(you)</span>{/if}
+          {#if user._id === $auth.user?._id}<span class="text-[--w60] text-sm">(you)</span>{/if}
         </h3>
-        <p class="text-sm text-dark-400">{user.email} • Joined {new Date(user.created_at).toLocaleDateString()}</p>
+        <p class="text-sm text-[--w60]">{user.email} • Joined {new Date(user.created_at).toLocaleDateString()}</p>
       </div>
       {#if user._id !== $auth.user?._id}
         <div class="flex gap-2">

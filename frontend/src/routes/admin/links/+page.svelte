@@ -36,10 +36,10 @@
       </form>
     </div>
   {/if}
-  {#if loading}<div class="space-y-4">{#each Array(4) as _}<div class="h-16 bg-dark-800 rounded-xl animate-pulse"></div>{/each}</div>
+  {#if loading}<div class="space-y-4">{#each Array(4) as _}<div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>{/each}</div>
   {:else}<div class="space-y-2">{#each links as link}
     <div class="card p-4 flex justify-between items-center">
-      <div><h3 class="font-medium">{link.title}</h3><p class="text-sm text-dark-400">{link.url}</p></div>
+      <div><h3 class="font-medium">{link.title}</h3><p class="text-sm text-[--w60]">{link.url}</p></div>
       <div class="flex gap-2"><button onclick={() => editLink(link)} class="btn btn-secondary text-sm">Edit</button><button onclick={() => deleteLink(link._id)} class="btn btn-danger text-sm">Delete</button></div>
     </div>
   {/each}</div>{/if}

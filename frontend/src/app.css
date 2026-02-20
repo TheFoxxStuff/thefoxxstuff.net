@@ -8,11 +8,11 @@
   .btn-secondary { @apply bg-dark-800 text-white border border-dark-700 hover:bg-dark-700; }
   .btn-breadcrumb { @apply inline-flex items-center justify-center gap-[12px] px-[14px] py-[8px] text-[14px] font-medium transition-all rounded-[8px] disabled:opacity-5 hover:bg-[--w5] }
   .btn-danger { @apply bg-accent-red text-white hover:bg-accent-red/90; }
-  .card { @apply bg-dark-900 rounded-xl overflow-hidden; }
-  .card-hover { @apply hover:bg-dark-800/50 transition-colors; }
-  .input { @apply w-full px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:border-accent-green/50; }
-  .textarea { @apply w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:border-accent-green/50 resize-none; }
-  .label { @apply block text-sm font-medium text-dark-400 mb-1; }
+  .card { background: var(--w5); border: 1px solid var(--w8); border-radius: 0.75rem; overflow: hidden; }
+  .card-hover { transition: background 0.15s; } .card-hover:hover { background: var(--w8); }
+  .input { @apply w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent-green/50; background: var(--w8); border: 1px solid var(--w12); color: var(--w); }
+  .textarea { @apply w-full px-4 py-3 rounded-lg focus:outline-none resize-none; background: var(--w8); border: 1px solid var(--w12); color: var(--w); }
+  .label { @apply block text-sm font-medium mb-1; color: var(--w60); }
   .nav-link { @apply px-4 py-2 text-sm font-medium text-dark-400 hover:text-white transition-colors rounded-lg; }
   .nav-link-active { @apply bg-dark-800 text-white; }
   .badge { @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-dark-700 bg-dark-800/50; }

@@ -68,42 +68,42 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[4px]">
       {#each Array(6) as _}
         <div class="card p-6 animate-pulse">
-          <div class="h-4 w-20 bg-dark-800 rounded mb-2"></div>
-          <div class="h-8 w-16 bg-dark-800 rounded"></div>
+          <div class="h-4 w-20 bg-[--w8] rounded mb-2"></div>
+          <div class="h-8 w-16 bg-[--w8] rounded"></div>
         </div>
       {/each}
     </div>
   {:else if stats}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[4px] mb-8">
       <div class="card p-6">
-        <div class="text-dark-400 text-sm mb-1">Music Releases</div>
+        <div class="text-[--w60] text-sm mb-1">Music Releases</div>
         <div class="text-3xl font-bold">{stats.music.count}</div>
-        <div class="text-dark-500 text-sm mt-1">{stats.music.views.toLocaleString()} views</div>
+        <div class="text-[--w30] text-sm mt-1">{stats.music.views.toLocaleString()} views</div>
       </div>
       <div class="card p-6">
-        <div class="text-dark-400 text-sm mb-1">Blog Posts</div>
+        <div class="text-[--w60] text-sm mb-1">Blog Posts</div>
         <div class="text-3xl font-bold">{stats.blog.count}</div>
-        <div class="text-dark-500 text-sm mt-1">{stats.blog.views.toLocaleString()} views</div>
+        <div class="text-[--w30] text-sm mt-1">{stats.blog.views.toLocaleString()} views</div>
       </div>
       <div class="card p-6">
-        <div class="text-dark-400 text-sm mb-1">Artworks</div>
+        <div class="text-[--w60] text-sm mb-1">Artworks</div>
         <div class="text-3xl font-bold">{stats.arts.count}</div>
-        <div class="text-dark-500 text-sm mt-1">{stats.arts.views.toLocaleString()} views</div>
+        <div class="text-[--w30] text-sm mt-1">{stats.arts.views.toLocaleString()} views</div>
       </div>
       <div class="card p-6">
-        <div class="text-dark-400 text-sm mb-1">Links</div>
+        <div class="text-[--w60] text-sm mb-1">Links</div>
         <div class="text-3xl font-bold">{stats.links.count}</div>
       </div>
       <div class="card p-6">
-        <div class="text-dark-400 text-sm mb-1">Users</div>
+        <div class="text-[--w60] text-sm mb-1">Users</div>
         <div class="text-3xl font-bold">{stats.users.count}</div>
       </div>
       <div class="card p-6">
-        <div class="text-dark-400 text-sm mb-1">Images</div>
+        <div class="text-[--w60] text-sm mb-1">Images</div>
         <div class="text-3xl font-bold">{stats.images?.count || 0}</div>
       </div>
       <div class="card p-6 col-span-2 bg-gradient-to-r from-accent-green/10 to-accent-cyan/10">
-        <div class="text-dark-400 text-sm mb-1">Total Views</div>
+        <div class="text-[--w60] text-sm mb-1">Total Views</div>
         <div class="text-3xl font-bold text-gradient">{stats.total_views.toLocaleString()}</div>
       </div>
     </div>
@@ -115,7 +115,7 @@
           {#each [7, 14, 30, 90] as days}
             <button 
               onclick={() => loadChart(days)}
-              class="px-3 py-1 text-sm rounded-lg transition-colors {chartDays === days ? 'bg-accent-green text-dark-950' : 'bg-dark-800 hover:bg-dark-700'}"
+              class="px-3 py-1 text-sm rounded-lg transition-colors {chartDays === days ? 'bg-accent-green text-dark-950' : 'bg-[--w8] hover:bg-[--w12]'}"
             >
               {days}d
             </button>
@@ -136,15 +136,15 @@
         <div class="flex gap-6 mb-4 text-sm">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded-full bg-accent-green"></div>
-            <span class="text-dark-400">Music ({chartData.summary.music.toLocaleString()})</span>
+            <span class="text-[--w60]">Music ({chartData.summary.music.toLocaleString()})</span>
           </div>
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded-full bg-accent-cyan"></div>
-            <span class="text-dark-400">Blog ({chartData.summary.blog.toLocaleString()})</span>
+            <span class="text-[--w60]">Blog ({chartData.summary.blog.toLocaleString()})</span>
           </div>
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-            <span class="text-dark-400">Arts ({chartData.summary.arts.toLocaleString()})</span>
+            <span class="text-[--w60]">Arts ({chartData.summary.arts.toLocaleString()})</span>
           </div>
         </div>
         
@@ -188,7 +188,7 @@
           </svg>
         </div>
       {:else}
-        <div class="h-64 flex items-center justify-center text-dark-500">No data available</div>
+        <div class="h-64 flex items-center justify-center text-[--w30]">No data available</div>
       {/if}
     </div>
     
@@ -200,10 +200,10 @@
             {#each topContent.music as item, i}
               <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                  <span class="text-dark-500 w-5">{i + 1}.</span>
+                  <span class="text-[--w30] w-5">{i + 1}.</span>
                   <span class="truncate max-w-[180px]">{item.title}</span>
                 </div>
-                <span class="text-dark-400 text-sm">{item.views.toLocaleString()}</span>
+                <span class="text-[--w60] text-sm">{item.views.toLocaleString()}</span>
               </div>
             {/each}
           </div>
@@ -215,10 +215,10 @@
             {#each topContent.blog as item, i}
               <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                  <span class="text-dark-500 w-5">{i + 1}.</span>
+                  <span class="text-[--w30] w-5">{i + 1}.</span>
                   <span class="truncate max-w-[180px]">{item.title}</span>
                 </div>
-                <span class="text-dark-400 text-sm">{item.views.toLocaleString()}</span>
+                <span class="text-[--w60] text-sm">{item.views.toLocaleString()}</span>
               </div>
             {/each}
           </div>
@@ -230,10 +230,10 @@
             {#each topContent.arts as item, i}
               <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                  <span class="text-dark-500 w-5">{i + 1}.</span>
+                  <span class="text-[--w30] w-5">{i + 1}.</span>
                   <span class="truncate max-w-[180px]">{item.title}</span>
                 </div>
-                <span class="text-dark-400 text-sm">{item.views.toLocaleString()}</span>
+                <span class="text-[--w60] text-sm">{item.views.toLocaleString()}</span>
               </div>
             {/each}
           </div>

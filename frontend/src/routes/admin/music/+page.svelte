@@ -440,17 +440,17 @@
           {#if form.tracks.length > 0}
             <div class="space-y-3">
               {#each form.tracks as track, i}
-                <div class="p-4 bg-dark-800 rounded-lg space-y-3">
+                <div class="p-4 bg-[--w8] rounded-lg space-y-3">
                   <!-- Track info row -->
                   <div class="flex items-center gap-3">
-                    <span class="text-dark-500 w-6 text-sm">{i + 1}.</span>
+                    <span class="text-[--w30] w-6 text-sm">{i + 1}.</span>
                     <input type="text" bind:value={track.title} placeholder="Track title" class="input flex-1" />
                     <input type="text" bind:value={track.duration} placeholder="00:00" class="input w-20 text-center" />
                     <div class="flex gap-1">
-                      <button type="button" onclick={() => moveTrack(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-dark-700 rounded disabled:opacity-30">
+                      <button type="button" onclick={() => moveTrack(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
                       </button>
-                      <button type="button" onclick={() => moveTrack(i, i + 1)} disabled={i === form.tracks.length - 1} class="p-1 hover:bg-dark-700 rounded disabled:opacity-30">
+                      <button type="button" onclick={() => moveTrack(i, i + 1)} disabled={i === form.tracks.length - 1} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                       </button>
                       <button type="button" onclick={() => removeTrack(i)} class="p-1 hover:bg-accent-red/50 rounded">
@@ -468,9 +468,9 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                         <span class="text-sm text-dark-300 truncate">Audio uploaded</span>
-                        <div class="flex items-center gap-1 text-xs text-dark-500">
-                          {#if track.audio_mp3_320}<span class="px-1.5 py-0.5 bg-dark-700 rounded">MP3 320</span>{/if}
-                          {#if track.audio_mp3_128}<span class="px-1.5 py-0.5 bg-dark-700 rounded">MP3 128</span>{/if}
+                        <div class="flex items-center gap-1 text-xs text-[--w30]">
+                          {#if track.audio_mp3_320}<span class="px-1.5 py-0.5 bg-[--w12] rounded">MP3 320</span>{/if}
+                          {#if track.audio_mp3_128}<span class="px-1.5 py-0.5 bg-[--w12] rounded">MP3 128</span>{/if}
                           {#if track.audio_opus}<span class="px-1.5 py-0.5 bg-accent-green/20 text-accent-green rounded">Opus</span>{/if}
                         </div>
                         <button type="button" onclick={() => removeAudio(i)} class="text-xs text-accent-red hover:underline ml-2">Remove</button>
@@ -494,7 +494,7 @@
                           onchange={(e) => handleAudioUpload(e, i)}
                           disabled={uploadingAudioIndex >= 0}
                         />
-                        <span class="text-xs text-dark-500">→ MP3 320kbps + Opus 128kbps</span>
+                        <span class="text-xs text-[--w30]">→ MP3 320kbps + Opus 128kbps</span>
                       </label>
                     {/if}
                     
@@ -507,14 +507,14 @@
                         onchange={() => toggleMp3128(i)}
                         class="rounded"
                       />
-                      <label for="mp3_128_{i}" class="text-xs text-dark-400">MP3 128kbps</label>
+                      <label for="mp3_128_{i}" class="text-xs text-[--w60]">MP3 128kbps</label>
                     </div>
                   </div>
                 </div>
               {/each}
             </div>
           {:else}
-            <p class="text-dark-500 text-sm">No tracks added yet.</p>
+            <p class="text-[--w30] text-sm">No tracks added yet.</p>
           {/if}
         </div>
         
@@ -540,7 +540,7 @@
             <div class="grid grid-cols-4 gap-3">
               {#each galleryImages as img, i}
                 <div class="relative group">
-                  <div class="aspect-square bg-dark-800 rounded-lg overflow-hidden">
+                  <div class="aspect-square bg-[--w8] rounded-lg overflow-hidden">
                     <img src={getImageUrl(img, 'thumb')} alt="" class="w-full h-full object-cover" />
                   </div>
                   <input 
@@ -563,7 +563,7 @@
               {/each}
             </div>
           {:else}
-            <p class="text-dark-500 text-sm">No gallery images added yet.</p>
+            <p class="text-[--w30] text-sm">No gallery images added yet.</p>
           {/if}
         </div>
         
@@ -580,8 +580,8 @@
         </div>
         
         <!-- SEO Section -->
-        <div class="border-t border-dark-800 pt-6">
-          <button type="button" onclick={() => showSeo = !showSeo} class="flex items-center gap-2 text-dark-400 hover:text-white transition-colors">
+        <div class="border-t border-[--w8] pt-6">
+          <button type="button" onclick={() => showSeo = !showSeo} class="flex items-center gap-2 text-[--w60] hover:text-white transition-colors">
             <svg class="w-5 h-5 transition-transform {showSeo ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -637,7 +637,7 @@
   {#if loading}
     <div class="space-y-4">
       {#each Array(5) as _}
-        <div class="h-16 bg-dark-800 rounded-xl animate-pulse"></div>
+        <div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>
       {/each}
     </div>
   {:else}
@@ -645,18 +645,18 @@
       {#each releases as release}
         <div class="card p-4 flex justify-between items-center">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-dark-800 rounded-lg flex items-center justify-center overflow-hidden">
+            <div class="w-12 h-12 bg-[--w8] rounded-lg flex items-center justify-center overflow-hidden">
               {#if release.cover_image_info}
                 <img src={getImageUrl(release.cover_image_info, 'thumb')} alt="" class="w-full h-full object-cover" />
               {:else}
-                <svg class="w-6 h-6 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-[--w30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19V6l12-3v13" />
                 </svg>
               {/if}
             </div>
             <div>
               <h3 class="font-medium">{release.title}</h3>
-              <p class="text-sm text-dark-400">
+              <p class="text-sm text-[--w60]">
                 {#if release.slug}<span class="text-accent-green">/music/{release.slug}</span> • {/if}
                 {release.genre} • {release.release_type} • {release.tracks?.length || 0} tracks
                 {#if release.tracks?.some(t => t.audio_opus)}

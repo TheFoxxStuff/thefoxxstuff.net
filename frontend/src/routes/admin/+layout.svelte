@@ -4,41 +4,203 @@
   import { onMount } from 'svelte';
   import { auth, isAdmin } from '$lib/stores/auth.js';
   let { children } = $props();
+
   const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { href: '/admin/banner', label: 'Banner', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01' },
-    { href: '/admin/music', label: 'Music', icon: 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z' },
-    { href: '/admin/blog', label: 'Blog', icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1' },
-    { href: '/admin/arts', label: 'Arts', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586' },
-    { href: '/admin/links', label: 'Links', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656' },
-    { href: '/admin/users', label: 'Users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1z' },
-    { href: '/admin/media', label: 'Media', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
-    { href: '/admin/views-map', label: 'Views Map', icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { href: '/admin',           label: 'Dashboard', short: 'Dash' },
+    { href: '/admin/banner',    label: 'Banner',    short: 'Banner' },
+    { href: '/admin/music',     label: 'Music',     short: 'Music' },
+    { href: '/admin/blog',      label: 'Blog',      short: 'Blog' },
+    { href: '/admin/arts',      label: 'Arts',      short: 'Arts' },
+    { href: '/admin/links',     label: 'Links',     short: 'Links' },
+    { href: '/admin/users',     label: 'Users',     short: 'Users' },
+    { href: '/admin/media',     label: 'Media',     short: 'Media' },
+    { href: '/admin/views-map', label: 'Views Map', short: 'Map' },
   ];
-  const isActive = (href) => href === '/admin' ? $page.url.pathname === '/admin' : $page.url.pathname.startsWith(href);
-  onMount(() => { if (!$auth.user || !isAdmin($auth.user)) goto('/auth/login'); });
+
+  const isActive = (href) =>
+    href === '/admin'
+      ? $page.url.pathname === '/admin'
+      : $page.url.pathname.startsWith(href);
+
+  onMount(() => {
+    if (!$auth.user || !isAdmin($auth.user)) goto('/auth/login');
+  });
 </script>
+
 {#if $auth.user && isAdmin($auth.user)}
-<div class="min-h-screen flex">
-  <aside class="w-56 bg-dark-900 border-r border-dark-800 p-4 flex flex-col flex-shrink-0">
-    <a href="/" class="flex items-center gap-2 mb-8">
-      <svg class="h-8 w-auto" viewBox="0 0 32 32" fill="none"><path d="M16 2L4 8v16l12 6 12-6V8L16 2z" fill="url(#lg2)" /><defs><linearGradient id="lg2" x1="4" y1="2" x2="28" y2="30"><stop stop-color="#4ade80" /><stop offset="1" stop-color="#22d3ee" /></linearGradient></defs></svg>
-      <span class="font-display text-xl">Admin</span>
-    </a>
-    <nav class="space-y-1 flex-1">
-      {#each navItems as item}
-        <a href={item.href} class="admin-link {isActive(item.href) ? 'admin-link-active' : ''}">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={item.icon} /></svg>
-          {item.label}
+<div class="admin-root">
+
+  <!-- Admin top bar -->
+  <div class="admin-bar-wrap">
+    <div class="admin-bar">
+
+      <div class="admin-bar-left">
+        <a href="/" class="admin-back">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Site
         </a>
-      {/each}
-    </nav>
-    <a href="/" class="admin-link mt-4 border-t border-dark-800 pt-4">← Back to site</a>
-  </aside>
-  <main class="flex-1 p-8 overflow-auto">
-    <div class="max-w-5xl mx-auto">
+        <span class="admin-badge">ADMIN</span>
+      </div>
+
+      <nav class="admin-nav">
+        {#each navItems as item}
+          <a
+            href={item.href}
+            class="admin-nav-item {isActive(item.href) ? 'active' : ''}"
+          >
+            <span class="full">{item.label}</span>
+            <span class="short">{item.short}</span>
+          </a>
+        {/each}
+      </nav>
+
+      <div class="admin-bar-right">
+        <span class="admin-user">{$auth.user?.display_name || $auth.user?.username}</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Content -->
+  <main class="admin-main">
+    <div class="admin-container">
       {@render children()}
     </div>
   </main>
+
 </div>
 {/if}
+
+<style>
+  .admin-root {
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  /* ── Sticky top bar ── */
+  .admin-bar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(6,6,6,0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .admin-bar {
+    max-width: 828px;
+    margin: 0 auto;
+    padding: 0 16px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ── Left ── */
+  .admin-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .admin-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.40);
+    text-decoration: none;
+    padding: 5px 9px;
+    border-radius: 7px;
+    transition: background 0.12s, color 0.12s;
+    line-height: 1;
+  }
+  .admin-back:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.85);
+  }
+
+  .admin-badge {
+    font-family: DrukWideCyr, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    color: #4ade80;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.18);
+    padding: 3px 7px;
+    border-radius: 5px;
+    line-height: 1.4;
+  }
+
+  /* ── Nav ── */
+  .admin-nav {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-nav::-webkit-scrollbar { display: none; }
+
+  .admin-nav-item {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .admin-nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.9);
+  }
+  .admin-nav-item.active {
+    background: rgba(255,255,255,0.10);
+    color: #ffffff;
+  }
+
+  /* responsive label switching */
+  .admin-nav-item :global(.short) { display: none; }
+  @media (max-width: 860px) {
+    .admin-nav-item :global(.full) { display: none; }
+    .admin-nav-item :global(.short) { display: inline; }
+  }
+
+  /* ── Right ── */
+  .admin-bar-right {
+    flex-shrink: 0;
+  }
+  .admin-user {
+    font-size: 12px;
+    color: rgba(255,255,255,0.28);
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Content ── */
+  .admin-main {
+    padding: 32px 0 80px;
+  }
+  .admin-container {
+    max-width: 828px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  @media (max-width: 600px) {
+    .admin-bar { gap: 8px; padding: 0 12px; }
+    .admin-badge, .admin-user { display: none; }
+  }
+</style>
