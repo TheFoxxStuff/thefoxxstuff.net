@@ -78,29 +78,41 @@
 
   function closeCrop() { showCropper = false; avatarFile = null; avatarPreview = null; }
 
-  // Минимальный scale: чтобы изображение всегда заполняло canvas по ОБЕИМ осям
-  function minScale() { return V / Math.min(imgNW, imgNH); }
+  // ── Cropper helpers ──────────────────────────────────────────────────
+  // Минимальный scale = меньшая сторона изображения заполняет круг
+  // Это гарантирует: никаких пустых полос внутри круга
+  function minScale() { return imgNW && imgNH ? V / Math.min(imgNW, imgNH) : 1; }
   function maxScale() { return minScale() * 5; }
 
-  function clamp() {
-    // Scale не может быть меньше minScale (иначе в canvas будут пустые полосы)
-    scale = Math.max(minScale(), Math.min(maxScale(), scale));
-    // Pan clamp: не даём изображению выходить за края canvas
-    const iw = imgNW * scale, ih = imgNH * scale;
+  // Зажать pan так чтобы изображение не выходило за края canvas
+  // Принимает явный s чтобы работать до обновления reactive scale
+  function clampPan(s) {
+    const iw = imgNW * s, ih = imgNH * s;
     const mx = Math.max(0, (iw - V) / 2);
     const my = Math.max(0, (ih - V) / 2);
     panX = Math.max(-mx, Math.min(mx, panX));
     panY = Math.max(-my, Math.min(my, panY));
   }
 
-  function zoomIn()  { scale = Math.min(scale * 1.15, maxScale()); clamp(); }
-  function zoomOut() { scale = Math.max(scale / 1.15, minScale()); clamp(); }
+  // Применить новый scale и сразу зажать pan под него
+  function applyScale(newScale) {
+    const s = Math.max(minScale(), Math.min(maxScale(), newScale));
+    scale = s;
+    clampPan(s);
+  }
+
+  function zoomIn()  { applyScale(scale * 1.15); }
+  function zoomOut() { applyScale(scale / 1.15); }
   function wheel(e)  { e.preventDefault(); e.deltaY < 0 ? zoomIn() : zoomOut(); }
 
+  // Слайдер: bind:value уже записал scale, просто зажимаем pan под него
+  function onSliderInput() { clampPan(scale); }
+
   function dragStart(e) {
-    e.preventDefault(); dragging = true;
-    // Поддержка и мыши, и тача
-    const ev = e.touches ? e.touches[0] : e;
+    // preventDefault останавливает scroll и выделение текста
+    try { e.preventDefault(); } catch(_) {}
+    dragging = true;
+    const ev = (e.touches && e.touches.length) ? e.touches[0] : e;
     dsx = ev.clientX; dsy = ev.clientY; dpx = panX; dpy = panY;
   }
   function dragMove(e) {
@@ -108,20 +120,16 @@
     const ev = e.touches ? e.touches[0] : e;
     panX = dpx + (ev.clientX - dsx);
     panY = dpy + (ev.clientY - dsy);
-    clamp();
+    clampPan(scale);
   }
   function dragEnd() { dragging = false; }
 
   function getCrop() {
-    // Позиция левого-верхнего угла изображения в координатах canvas
     const imgLeft = (V - imgNW * scale) / 2 + panX;
     const imgTop  = (V - imgNH * scale) / 2 + panY;
-    // Координаты кропа в оригинальных пикселях изображения
     const cx = Math.max(0, Math.round(-imgLeft / scale));
     const cy = Math.max(0, Math.round(-imgTop  / scale));
-    // Размер кропа: сколько оригинальных пикселей помещается в V px canvas
     let cs = Math.round(V / scale);
-    // Убедимся что не выходим за границы изображения
     cs = Math.min(cs, imgNW - cx, imgNH - cy);
     return { cx, cy, cs };
   }
@@ -320,11 +328,11 @@
       <div class="crop-zoom">
         <button class="crop-zoom-btn" onclick={zoomOut}><ZoomOut size={16}/></button>
         <input type="range"
-          min={imgNW && imgNH ? V / Math.min(imgNW, imgNH) : 0.1}
-          max={imgNW && imgNH ? (V / Math.min(imgNW, imgNH)) * 5 : 5}
+          min={minScale()}
+          max={maxScale()}
           step="0.001"
           bind:value={scale}
-          oninput={clamp}
+          oninput={onSliderInput}
           class="crop-slider"
         />
         <button class="crop-zoom-btn" onclick={zoomIn}><ZoomIn size={16}/></button>
@@ -628,16 +636,34 @@
   }
   .crop-close:hover { background: var(--w12); color: var(--w); }
   .crop-canvas {
-    position: relative; border-radius: 50%; overflow: hidden;
-    background: var(--w8); cursor: grab; user-select: none;
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden;
+    /* transform создаёт stacking context — гарантирует overflow clip с position:absolute детьми */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    background: var(--w8);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
     margin: 0 auto;
+    /* Дополнительная защита через clip-path */
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
   }
   .crop-canvas:active { cursor: grabbing; }
-  .crop-img { position: absolute; pointer-events: none; }
+  .crop-img {
+    position: absolute;
+    pointer-events: none;
+    /* Аппаратное ускорение для плавности */
+    will-change: transform;
+    transform: translateZ(0);
+  }
   .crop-ring {
     position: absolute; inset: 0; border-radius: 50%;
-    box-shadow: 0 0 0 2px rgba(255,255,255,.2);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.25), inset 0 0 0 1px rgba(255,255,255,.1);
     pointer-events: none;
+    z-index: 2;
   }
   .crop-zoom {
     display: flex; align-items: center; justify-content: center; gap: 12px;
