@@ -26,18 +26,22 @@
   let searchQuery = $state('');
   let authChecking = $state(true);
 
-  // Флаг: был ли уже первый рендер индикатора
+  // Индикатор готов к анимированным переходам только после первого showInstant
   let indicatorReady = false;
+  // Храним «последнюю известную» позицию, чтобы при resize не прыгало
+  let lastActiveIndex = -1;
 
   function avatarUrl(path) { return path ? `${API_BASE}/upload/file/${path}` : null; }
 
   // ─── Индикатор ──────────────────────────────────────────────────────
+
   function hideInd() {
     if (!indicatorElement) return;
-    indicatorElement.style.opacity = '0';
     indicatorElement.style.transition = 'opacity 200ms ease-out';
+    indicatorElement.style.opacity = '0';
   }
 
+  /** Мгновенно ставим индикатор без анимации. Вызывается при первом рендере и resize. */
   function showInstant(i) {
     if (!navElement || !indicatorElement) return;
     const items = navElement.querySelectorAll('.nav-item');
@@ -46,90 +50,116 @@
     const nr = navElement.getBoundingClientRect();
     const tr = t.getBoundingClientRect();
     const x = tr.left - nr.left;
+
+    // Глушим все переходы
     indicatorElement.style.transition = 'none';
     indicatorElement.style.width = tr.width + 'px';
     indicatorElement.style.transform = `translateX(${x}px) scaleX(1)`;
     indicatorElement.style.opacity = '1';
-    // Разрешаем переходы снова через два кадра
+
+    // Через два кадра снова разрешаем анимации (чтобы браузер успел применить стиль)
     requestAnimationFrame(() => requestAnimationFrame(() => {
       if (indicatorElement) indicatorElement.style.transition = '';
       indicatorReady = true;
+      lastActiveIndex = i;
     }));
   }
 
-  function moveInd(i, fi) {
-    if (!navElement || !indicatorElement || i === -1) return;
+  /** Анимированный переход между пунктами. */
+  function moveInd(toIdx, fromIdx) {
+    if (!navElement || !indicatorElement || toIdx === -1) return;
     const items = navElement.querySelectorAll('.nav-item');
-    const t = items[i];
-    if (!t) return;
+    const to = items[toIdx];
+    if (!to) return;
     const nr = navElement.getBoundingClientRect();
-    const tr = t.getBoundingClientRect();
-    const x = tr.left - nr.left;
-    indicatorElement.style.width = tr.width + 'px';
+    const toR = to.getBoundingClientRect();
+    const x = toR.left - nr.left;
+
+    indicatorElement.style.width = toR.width + 'px';
     indicatorElement.style.opacity = '1';
-    if (fi === null || fi === -1) {
+
+    if (fromIdx === -1 || fromIdx === null) {
       indicatorElement.style.transition = 'transform 260ms cubic-bezier(.22,1,.36,1)';
       indicatorElement.style.transform = `translateX(${x}px) scaleX(1)`;
+      lastActiveIndex = toIdx;
       return;
     }
-    const f = items[fi];
-    const fr = f.getBoundingClientRect();
-    const fx = fr.left - nr.left;
+
+    const from = items[fromIdx];
+    const fromR = from?.getBoundingClientRect();
+    const fx = fromR ? fromR.left - nr.left : x;
     const dist = Math.abs(x - fx);
     const dir = x > fx ? 1 : -1;
-    const now = performance.now(); lastTime = now;
+
+    lastTime = performance.now();
     const sc = dist < 80 ? 1.02 : dist < 160 ? 1.05 : 1.08;
     indicatorElement.style.transformOrigin = dir === 1 ? 'left center' : 'right center';
-    indicatorElement.style.transition = `transform 160ms cubic-bezier(.22,1,.36,1)`;
+    indicatorElement.style.transition = 'transform 160ms cubic-bezier(.22,1,.36,1)';
     indicatorElement.style.transform = `translateX(${x}px) scaleX(${sc})`;
+
     setTimeout(() => {
       if (!indicatorElement) return;
       indicatorElement.style.transition = 'transform 220ms cubic-bezier(.22,1.25,.36,1)';
       indicatorElement.style.transform = `translateX(${x}px) scaleX(1)`;
     }, 160);
+
+    lastActiveIndex = toIdx;
   }
 
-  // Реакция на смену маршрута
+  // ─── Реакция на маршрут — только после монтирования ─────────────────
+  // Используем $effect ТОЛЬКО для переходов между страницами (не для первого рендера).
+  // Первый рендер обрабатывает onMount, чтобы гарантировать готовность DOM + шрифтов.
+  let mounted = false;
+
   $effect(() => {
-    const i = navItems.findIndex(item => isActive(item.href, $page.url.pathname));
-    if (i !== activeIndex) {
-      const prev = activeIndex;
-      activeIndex = i;
-      if (navElement && indicatorElement) {
-        if (i === -1) hideInd();
-        else if (!indicatorReady || prev === -1) showInstant(i);
-        else moveInd(i, prev);
-      }
-    }
+    const pathname = $page.url.pathname;
+    if (!mounted) return; // ждём onMount
+
+    const i = navItems.findIndex(item => isActive(item.href, pathname));
+    if (i === activeIndex) return;
+    const prev = activeIndex;
+    activeIndex = i;
+
+    if (!navElement || !indicatorElement) return;
+    if (i === -1) { hideInd(); return; }
+    if (!indicatorReady) { showInstant(i); return; }
+    moveInd(i, prev);
   });
 
   onMount(async () => {
-    // Ждём, пока DOM полностью отрисуется — это ключевое для корректного getBoundingClientRect
-    await tick();
-    requestAnimationFrame(() => {
-      const i = navItems.findIndex(item => isActive(item.href, $page.url.pathname));
-      activeIndex = i;
-      if (i !== -1 && navElement && indicatorElement) showInstant(i);
-    });
+    mounted = true;
+
+    // Ждём шрифты — они меняют ширину nav-item-ов и сбивают getBoundingClientRect
+    await Promise.allSettled([document.fonts.ready, tick()]);
+
+    const i = navItems.findIndex(item => isActive(item.href, $page.url.pathname));
+    activeIndex = i;
+    if (i !== -1) showInstant(i);
 
     // Проверка авторизации
     if ($auth.token && $auth.user) {
       api.profile.me()
-        .then(p => auth.updateUser({ avatar_thumb: p.avatar_thumb, avatar_original: p.avatar_original, display_name: p.display_name }))
+        .then(p => auth.updateUser({
+          avatar_thumb: p.avatar_thumb,
+          avatar_original: p.avatar_original,
+          display_name: p.display_name
+        }))
         .catch(() => {})
         .finally(() => { authChecking = false; });
     } else {
       authChecking = false;
     }
 
+    // При resize пересчитываем позицию мгновенно
     const onResize = () => {
-      if (navElement && indicatorElement && activeIndex !== -1) showInstant(activeIndex);
+      if (navElement && indicatorElement && lastActiveIndex !== -1) showInstant(lastActiveIndex);
     };
     const onClick = (e) => {
       if (contextMenuElement && !contextMenuElement.contains(e.target)) contextMenuVisible = false;
       if (userMenuElement && !userMenuElement.contains(e.target)) userMenuVisible = false;
     };
     const onScroll = () => { contextMenuVisible = false; userMenuVisible = false; };
+
     window.addEventListener('resize', onResize);
     document.addEventListener('click', onClick);
     window.addEventListener('scroll', onScroll);
@@ -165,8 +195,9 @@
 
   function doSearch(e) {
     if (e.key === 'Enter' && searchQuery.trim()) {
+      const q = searchQuery.trim();
       closeSearch();
-      goto(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      goto(`/search?q=${encodeURIComponent(q)}`);
     }
     if (e.key === 'Escape') closeSearch();
   }
@@ -175,42 +206,67 @@
 <svelte:head>
   <style>
     .nav-item { position: relative; }
-    .nav-item::after { content: ''; position: absolute; inset: 0; border-radius: 0.5rem; background: rgba(255,255,255,0.04); opacity: 0; transition: opacity 150ms; z-index: -1; }
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 0.5rem;
+      background: rgba(255,255,255,0.04);
+      opacity: 0;
+      transition: opacity 150ms;
+      z-index: -1;
+    }
     .nav-item:hover::after { opacity: 1; }
+
     #logo { transform-origin: center; transition: transform 350ms cubic-bezier(.22,1,.36,1); }
     #nav-indicator { will-change: transform, width, opacity; transform-origin: left center; }
 
-    /* Анимации поиска */
-    .search-collapsible {
+    /* ── Блок «разделитель + auth» — уезжает влево при поиске ── */
+    .nav-right-collapse {
       display: flex;
       align-items: center;
       overflow: hidden;
-      transition: max-width 300ms cubic-bezier(.4,0,.2,1), opacity 250ms cubic-bezier(.4,0,.2,1);
+      /* max-width анимирует «схлопывание» блока */
+      max-width: 260px;
+      opacity: 1;
+      transition:
+        max-width 320ms cubic-bezier(.4,0,.2,1),
+        opacity   200ms cubic-bezier(.4,0,.2,1),
+        margin    320ms cubic-bezier(.4,0,.2,1);
     }
-    .search-collapsible.collapsed {
+    .nav-right-collapse.hidden {
       max-width: 0;
       opacity: 0;
       pointer-events: none;
-    }
-    .search-collapsible.expanded {
-      max-width: 300px;
-      opacity: 1;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
     }
 
+    /* ── Строка поиска — выезжает справа ── */
     .search-input-wrap {
       display: flex;
       align-items: center;
       overflow: hidden;
-      transition: max-width 300ms cubic-bezier(.4,0,.2,1), opacity 250ms cubic-bezier(.4,0,.2,1);
-    }
-    .search-input-wrap.collapsed {
       max-width: 0;
       opacity: 0;
-      pointer-events: none;
+      transition:
+        max-width 320ms cubic-bezier(.4,0,.2,1),
+        opacity   220ms cubic-bezier(.4,0,.2,1);
     }
-    .search-input-wrap.expanded {
-      max-width: 200px;
+    .search-input-wrap.open {
+      max-width: 180px;
       opacity: 1;
+    }
+
+    /* Кнопка поиска — плавная замена иконки */
+    .search-btn-icon {
+      transition: opacity 150ms, transform 150ms;
+    }
+    .search-btn-icon.hidden-icon {
+      opacity: 0;
+      transform: rotate(90deg) scale(.7);
+      position: absolute;
+      pointer-events: none;
     }
   </style>
 </svelte:head>
@@ -243,9 +299,17 @@
           {/each}
         </div>
 
-        <!-- Разделитель + auth: скрываются при открытом поиске -->
-        <div class="search-collapsible {searchOpen ? 'collapsed' : 'expanded'} gap-[5px]">
-          <span class="mx-1 h-5 w-px bg-[--w18] shrink-0"></span>
+        <!--
+          Правая часть navbar: [  | auth  ] [🔍/X]
+          При открытом поиске:
+            — "| auth" схлопывается влево (max-width → 0)
+            — инпут выезжает влево от кнопки (max-width → 180px)
+            — кнопка остаётся на месте, меняет иконку
+        -->
+
+        <!-- Разделитель + auth -->
+        <div class="nav-right-collapse {searchOpen ? 'hidden' : ''} ml-[5px]">
+          <span class="h-5 w-px bg-[--w18] shrink-0 mx-1"></span>
 
           {#if authChecking}
             <div class="w-[60px] h-[28px] rounded-[8px] bg-[--w8] animate-pulse shrink-0"></div>
@@ -257,18 +321,26 @@
                   <img src={avatarUrl($auth.user.avatar_thumb)} alt="" class="w-6 h-6 rounded-full object-cover" />
                 {:else}
                   <div class="w-6 h-6 rounded-full bg-[--w12] flex items-center justify-center">
-                    <span class="text-xs text-[--w60] font-medium">{($auth.user.display_name || $auth.user.username || '?')[0].toUpperCase()}</span>
+                    <span class="text-xs text-[--w60] font-medium">
+                      {($auth.user.display_name || $auth.user.username || '?')[0].toUpperCase()}
+                    </span>
                   </div>
                 {/if}
-                <span class="text-sm text-[--w60] hidden sm:inline max-w-[80px] truncate">{$auth.user.display_name || $auth.user.username}</span>
-                <svg class="w-3 h-3 text-[--w60] transition-transform {userMenuVisible ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span class="text-sm text-[--w60] hidden sm:inline max-w-[80px] truncate">
+                  {$auth.user.display_name || $auth.user.username}
+                </span>
+                <svg class="w-3 h-3 text-[--w60] transition-transform {userMenuVisible ? 'rotate-180' : ''}"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
+
               {#if userMenuVisible}
                 <div class="absolute right-0 top-full mt-2 w-52 bg-[--select] backdrop-blur-xl border border-[--w12] rounded-xl p-1.5 shadow-2xl z-[10000]">
                   <div class="px-3 py-2 border-b border-[--w8] mb-1.5">
-                    <div class="text-sm text-[--w] font-medium truncate">{$auth.user.display_name || $auth.user.username}</div>
+                    <div class="text-sm text-[--w] font-medium truncate">
+                      {$auth.user.display_name || $auth.user.username}
+                    </div>
                     <div class="text-xs text-[--w60]">@{$auth.user.username}</div>
                   </div>
                   <a href="/profile" onclick={() => userMenuVisible = false}
@@ -297,38 +369,31 @@
           {/if}
         </div>
 
-        <!-- Поиск: кнопка всегда видна, инпут выезжает -->
-        <div class="flex items-center gap-1 shrink-0 ml-[5px]">
-          <!-- Инпут поиска — выезжает справа от кнопки -->
-          <div class="search-input-wrap {searchOpen ? 'expanded' : 'collapsed'}">
+        <!-- Поиск: инпут выезжает ВЛЕВО от кнопки, кнопка — крайняя справа -->
+        <div class="flex items-center shrink-0 ml-[5px]">
+
+          <!-- Инпут выезжает влево -->
+          <div class="search-input-wrap {searchOpen ? 'open' : ''}">
             <input
               bind:this={searchInputElement}
               type="text"
               bind:value={searchQuery}
               onkeydown={doSearch}
               placeholder="Search..."
-              class="w-[140px] bg-transparent border-b border-[--w18] text-sm text-[--w] outline-none px-1 py-1 placeholder:text-[--w30]"
+              class="w-[148px] bg-transparent border-b border-[--w18] text-sm text-[--w] outline-none px-1 py-1 placeholder:text-[--w30]"
             />
           </div>
 
-          <!-- Кнопка поиска / закрытия -->
-          {#if searchOpen}
-            <button
-              onclick={closeSearch}
-              class="text-[--w60] hover:text-[--w] p-1.5 rounded-[8px] hover:bg-[--w8] transition"
-              title="Close search"
-            >
-              <X size={16} />
-            </button>
-          {:else}
-            <button
-              onclick={openSearch}
-              class="text-[--w60] hover:text-[--w] p-1.5 rounded-[8px] hover:bg-[--w8] transition"
-              title="Search"
-            >
-              <Search size={16} />
-            </button>
-          {/if}
+          <!-- Кнопка: Search ↔ X -->
+          <button
+            onclick={searchOpen ? closeSearch : openSearch}
+            class="relative w-[28px] h-[28px] flex items-center justify-center text-[--w60] hover:text-[--w] rounded-[8px] hover:bg-[--w8] transition-colors ml-1"
+            title={searchOpen ? 'Close search' : 'Search'}
+          >
+            <span class="search-btn-icon {searchOpen ? 'hidden-icon' : ''}"><Search size={16} /></span>
+            <span class="search-btn-icon {searchOpen ? '' : 'hidden-icon'}"><X size={16} /></span>
+          </button>
+
         </div>
 
       </nav>
@@ -340,8 +405,17 @@
   <div bind:this={contextMenuElement}
     class="fixed z-[10001] min-w-[200px] bg-[--select] backdrop-blur-xl border border-[--w12] rounded-xl p-1.5 shadow-2xl select-none"
     style="left:{contextMenuPos.x}px;top:{contextMenuPos.y}px;">
-    <button onclick={copyLogo} class="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] cursor-pointer transition hover:bg-[--w8] hover:text-[--w]"><Copy size={16} /> Copy Logo SVG</button>
-    <a href="/" onclick={() => contextMenuVisible = false} class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] transition hover:bg-[--w8] hover:text-[--w]"><Home size={16} /> Home</a>
-    <a href="/about" onclick={() => contextMenuVisible = false} class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] transition hover:bg-[--w8] hover:text-[--w]"><Info size={16} /> About</a>
+    <button onclick={copyLogo}
+      class="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] cursor-pointer transition hover:bg-[--w8] hover:text-[--w]">
+      <Copy size={16} /> Copy Logo SVG
+    </button>
+    <a href="/" onclick={() => contextMenuVisible = false}
+      class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] transition hover:bg-[--w8] hover:text-[--w]">
+      <Home size={16} /> Home
+    </a>
+    <a href="/about" onclick={() => contextMenuVisible = false}
+      class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[8px] transition hover:bg-[--w8] hover:text-[--w]">
+      <Info size={16} /> About
+    </a>
   </div>
 {/if}
