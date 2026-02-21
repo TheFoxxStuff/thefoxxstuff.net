@@ -15,7 +15,22 @@
     uploading = true;
     try {
       const result = await api.upload.markdown(file);
-      insertText(result.markdown + '\n');
+      // Use the markdown field from the response — already formatted as ![alt](url)
+      const md = result.markdown || `![${file.name}](${result.url})`;
+      // Insert on its own line for block-level rendering
+      if (!textarea) { value += '\n' + md + '\n'; return; }
+      const start = textarea.selectionStart;
+      // Ensure the image is on its own line
+      const before = value.substring(0, start);
+      const after = value.substring(start);
+      const needsNewlineBefore = before.length > 0 && !before.endsWith('\n') ? '\n' : '';
+      const needsNewlineAfter = after.length > 0 && !after.startsWith('\n') ? '\n' : '';
+      const insertion = needsNewlineBefore + md + needsNewlineAfter;
+      value = before + insertion + after;
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + insertion.length, start + insertion.length);
+      }, 0);
     } catch (err) {
       alert('Upload failed: ' + err.message);
     } finally {
