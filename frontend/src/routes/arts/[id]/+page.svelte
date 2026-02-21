@@ -132,7 +132,7 @@
       >
         {#if artwork.image_info}
           <img 
-            src={getImageUrl(artwork.image_info, 'original')} 
+            src={getImageUrl(artwork.image_info, 'medium')} 
             alt={artwork.title} 
             class="w-full h-full object-contain"
             loading="eager"
