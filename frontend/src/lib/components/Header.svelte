@@ -350,7 +350,7 @@
                   </div>
                 {/if}
                     <span class="text-sm text-[--w60] hidden sm:inline">
-                      {($auth.user.display_name || $auth.user.username || '').slice(0, 8)}{($auth.user.display_name || $auth.user.username || '').length > 11 ? '...' : ''}
+                      {($auth.user.display_name || $auth.user.username || '').slice(0, 11)}{($auth.user.display_name || $auth.user.username || '').length > 11 ? '...' : ''}
                     </span>
                 <svg class="w-3 h-3 text-[--w60] transition-transform {userMenuVisible ? 'rotate-180' : ''}"
                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
