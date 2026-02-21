@@ -84,3 +84,9 @@ html {
   border-radius: 20px;
   border: 3px solid #111;
 }
+
+body {
+  font-family: 'Golos-Regular';
+  color:#73EE07;
+  background-color: #47ADFF;
+}

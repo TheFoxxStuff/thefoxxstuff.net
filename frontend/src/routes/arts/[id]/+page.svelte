@@ -63,7 +63,7 @@
 
       // image_info уже в ответе — дополнительный запрос не нужен
       if (artwork.image_info) {
-        imageUrl = getImageUrl(artwork.image_info, 'original');
+        imageUrl = getImageUrl(artwork.image_info, 'medium');
         // og_image fallback: используем основное изображение если og_image_info нет
         ogImageUrl = artwork.og_image_info
           ? getImageUrl(artwork.og_image_info, 'original')
@@ -145,7 +145,7 @@
       </div>
       
       <div class="rounded-[8px] bg-[--w5] pt-[36px] pr-[36px] pb-[42px] pl-[36px]">
-        <h1 class="font-display text-4xl font-black uppercase tracking-tight text-[--w] mb-6">
+        <h1 style="font-family: 'DrukWideCyr';" class="font-display text-[24px] tracking-wide font-black uppercase text-[--w] mb-[16px]">
           {artwork.title}
         </h1>
         

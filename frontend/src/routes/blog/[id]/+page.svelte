@@ -51,8 +51,8 @@
       if (post._id) api.views.record('blog', post._id);
 
       // cover_image_info и og_image_info уже приходят с бэкенда
-      if (post.cover_image_info) coverImageUrl = getImageUrl(post.cover_image_info, 'original');
-      if (post.og_image_info)    ogImageUrl    = getImageUrl(post.og_image_info, 'original');
+      if (post.cover_image_info) coverImageUrl = getImageUrl(post.cover_image_info, 'medium');
+      if (post.og_image_info)    ogImageUrl    = getImageUrl(post.og_image_info, 'medium');
     } catch (e) {
       console.error(e);
     } finally {
