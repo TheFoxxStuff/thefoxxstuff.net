@@ -66,7 +66,7 @@
         imageUrl = getImageUrl(artwork.image_info, 'medium');
         // og_image fallback: используем основное изображение если og_image_info нет
         ogImageUrl = artwork.og_image_info
-          ? getImageUrl(artwork.og_image_info, 'original')
+          ? getImageUrl(artwork.og_image_info, 'medium')
           : imageUrl;
       }
     } catch (e) {
