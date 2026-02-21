@@ -9,7 +9,7 @@
     class: className = "" 
   } = $props();
 
-  const baseClass = "inline-flex items-center justify-center gap-[4px] px-[12px] py-[6px] bg-[--w5] hover:bg-[--w8] text-[#999] hover:text-[--w] rounded-[8px] transition-all duration-200 group no-underline";
+  const baseClass = "inline-flex items-center justify-center gap-[4px] px-[12px] py-[6px] bg-[--w5] hover:bg-[--w8] text-[#999] hover:text-[--w] rounded-[8px] transition-all duration-160 group no-underline";
 </script>
 
 {#if href}
@@ -28,7 +28,7 @@
       {#if typeof IconLeft === 'function'}
         {@render IconLeft()} 
       {:else}
-        <IconLeft size={20} strokeWidth={2.5} />
+        <IconLeft size={16} strokeWidth={2.5} />
       {/if}
     </div>
   {/if}
@@ -39,7 +39,7 @@
 
   {#if IconRight}
     <div class="flex items-center group-hover:text-[--w] transition-colors">
-      <IconRight size={20} strokeWidth={2.5} />
+      <IconRight size={16} strokeWidth={2.5} />
     </div>
   {/if}
 {/snippet}
