@@ -11,3 +11,4 @@ export { default as ImageUpload } from './ImageUpload.svelte';
 export { default as MultiImageUpload } from './MultiImageUpload.svelte';
 export { default as GuestChat } from './GuestChat.svelte';
 export { default as AvatarCropper } from './AvatarCropper.svelte';
+export { default as MarkdownRenderer } from './MarkdownRenderer.svelte';

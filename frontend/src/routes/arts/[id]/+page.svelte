@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api, getImageUrl } from '$lib/api';
-  import { Breadcrumb } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer } from '$lib/components';
   import { Calendar, Eye, Maximize, Download, Image as ImageIcon } from 'lucide-svelte';
   import Badge from '../../../lib/components/Badge.svelte';
   
@@ -44,15 +44,6 @@
     }
   }
   
-  function parseMarkdown(md) {
-    if (!md) return '';
-    return md
-      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2 text-white">$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-6 mb-3 text-white">$1</h2>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-      .replace(/\n\n/g, '</p><p class="my-3">')
-      .replace(/\n/g, '<br>');
-  }
   
   onMount(async () => {
     try {
@@ -168,7 +159,7 @@
         {#if artwork.description}
           <h2 class="text-xl font-bold text-[--w] mb-4">Description</h2>
           <div class="prose prose-invert max-w-none text-[--w60] font-light leading-relaxed">
-            {@html parseMarkdown(artwork.description)}
+            <MarkdownRenderer content={artwork.description} />
           </div>
         {/if}
       </div>

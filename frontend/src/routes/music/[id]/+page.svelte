@@ -2,8 +2,8 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { Breadcrumb } from '$lib/components';
-  import { player, currentTrack } from '$lib/stores/player.js';
+  import { Breadcrumb, MarkdownRenderer } from '$lib/components';
+  import { player } from '$lib/stores/player.js';
   
   let release = $state(null);
   let loading = $state(true);
@@ -13,47 +13,21 @@
   
   const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   
-  function parseMarkdown(md) {
-    if (!md) return '';
-    return md
-      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2 text-white">$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-6 mb-3 text-white">$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-8 mb-4 text-white">$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-dark-800 rounded text-sm">$1</code>')
-      .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" class="rounded-lg max-w-full my-4" />')
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-accent-green hover:underline">$1</a>')
-      .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
-      .replace(/(<li.*<\/li>)/s, '<ul class="list-disc my-2">$1</ul>')
-      .replace(/\n\n/g, '</p><p class="my-3">')
-      .replace(/\n/g, '<br>');
-  }
-  
   function fileUrl(path) {
     if (!path) return null;
     return `${API_BASE}/upload/file/${path}`;
   }
   
-  // Use global player to play tracks
   function playTrack(index) {
     if (!release) return;
-    const playerState = $player;
-    
-    // If same release and same track, just toggle
-    if (playerState.release?._id === release._id && playerState.currentIndex === index) {
+    const s = $player;
+    if (s.release?._id === release._id && s.currentIndex === index) {
       player.togglePlay();
-      return;
-    }
-    
-    // If same release but different track
-    if (playerState.release?._id === release._id) {
+    } else if (s.release?._id === release._id) {
       player.playIndex(index);
-      return;
+    } else {
+      player.playRelease(release, index);
     }
-    
-    // New release
-    player.playRelease(release, index);
   }
   
   function downloadTrack(path, trackTitle, ext) {
@@ -66,7 +40,6 @@
     document.body.removeChild(a);
   }
   
-  // Check if this track is currently playing in global player
   function isTrackPlaying(index) {
     const s = $player;
     return s.release?._id === release?._id && s.currentIndex === index && s.isPlaying;
@@ -82,13 +55,9 @@
   onMount(async () => {
     try {
       release = await api.music.get($page.params.id);
-
       if (release.cover_image_info) coverImageUrl = getImageUrl(release.cover_image_info, 'medium');
-      // og_image_info приходит с бэкенда — доп. запрос не нужен
       if (release.og_image_info) ogImageUrl = getImageUrl(release.og_image_info, 'original');
       else if (coverImageUrl) ogImageUrl = coverImageUrl;
-
-      // fire-and-forget
       if (release._id) api.views.record('music', release._id);
     } catch (e) {
       console.error(e);
@@ -122,14 +91,22 @@
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   {#if loading}
-    <div class="animate-pulse"><div class="h-8 w-64 bg-dark-800 rounded mb-8"></div></div>
+    <div class="animate-pulse space-y-4">
+      <div class="h-8 w-64 bg-dark-800 rounded"></div>
+      <div class="flex gap-6">
+        <div class="w-64 aspect-square bg-dark-800 rounded-xl"></div>
+        <div class="flex-1 space-y-3">
+          <div class="h-6 bg-dark-800 rounded w-3/4"></div>
+          <div class="h-4 bg-dark-800 rounded w-1/2"></div>
+        </div>
+      </div>
+    </div>
   {:else if release}
-    <h1 class="font-display text-[24px] tracking-wide mb-2">{release.title} ({new Date(release.release_date).getFullYear()})</h1>
     <Breadcrumb items={[{ href: '/music', label: 'Music' }, { href: `/music/${release.slug || release._id}`, label: release.title }]} />
     
-    <div class="mt-8 flex flex-col md:flex-row gap-8">
+    <div class="mt-6 flex flex-col md:flex-row gap-8">
       <!-- Cover Image -->
-      <div class="w-full md:w-80 aspect-square bg-dark-800 rounded-xl overflow-hidden flex-shrink-0">
+      <div class="w-full md:w-72 aspect-square bg-dark-800 rounded-xl overflow-hidden flex-shrink-0 shadow-2xl">
         {#if release.cover_image_info}
           <img loading="lazy" src={getImageUrl(release.cover_image_info, 'medium')} alt={release.title} class="w-full h-full object-cover" />
         {:else}
@@ -142,14 +119,16 @@
       </div>
       
       <!-- Info -->
-      <div class="flex-1">
-        <h2 class="font-display text-4xl tracking-wide mb-4">{release.title}</h2>
-        <div class="space-y-1 text-sm text-dark-400 mb-6">
-          <p>Released: {formatDate(release.release_date)}</p>
-          <p>Number of tracks: {release.tracks?.length || 0}</p>
-          <p>Genre: {release.genre}</p>
-          <p>Type: {release.release_type}</p>
-          <p>Price: {release.price}</p>
+      <div class="flex-1 flex flex-col justify-between">
+        <div>
+          <p class="text-sm text-dark-400 mb-1 uppercase tracking-wider">{release.release_type}</p>
+          <h1 class="font-display text-3xl md:text-4xl tracking-wide mb-3 text-white">{release.title}</h1>
+          <div class="space-y-1 text-sm text-dark-400 mb-6">
+            <p>Released: {formatDate(release.release_date)}</p>
+            {#if release.genre}<p>Genre: {release.genre}</p>{/if}
+            <p>{release.tracks?.length || 0} tracks</p>
+            {#if release.price}<p>{release.price}</p>{/if}
+          </div>
         </div>
         <div class="flex gap-3 flex-wrap">
           {#if release.download_flac}
@@ -173,61 +152,60 @@
       </div>
     </div>
     
-    <!-- Description (Markdown) -->
+    <!-- Description -->
     {#if release.description}
-      <section class="mt-12">
-        <h3 class="font-display text-2xl tracking-wide mb-4">Description</h3>
-        <div class="prose prose-invert max-w-none text-dark-300 leading-relaxed">
-          {@html parseMarkdown(release.description)}
-        </div>
+      <section class="mt-10">
+        <h2 class="font-display text-2xl tracking-wide mb-4 text-white">About</h2>
+        <MarkdownRenderer content={release.description} />
       </section>
     {/if}
     
     <!-- Track List -->
     {#if release.tracks?.length > 0}
-      <section class="mt-12">
-        <h3 class="font-display text-2xl tracking-wide mb-4">Track List</h3>
-        <div class="space-y-1">
+      <section class="mt-10">
+        <h2 class="font-display text-2xl tracking-wide mb-4 text-white">Tracklist</h2>
+        <div class="bg-dark-900 rounded-xl border border-white/5 overflow-hidden divide-y divide-white/5">
           {#each release.tracks as track, i}
-            <div class="group rounded-lg transition-colors {isTrackActive(i) ? 'bg-dark-800' : 'hover:bg-dark-900'}">
-              <div class="flex items-center py-3 px-4 gap-3">
-                {#if track.audio_opus}
-                  <button 
-                    onclick={() => playTrack(i)} 
-                    class="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 transition-colors {isTrackActive(i) ? 'bg-accent-green text-dark-950' : 'bg-dark-800 text-dark-300 group-hover:bg-dark-700'}"
-                  >
-                    {#if isTrackPlaying(i)}
-                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
-                    {:else}
-                      <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    {/if}
-                  </button>
-                {:else}
-                  <span class="w-8 h-8 flex items-center justify-center text-dark-500 flex-shrink-0 text-sm">{track.number || i + 1}</span>
+            <div class="group flex items-center gap-3 px-4 py-3 hover:bg-dark-800 transition-colors {isTrackActive(i) ? 'bg-dark-800' : ''}">
+              <!-- Play button or number -->
+              {#if track.audio_opus}
+                <button 
+                  onclick={() => playTrack(i)} 
+                  class="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 transition-colors
+                    {isTrackActive(i) ? 'bg-accent-green text-dark-950' : 'bg-dark-700 text-dark-300 group-hover:bg-dark-600'}"
+                >
+                  {#if isTrackPlaying(i)}
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                  {:else}
+                    <svg class="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  {/if}
+                </button>
+              {:else}
+                <span class="w-8 h-8 flex items-center justify-center text-dark-500 flex-shrink-0 text-sm">{track.number || i + 1}</span>
+              {/if}
+              
+              <!-- Title — links to track page -->
+              <a
+                href="/music/{release.slug || release._id}/track/{i}"
+                class="flex-1 text-sm hover:text-accent-green transition-colors {isTrackActive(i) ? 'text-accent-green font-medium' : 'text-dark-300'}"
+              >
+                {track.title}
+              </a>
+              
+              <!-- Download buttons (show on hover) -->
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {#if track.audio_original?.endsWith('.flac')}
+                  <button onclick={() => downloadTrack(track.audio_original, track.title, 'flac')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">FLAC</button>
                 {/if}
-                
-                <span class="flex-1 text-dark-300 {isTrackActive(i) ? 'text-accent-green font-medium' : ''}">{track.title}</span>
-                
-                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {#if track.audio_original?.endsWith('.flac')}
-                    <button onclick={() => downloadTrack(track.audio_original, track.title, 'flac')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300" title="Download FLAC">
-                      FLAC
-                    </button>
-                  {/if}
-                  {#if track.audio_mp3_320}
-                    <button onclick={() => downloadTrack(track.audio_mp3_320, track.title, 'mp3')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300" title="Download MP3 320kbps">
-                      MP3 320
-                    </button>
-                  {/if}
-                  {#if track.audio_mp3_128}
-                    <button onclick={() => downloadTrack(track.audio_mp3_128, track.title, 'mp3')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300" title="Download MP3 128kbps">
-                      MP3 128
-                    </button>
-                  {/if}
-                </div>
-                
-                <span class="text-dark-500 font-mono text-sm flex-shrink-0">{track.duration}</span>
+                {#if track.audio_mp3_320}
+                  <button onclick={() => downloadTrack(track.audio_mp3_320, track.title, 'mp3')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">320</button>
+                {/if}
+                {#if track.audio_mp3_128}
+                  <button onclick={() => downloadTrack(track.audio_mp3_128, track.title, 'mp3')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">128</button>
+                {/if}
               </div>
+              
+              <span class="text-dark-500 font-mono text-xs flex-shrink-0">{track.duration || ''}</span>
             </div>
           {/each}
         </div>
@@ -236,9 +214,9 @@
     
     <!-- Gallery -->
     {#if release.gallery_images?.length > 0}
-      <section class="mt-12">
-        <h3 class="font-display text-2xl tracking-wide mb-4">Gallery</h3>
-        <div class="grid grid-cols-4 gap-4">
+      <section class="mt-10">
+        <h2 class="font-display text-2xl tracking-wide mb-4 text-white">Gallery</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {#each release.gallery_images as img}
             <button 
               onclick={() => openLightbox(img)}
@@ -252,26 +230,21 @@
     {/if}
     
     <!-- Production Notes & Liner Notes -->
-    <div class="mt-12 grid md:grid-cols-2 gap-8">
+    <div class="mt-10 grid md:grid-cols-2 gap-6">
       {#if release.production_notes}
-        <section>
-          <h3 class="font-display text-2xl tracking-wide mb-4">Production Notes</h3>
-          <div class="prose prose-invert max-w-none text-dark-300 leading-relaxed">
-            {@html parseMarkdown(release.production_notes)}
-          </div>
+        <section class="bg-dark-900 rounded-xl p-6 border border-white/5">
+          <h2 class="font-display text-xl tracking-wide mb-4 text-white">Production Notes</h2>
+          <MarkdownRenderer content={release.production_notes} />
         </section>
       {/if}
       {#if release.liner_notes}
-        <section>
-          <h3 class="font-display text-2xl tracking-wide mb-4">Liner Notes</h3>
-          <div class="prose prose-invert max-w-none text-dark-300 italic leading-relaxed">
-            {@html parseMarkdown(release.liner_notes)}
-          </div>
+        <section class="bg-dark-900 rounded-xl p-6 border border-white/5">
+          <h2 class="font-display text-xl tracking-wide mb-4 text-white">Liner Notes</h2>
+          <MarkdownRenderer content={release.liner_notes} />
         </section>
       {/if}
     </div>
     
-    <!-- Bottom padding for floating player -->
     <div class="h-20"></div>
   {/if}
 </div>

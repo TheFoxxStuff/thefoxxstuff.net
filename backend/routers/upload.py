@@ -881,3 +881,66 @@ async def write_audio_metadata(
         results[key] = "ok" if res is True else res
 
     return {"results": results}
+
+
+@router.get("/audio/list")
+async def list_audio_files(
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
+    admin: dict = Depends(get_current_admin)
+):
+    """List all audio files with pagination"""
+    from math import ceil
+    db = get_db()
+    skip = (page - 1) * limit
+    total = await db.audio_files.count_documents({})
+    cursor = db.audio_files.find({}).sort("created_at", -1).skip(skip).limit(limit)
+    items = []
+    async for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        items.append(doc)
+    pages = ceil(total / limit) if total > 0 else 1
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "pages": pages,
+    }
+
+
+@router.post("/audio/cleanup")
+async def cleanup_unused_audio(admin: dict = Depends(get_current_admin)):
+    """Delete audio files not referenced by any music track"""
+    db = get_db()
+
+    # Collect all audio paths used in tracks
+    used_paths = set()
+    async for music in db.music.find({}, {"tracks": 1}):
+        for track in music.get("tracks", []):
+            for key in ["audio_original", "audio_opus", "audio_mp3_320", "audio_mp3_128"]:
+                val = track.get(key)
+                if val:
+                    used_paths.add(val)
+
+    deleted_count = 0
+    errors = []
+    async for audio in db.audio_files.find({}):
+        # Check if any of its paths are used
+        in_use = any(
+            audio.get(k) and audio[k] in used_paths
+            for k in ["original_path", "opus_path", "mp3_320_path", "mp3_128_path"]
+        )
+        if not in_use:
+            try:
+                for key in ["original_path", "mp3_320_path", "mp3_128_path", "opus_path"]:
+                    path_val = audio.get(key)
+                    if path_val:
+                        file_path = UPLOAD_DIR / path_val
+                        if file_path.exists():
+                            file_path.unlink()
+                await db.audio_files.delete_one({"_id": audio["_id"]})
+                deleted_count += 1
+            except Exception as e:
+                errors.append({"id": str(audio["_id"]), "error": str(e)})
+
+    return {"deleted_count": deleted_count, "errors": errors}

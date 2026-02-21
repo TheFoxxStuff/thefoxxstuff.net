@@ -67,6 +67,9 @@ allowed_origins = [
     "http://front.thefoxxstuff.net",
     "https://front.thefoxxstuff.net",
     "https://api.thefoxxstuff.net",
+    "http://thefoxxstuff.net",
+    "https://thefoxxstuff.net",
+    "https://www.thefoxxstuff.net",
 ]
 
 app.add_middleware(
@@ -75,7 +78,24 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Ensure CORS headers are present even on unhandled 500 errors."""
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in allowed_origins:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    logger.exception("Unhandled exception: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers=headers,
+    )
 
 
 # Rate limiting через Redis
