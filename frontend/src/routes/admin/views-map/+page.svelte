@@ -70,7 +70,7 @@
         <line x1="0" y1={MAP_H/2} x2={MAP_W} y2={MAP_H/2} stroke="#1a1a1a" stroke-width="0.5" stroke-dasharray="4,4" />
         {#each filteredLocs as loc}{@const pos=project(loc.lat,loc.lon)}{@const r=radius(loc.count)}
           <circle cx={pos.x} cy={pos.y} r={r*2} fill="rgba(74,222,128,0.08)" />
-          <circle cx={pos.x} cy={pos.y} r={r} fill="rgba(74,222,128,0.35)" stroke="rgba(74,222,128,0.7)" stroke-width="0.8" class="cursor-pointer hover:fill-[rgba(74,222,128,0.6)]" onmouseenter={(e)=>showTip(e,loc)} onmouseleave={hideTip} />
+          <circle cx={pos.x} cy={pos.y} r={r} fill="rgba(74,222,128,0.35)" stroke="rgba(74,222,128,0.7)" stroke-width="0.8" class="cursor-pointer hover:fill-[rgba(74,222,128,0.6)]" role="button" tabindex="0" aria-label="View location data" onmouseenter={(e)=>showTip(e,loc)} onmouseleave={hideTip} onkeydown={(e)=>e.key==='Enter'&&showTip(e,loc)} />
           <circle cx={pos.x} cy={pos.y} r="1.5" fill="#4ade80" />
         {/each}
       </svg>

@@ -155,8 +155,7 @@
       <button type="button" onclick={() => insertText('`', true)} class="tb-btn" title="Inline code">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
       </button>
-      <button type="button" onclick={() => insertText('```\n', false) || insertText('\n```')} class="tb-btn tb-code-block" title="Code block"
-        onclick={() => {
+      <button type="button" onclick={() => {
           if (!textarea) return;
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
@@ -164,8 +163,7 @@
           const ins = '```\n' + (selected || 'code') + '\n```';
           value = value.substring(0, start) + ins + value.substring(end);
           setTimeout(() => { textarea.focus(); textarea.setSelectionRange(start + 4, start + 4 + (selected || 'code').length); }, 0);
-        }}
-      >
+        }} class="tb-btn tb-code-block" title="Code block">
         <span class="tb-text text-[10px] font-mono">{'{}'}</span>
       </button>
     </div>

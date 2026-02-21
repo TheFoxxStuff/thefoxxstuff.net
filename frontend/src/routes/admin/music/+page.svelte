@@ -368,26 +368,26 @@
         <!-- Basic Info -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="label">Title</label>
+            <label class="label" for="title">Title</label>
             <input type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
           </div>
           <div>
-            <label class="label">Slug (URL)</label>
+            <label class="label" for="slug">Slug (URL)</label>
             <div class="flex gap-2">
               <input type="text" bind:value={form.slug} class="input flex-1" placeholder="auto-generated" />
               <button type="button" onclick={() => form.slug = generateSlug(form.title)} class="btn btn-secondary text-sm">Gen</button>
             </div>
           </div>
           <div>
-            <label class="label">Release Date</label>
+            <label class="label" for="release_date">Release Date</label>
             <input type="date" bind:value={form.release_date} required class="input" />
           </div>
           <div>
-            <label class="label">Genre</label>
+            <label class="label" for="genre">Genre</label>
             <input type="text" bind:value={form.genre} required class="input" />
           </div>
           <div>
-            <label class="label">Type</label>
+            <label class="label" for="release_type">Type</label>
             <select bind:value={form.release_type} class="input">
               <option>Album</option>
               <option>EP</option>
@@ -395,19 +395,19 @@
             </select>
           </div>
           <div>
-            <label class="label">Price</label>
+            <label class="label" for="price">Price</label>
             <input type="text" bind:value={form.price} class="input" />
           </div>
           <div>
-            <label class="label">Bandcamp URL</label>
+            <label class="label" for="bandcamp_url">Bandcamp URL</label>
             <input type="text" bind:value={form.bandcamp_url} class="input" />
           </div>
           <div>
-            <label class="label">Download MP3 URL</label>
+            <label class="label" for="download_mp3">Download MP3 URL</label>
             <input type="text" bind:value={form.download_mp3} class="input" />
           </div>
           <div>
-            <label class="label">Download FLAC URL</label>
+            <label class="label" for="download_flac">Download FLAC URL</label>
             <input type="text" bind:value={form.download_flac} class="input" />
           </div>
           <div class="flex items-center gap-2">
@@ -427,7 +427,7 @@
         
         <!-- Description (Markdown) -->
         <div>
-          <label class="label">Description (Markdown)</label>
+          <span class="label">Description (Markdown)</span>
           <MarkdownEditor bind:value={form.description} rows={4} placeholder="Describe your release..." />
         </div>
         
@@ -570,11 +570,11 @@
         <!-- Notes (Markdown) -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="label">Production Notes (Markdown)</label>
+            <span class="label">Production Notes (Markdown)</span>
             <MarkdownEditor bind:value={form.production_notes} rows={4} placeholder="Production notes..." />
           </div>
           <div>
-            <label class="label">Liner Notes (Markdown)</label>
+            <span class="label">Liner Notes (Markdown)</span>
             <MarkdownEditor bind:value={form.liner_notes} rows={4} placeholder="Liner notes..." />
           </div>
         </div>
@@ -591,15 +591,15 @@
           {#if showSeo}
             <div class="mt-4 space-y-4 pl-7">
               <div>
-                <label class="label">Meta Title</label>
+                <label class="label" for="meta_title">Meta Title</label>
                 <input type="text" bind:value={form.meta_title} class="input" placeholder="Custom title for search engines" />
               </div>
               <div>
-                <label class="label">Meta Description</label>
+                <label class="label" for="meta_description">Meta Description</label>
                 <textarea bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines"></textarea>
               </div>
               <div>
-                <label class="label">Meta Keywords</label>
+                <label class="label" for="meta_keywords">Meta Keywords</label>
                 <input type="text" bind:value={form.meta_keywords} class="input" placeholder="keyword1, keyword2, keyword3" />
               </div>
               <ImageUpload 

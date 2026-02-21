@@ -160,22 +160,22 @@
       <div class="card-label">Display info</div>
 
       <div class="field">
-        <label class="field-label">Display Name</label>
+        <label class="field-label" for="displayName">Display Name</label>
         <input type="text" class="field-input" placeholder="Your display name"
-          maxlength="50" bind:value={displayName} />
+          maxlength="50" id="displayName" bind:value={displayName} />
         <span class="field-hint">{displayName.length}/50</span>
       </div>
 
       <div class="field">
-        <label class="field-label">Username</label>
-        <input type="text" class="field-input" value={profile.username} disabled/>
+        <label class="field-label" for="username">Username</label>
+        <input type="text" class="field-input" id="username" value={profile.username} disabled/>
         <span class="field-hint muted">Cannot be changed</span>
       </div>
 
       <div class="field">
-        <label class="field-label">Bio</label>
+        <label class="field-label" for="bio">Bio</label>
         <textarea class="field-textarea" rows="4"
-          placeholder="Tell something about yourself…"
+          id="bio" placeholder="Tell something about yourself…"
           bind:value={bio}></textarea>
         <span class="field-hint" class:over={bioWords > 190}>{bioWords}/190 words</span>
       </div>

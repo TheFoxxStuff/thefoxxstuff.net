@@ -10,7 +10,7 @@
   let connected = $state(false);
   let onlineCount = $state(0);
   let error = $state('');
-  let messagesContainer;
+  let messagesContainer = $state(null);
   let isAtBottom = $state(true);
   let sending = $state(false);
 

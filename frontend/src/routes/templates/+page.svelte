@@ -314,7 +314,7 @@
           <!-- Back link -->
           <div class="ds-demo-card">
             <div class="ds-demo-preview center">
-              <a href="#" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all duration-100" style="color: var(--w60); background: var(--w5);">
+              <a href="#demo" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all duration-100" style="color: var(--w60); background: var(--w5);">
                 ← Back to arts
               </a>
             </div>
@@ -549,8 +549,8 @@
             <div class="ds-demo-label">.input — Form field</div>
             <div class="ds-demo-preview center">
               <div style="width: 200px;">
-                <label style="display: block; font-size: 14px; color: var(--w60); margin-bottom: 4px;">Label</label>
-                <input class="input" placeholder="Enter value..." />
+                <label for="demo-input" style="display: block; font-size: 14px; color: var(--w60); margin-bottom: 4px;">Label</label>
+                <input id="demo-input" class="input" placeholder="Enter value..." />
               </div>
             </div>
             <div class="ds-demo-code">
@@ -594,11 +594,11 @@
           <div class="ds-demo-card full">
             <div class="ds-demo-preview" style="padding: 20px;">
               <nav style="display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--w60);">
-                <a href="#" style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 8px; color: var(--w60); text-decoration: none; transition: background 0.1s;" class="hover:bg-[--w5]">
+                <a href="#demo" style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 8px; color: var(--w60); text-decoration: none; transition: background 0.1s;" class="hover:bg-[--w5]">
                   <Home size={20} /> Home
                 </a>
                 <ChevronRight size={14} style="color: var(--w30); flex-shrink: 0;" />
-                <a href="#" style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 8px; color: var(--w60); text-decoration: none;" class="hover:bg-[--w5]">Music</a>
+                <a href="#demo" style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 8px; color: var(--w60); text-decoration: none;" class="hover:bg-[--w5]">Music</a>
                 <ChevronRight size={14} style="color: var(--w30); flex-shrink: 0;" />
                 <span style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 8px; color: var(--w);">ASTRAL SUMMER</span>
               </nav>

@@ -57,6 +57,7 @@
       <div class="absolute right-[19px] bottom-[14px] flex gap-2 z-20">
         <button
           onclick={prevSlide}
+          aria-label="Previous slide"
           class="w-[36px] h-[36px] flex items-center justify-center bg-dark-900/60 hover:bg-dark-800 rounded-[10px] text-white/60 transition-colors backdrop-blur-[2px]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -65,6 +66,7 @@
         </button>
         <button
           onclick={nextSlide}
+          aria-label="Next slide"
           class="w-[36px] h-[36px] flex items-center justify-center bg-dark-900/60 hover:bg-dark-800 rounded-[10px] text-white/60 transition-colors backdrop-blur-[2px]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

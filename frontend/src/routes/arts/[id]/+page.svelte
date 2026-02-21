@@ -145,7 +145,7 @@
           <Badge text="{artwork.views} views" icon={Eye} />
           
           <div class="flex-1"></div>
-          <Badge text="{artwork.dimensions || 'Original Size'}" icon={Maximize} />
+          <Badge text={artwork.dimensions || 'Original Size'} icon={Maximize} />
           {#if artwork.image_info}
             <button 
               onclick={handleDownload}

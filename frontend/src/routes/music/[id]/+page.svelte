@@ -258,7 +258,7 @@
     role="dialog"
     tabindex="-1"
   >
-    <button onclick={closeLightbox} class="absolute top-4 right-4 p-2 hover:bg-dark-800 rounded-full">
+    <button onclick={closeLightbox} aria-label="Close" class="absolute top-4 right-4 p-2 hover:bg-dark-800 rounded-full">
       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
       </svg>
