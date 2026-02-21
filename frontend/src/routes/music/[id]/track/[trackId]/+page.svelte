@@ -4,12 +4,17 @@
   import { api, getImageUrl, API_BASE } from '$lib/api';
   import { Breadcrumb, MarkdownRenderer } from '$lib/components';
   import { player } from '$lib/stores/player.js';
+  import ImageLightbox from '$lib/components/ImageLightbox.svelte';
 
   let release = $state(null);
   let track = $state(null);
   let trackIndex = $state(0);
   let loading = $state(true);
   let coverImageUrl = $state(null);
+  let lbOpen = $state(false);
+  let lbSrc = $state('');
+  let lbOriginalSrc = $state('');
+  let lbAlt = $state('');
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
@@ -77,7 +82,7 @@
   {#if coverImageUrl}<meta property="og:image" content={coverImageUrl} />{/if}
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-4 pt-[20px] pb-24 min-[829px]:max-w-[828px] min-[829px]:px-0">
+<div class="mx-auto max-w-6xl px-4 pt-[20px] pb-28 min-[829px]:max-w-[828px] min-[829px]:px-0">
   {#if loading}
     <div class="animate-pulse space-y-4">
       <div class="h-6 w-48 bg-dark-800 rounded"></div>
@@ -210,3 +215,5 @@
     <p class="text-dark-400">Track not found.</p>
   {/if}
 </div>
+
+<ImageLightbox bind:open={lbOpen} src={lbSrc} originalSrc={lbOriginalSrc} alt={lbAlt} />

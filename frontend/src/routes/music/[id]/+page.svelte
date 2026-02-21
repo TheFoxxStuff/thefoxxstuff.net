@@ -4,20 +4,32 @@
   import { api, getImageUrl, API_BASE } from '$lib/api';
   import { Breadcrumb, MarkdownRenderer } from '$lib/components';
   import { player } from '$lib/stores/player.js';
-  
+  import ImageLightbox from '$lib/components/ImageLightbox.svelte';
+
   let release = $state(null);
   let loading = $state(true);
-  let lightboxImage = $state(null);
   let coverImageUrl = $state(null);
   let ogImageUrl = $state(null);
-  
-  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  
-  function fileUrl(path) {
-    if (!path) return null;
-    return `${API_BASE}/upload/file/${path}`;
+
+  // Lightbox state
+  let lbOpen = $state(false);
+  let lbSrc = $state('');
+  let lbOriginalSrc = $state('');
+  let lbAlt = $state('');
+
+  function openGalleryImage(img) {
+    lbSrc     = getImageUrl(img, 'medium') || getImageUrl(img, 'thumb') || '';
+    lbOriginalSrc = getImageUrl(img, 'original') || lbSrc;
+    lbAlt     = img.gallery_name || '';
+    lbOpen    = true;
   }
-  
+
+  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  function fileUrl(path) {
+    return path ? `${API_BASE}/upload/file/${path}` : null;
+  }
+
   function playTrack(index) {
     if (!release) return;
     const s = $player;
@@ -29,7 +41,7 @@
       player.playRelease(release, index);
     }
   }
-  
+
   function downloadTrack(path, trackTitle, ext) {
     if (!path) return;
     const a = document.createElement('a');
@@ -39,19 +51,17 @@
     a.click();
     document.body.removeChild(a);
   }
-  
+
   function isTrackPlaying(index) {
     const s = $player;
     return s.release?._id === release?._id && s.currentIndex === index && s.isPlaying;
   }
-  
+
   function isTrackActive(index) {
     const s = $player;
     return s.release?._id === release?._id && s.currentIndex === index;
   }
-  
-  let hasAnyAudio = $derived(release?.tracks?.some(t => t.audio_opus));
-  
+
   onMount(async () => {
     try {
       release = await api.music.get($page.params.id);
@@ -65,14 +75,14 @@
       loading = false;
     }
   });
-  
-  const openLightbox = (img) => { lightboxImage = img; };
-  const closeLightbox = () => { lightboxImage = null; };
-  
-  let seoTitle = $derived(release?.meta_title || release?.title || 'Music');
+
+  let seoTitle       = $derived(release?.meta_title || release?.title || 'Music');
   let seoDescription = $derived(release?.meta_description || release?.description?.substring(0, 160) || '');
-  let seoImage = $derived(ogImageUrl || coverImageUrl || '');
-  let seoKeywords = $derived(release?.meta_keywords || '');
+  let seoImage       = $derived(ogImageUrl || coverImageUrl || '');
+  let seoKeywords    = $derived(release?.meta_keywords || '');
+
+  // How many tracks have download options
+  let hasDownloads = $derived(release?.tracks?.some(t => t.audio_original || t.audio_mp3_320 || t.audio_mp3_128));
 </script>
 
 <svelte:head>
@@ -89,26 +99,52 @@
   {#if seoImage}<meta name="twitter:image" content={seoImage} />{/if}
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
+<!-- pb-28 = leaves room for the fixed music player at the bottom -->
+<div class="mx-auto max-w-6xl px-4 pt-[20px] pb-28 min-[829px]:max-w-[828px] min-[829px]:px-0">
   {#if loading}
     <div class="animate-pulse space-y-4">
-      <div class="h-8 w-64 bg-dark-800 rounded"></div>
+      <div class="h-6 w-48 bg-dark-800 rounded"></div>
       <div class="flex gap-6">
-        <div class="w-64 aspect-square bg-dark-800 rounded-xl"></div>
-        <div class="flex-1 space-y-3">
-          <div class="h-6 bg-dark-800 rounded w-3/4"></div>
+        <div class="w-64 aspect-square bg-dark-800 rounded-xl flex-shrink-0"></div>
+        <div class="flex-1 space-y-3 pt-2">
+          <div class="h-5 bg-dark-800 rounded w-3/4"></div>
           <div class="h-4 bg-dark-800 rounded w-1/2"></div>
+          <div class="h-4 bg-dark-800 rounded w-1/3"></div>
         </div>
       </div>
     </div>
   {:else if release}
     <Breadcrumb items={[{ href: '/music', label: 'Music' }, { href: `/music/${release.slug || release._id}`, label: release.title }]} />
-    
+
+    <!-- ── Hero ──────────────────────────────────────────────── -->
     <div class="mt-6 flex flex-col md:flex-row gap-8">
-      <!-- Cover Image -->
-      <div class="w-full md:w-72 aspect-square bg-dark-800 rounded-xl overflow-hidden flex-shrink-0 shadow-2xl">
+      <!-- Cover (click to enlarge) -->
+      <button
+        class="w-full md:w-64 aspect-square bg-dark-800 rounded-xl overflow-hidden flex-shrink-0 shadow-2xl group relative cursor-zoom-in"
+        onclick={() => {
+          if (release.cover_image_info) {
+            lbSrc = getImageUrl(release.cover_image_info, 'medium') || '';
+            lbOriginalSrc = getImageUrl(release.cover_image_info, 'original') || lbSrc;
+            lbAlt = release.title;
+            lbOpen = true;
+          }
+        }}
+        aria-label="View cover art"
+        type="button"
+      >
         {#if release.cover_image_info}
-          <img loading="lazy" src={getImageUrl(release.cover_image_info, 'medium')} alt={release.title} class="w-full h-full object-cover" />
+          <img
+            src={getImageUrl(release.cover_image_info, 'medium')}
+            alt={release.title}
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div class="absolute inset-0 flex items-end justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-sm flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+              </svg>
+            </div>
+          </div>
         {:else}
           <div class="w-full h-full flex items-center justify-center text-dark-600">
             <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,31 +152,31 @@
             </svg>
           </div>
         {/if}
-      </div>
-      
-      <!-- Info -->
-      <div class="flex-1 flex flex-col justify-between">
+      </button>
+
+      <!-- Meta -->
+      <div class="flex-1 flex flex-col justify-between min-w-0">
         <div>
-          <p class="text-sm text-dark-400 mb-1 uppercase tracking-wider">{release.release_type}</p>
-          <h1 class="font-display text-3xl md:text-4xl tracking-wide mb-3 text-white">{release.title}</h1>
+          <p class="text-xs text-dark-500 mb-1 uppercase tracking-widest">{release.release_type}</p>
+          <h1 class="font-display text-3xl md:text-4xl tracking-wide mb-3 text-white leading-tight">{release.title}</h1>
           <div class="space-y-1 text-sm text-dark-400 mb-6">
             <p>Released: {formatDate(release.release_date)}</p>
             {#if release.genre}<p>Genre: {release.genre}</p>{/if}
-            <p>{release.tracks?.length || 0} tracks</p>
+            <p>{release.tracks?.length || 0} track{release.tracks?.length !== 1 ? 's' : ''}</p>
             {#if release.price}<p>{release.price}</p>{/if}
           </div>
         </div>
         <div class="flex gap-3 flex-wrap">
           {#if release.download_flac}
-            <a href={release.download_flac} class="btn btn-secondary">
+            <a href={release.download_flac} class="btn btn-secondary gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              DOWNLOAD FLAC
+              FLAC
             </a>
           {/if}
           {#if release.download_mp3}
-            <a href={release.download_mp3} class="btn btn-secondary">
+            <a href={release.download_mp3} class="btn btn-secondary gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              DOWNLOAD MP3
+              MP3
             </a>
           {/if}
           {#if release.bandcamp_url}
@@ -151,28 +187,30 @@
         </div>
       </div>
     </div>
-    
-    <!-- Description -->
+
+    <!-- ── Description ───────────────────────────────────────── -->
     {#if release.description}
       <section class="mt-10">
         <h2 class="font-display text-2xl tracking-wide mb-4 text-white">About</h2>
         <MarkdownRenderer content={release.description} />
       </section>
     {/if}
-    
-    <!-- Track List -->
+
+    <!-- ── Tracklist ─────────────────────────────────────────── -->
     {#if release.tracks?.length > 0}
       <section class="mt-10">
         <h2 class="font-display text-2xl tracking-wide mb-4 text-white">Tracklist</h2>
         <div class="bg-dark-900 rounded-xl border border-white/5 overflow-hidden divide-y divide-white/5">
           {#each release.tracks as track, i}
-            <div class="group flex items-center gap-3 px-4 py-3 hover:bg-dark-800 transition-colors {isTrackActive(i) ? 'bg-dark-800' : ''}">
-              <!-- Play button or number -->
+            <div class="group flex items-center gap-3 px-4 py-3 transition-colors {isTrackActive(i) ? 'bg-dark-800' : 'hover:bg-dark-800/50'}">
+
+              <!-- Play / number -->
               {#if track.audio_opus}
-                <button 
-                  onclick={() => playTrack(i)} 
+                <button
+                  onclick={() => playTrack(i)}
                   class="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 transition-colors
                     {isTrackActive(i) ? 'bg-accent-green text-dark-950' : 'bg-dark-700 text-dark-300 group-hover:bg-dark-600'}"
+                  aria-label="{isTrackPlaying(i) ? 'Pause' : 'Play'} {track.title}"
                 >
                   {#if isTrackPlaying(i)}
                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -181,55 +219,81 @@
                   {/if}
                 </button>
               {:else}
-                <span class="w-8 h-8 flex items-center justify-center text-dark-500 flex-shrink-0 text-sm">{track.number || i + 1}</span>
+                <span class="w-8 h-8 flex items-center justify-center text-dark-500 flex-shrink-0 text-sm tabular-nums">{track.number || i + 1}</span>
               {/if}
-              
-              <!-- Title — links to track page -->
+
+              <!-- Title (links to track page) -->
               <a
                 href="/music/{release.slug || release._id}/track/{i}"
-                class="flex-1 text-sm hover:text-accent-green transition-colors {isTrackActive(i) ? 'text-accent-green font-medium' : 'text-dark-300'}"
+                class="flex-1 text-sm truncate transition-colors {isTrackActive(i) ? 'text-accent-green font-medium' : 'text-dark-300 hover:text-white'}"
               >
                 {track.title}
               </a>
-              
-              <!-- Download buttons (show on hover) -->
-              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {#if track.audio_original?.endsWith('.flac')}
-                  <button onclick={() => downloadTrack(track.audio_original, track.title, 'flac')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">FLAC</button>
-                {/if}
-                {#if track.audio_mp3_320}
-                  <button onclick={() => downloadTrack(track.audio_mp3_320, track.title, 'mp3')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">320</button>
-                {/if}
-                {#if track.audio_mp3_128}
-                  <button onclick={() => downloadTrack(track.audio_mp3_128, track.title, 'mp3')} class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">128</button>
-                {/if}
-              </div>
-              
-              <span class="text-dark-500 font-mono text-xs flex-shrink-0">{track.duration || ''}</span>
+
+              <!-- Downloads (hover) -->
+              {#if track.audio_original || track.audio_mp3_320 || track.audio_mp3_128}
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {#if track.audio_original?.endsWith('.flac')}
+                    <button onclick={() => downloadTrack(track.audio_original, track.title, 'flac')}
+                      class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">FLAC</button>
+                  {/if}
+                  {#if track.audio_mp3_320}
+                    <button onclick={() => downloadTrack(track.audio_mp3_320, track.title, 'mp3')}
+                      class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">320</button>
+                  {/if}
+                  {#if track.audio_mp3_128}
+                    <button onclick={() => downloadTrack(track.audio_mp3_128, track.title, 'mp3')}
+                      class="px-2 py-0.5 text-xs bg-dark-700 hover:bg-dark-600 rounded transition-colors text-dark-300">128</button>
+                  {/if}
+                </div>
+              {/if}
+
+              <span class="text-dark-500 font-mono text-xs flex-shrink-0 tabular-nums">{track.duration || ''}</span>
             </div>
           {/each}
         </div>
       </section>
     {/if}
-    
-    <!-- Gallery -->
+
+    <!-- ── Gallery ───────────────────────────────────────────── -->
     {#if release.gallery_images?.length > 0}
       <section class="mt-10">
         <h2 class="font-display text-2xl tracking-wide mb-4 text-white">Gallery</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {#each release.gallery_images as img}
-            <button 
-              onclick={() => openLightbox(img)}
-              class="aspect-square bg-dark-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-accent-green/50 transition-all"
+            <button
+              type="button"
+              onclick={() => openGalleryImage(img)}
+              class="group aspect-square bg-dark-800 rounded-xl overflow-hidden relative cursor-zoom-in
+                     hover:ring-2 hover:ring-accent-green/40 transition-all duration-200"
+              aria-label="View {img.gallery_name || 'image'}"
             >
-              <img loading="lazy" src={getImageUrl(img, 'thumb')} alt={img.gallery_name || ''} class="w-full h-full object-cover" />
+              <img
+                src={getImageUrl(img, 'thumb')}
+                alt={img.gallery_name || ''}
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <!-- Zoom icon overlay -->
+              <div class="absolute inset-0 flex items-end justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="w-7 h-7 rounded-lg bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                  </svg>
+                </div>
+              </div>
+              <!-- Caption -->
+              {#if img.gallery_name}
+                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-2 pt-4 pb-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p class="text-white text-xs truncate">{img.gallery_name}</p>
+                </div>
+              {/if}
             </button>
           {/each}
         </div>
       </section>
     {/if}
-    
-    <!-- Production Notes & Liner Notes -->
+
+    <!-- ── Production / Liner notes ──────────────────────────── -->
     <div class="mt-10 grid md:grid-cols-2 gap-6">
       {#if release.production_notes}
         <section class="bg-dark-900 rounded-xl p-6 border border-white/5">
@@ -244,25 +308,8 @@
         </section>
       {/if}
     </div>
-    
-    <div class="h-20"></div>
   {/if}
 </div>
 
-<!-- Lightbox -->
-{#if lightboxImage}
-  <div 
-    class="fixed inset-0 bg-dark-950/95 z-50 flex items-center justify-center p-8"
-    onclick={closeLightbox}
-    onkeydown={(e) => e.key === 'Escape' && closeLightbox()}
-    role="dialog"
-    tabindex="-1"
-  >
-    <button onclick={closeLightbox} aria-label="Close" class="absolute top-4 right-4 p-2 hover:bg-dark-800 rounded-full">
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-    <img loading="lazy" src={getImageUrl(lightboxImage, 'original')} alt={lightboxImage.gallery_name || ''} class="max-w-full max-h-full object-contain" />
-  </div>
-{/if}
+<!-- Universal lightbox (z-10100, above header z-9998 and player z-9999) -->
+<ImageLightbox bind:open={lbOpen} src={lbSrc} originalSrc={lbOriginalSrc} alt={lbAlt} />

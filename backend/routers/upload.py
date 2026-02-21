@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query
 from fastapi.responses import FileResponse
 from bson import ObjectId
@@ -13,6 +14,8 @@ import aiofiles
 from database import get_db
 from config import settings
 from auth import get_current_admin
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
@@ -450,27 +453,41 @@ def audio_slugify(text: str) -> str:
     text = re.sub(r'_+', '_', text)
     return text
 
+def _check_tool(name: str) -> bool:
+    """Check if a command-line tool is available."""
+    import shutil
+    return shutil.which(name) is not None
+
+
 def _run_ffmpeg(cmd):
     """Run ffmpeg/ffprobe synchronously (called from thread)"""
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
 async def convert_audio(input_path: Path, output_path: Path, codec: str, bitrate: str):
-    """Convert audio using ffmpeg (Windows-compatible via asyncio.to_thread)"""
+    """Convert audio using ffmpeg."""
+    if not _check_tool("ffmpeg"):
+        raise Exception(
+            "ffmpeg is not installed on this server. "
+            "Please install it: apt-get install -y ffmpeg"
+        )
     cmd = ["ffmpeg", "-y", "-i", str(input_path)]
     if codec == "libmp3lame":
         cmd += ["-codec:a", "libmp3lame", "-b:a", bitrate, "-q:a", "0"]
     elif codec == "libopus":
         cmd += ["-codec:a", "libopus", "-b:a", bitrate, "-vbr", "on"]
     cmd.append(str(output_path))
-    
+
     result = await asyncio.to_thread(_run_ffmpeg, cmd)
     if result.returncode != 0:
-        raise Exception(f"ffmpeg error: {result.stderr}")
+        raise Exception(f"ffmpeg conversion failed: {result.stderr[-500:] if result.stderr else 'unknown error'}")
 
 
 async def get_audio_duration(file_path: Path) -> str:
-    """Get audio duration using ffprobe, returns MM:SS (Windows-compatible)"""
+    """Get audio duration using ffprobe, returns MM:SS. Falls back to 00:00 if unavailable."""
+    if not _check_tool("ffprobe"):
+        logger.warning("ffprobe not found — duration will be 00:00")
+        return "00:00"
     cmd = [
         "ffprobe", "-v", "quiet", "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1", str(file_path)
@@ -483,7 +500,7 @@ async def get_audio_duration(file_path: Path) -> str:
         mins = int(seconds // 60)
         secs = int(seconds % 60)
         return f"{mins:02d}:{secs:02d}"
-    except:
+    except Exception:
         return "00:00"
 
 

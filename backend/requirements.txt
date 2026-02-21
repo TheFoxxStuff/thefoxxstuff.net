@@ -29,3 +29,4 @@ uvicorn==0.40.0
 httpx
 websockets
 redis[asyncio]==5.2.1
+mutagen
