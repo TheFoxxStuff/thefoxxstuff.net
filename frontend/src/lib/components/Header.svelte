@@ -485,7 +485,7 @@
             class="search-block {searchOpen ? 'open' : ''}"
           >
             <div class="search-inner">
-              <div class="relative">
+              <div class="relative me-1">
                 <input
                   bind:this={searchInputElement}
                   type="text"
