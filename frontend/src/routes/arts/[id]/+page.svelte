@@ -22,7 +22,7 @@
   });
 
   async function handleDownload() {
-    const url = getImageUrl(artwork.image_info, 'original');
+    const url = getImageUrl(artwork.image_info, 'medium');
     const fileName = `${artwork.title.replace(/[/\\?%*:|"<>]/g, '-') || 'artwork'}.png`;
 
     try {
