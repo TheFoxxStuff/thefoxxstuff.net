@@ -18,7 +18,7 @@
   function slideImageUrl(slide) {
     if (!slide.image_info) return null;
     if (!browser) return getImageUrl(slide.image_info, 'large');
-    const variant = window.innerWidth <= 768 ? 'large' : 'original';
+    const variant = window.innerWidth <= 768 ? 'large' : 'medium';
     return getImageUrl(slide.image_info, variant);
   }
 </script>
