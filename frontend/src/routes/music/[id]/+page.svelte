@@ -124,7 +124,7 @@
   {#if loading}
     <div class="animate-pulse"><div class="h-8 w-64 bg-dark-800 rounded mb-8"></div></div>
   {:else if release}
-    <h1 class="font-display text-3xl tracking-wide mb-2">{release.title} ({new Date(release.release_date).getFullYear()})</h1>
+    <h1 class="font-display text-[24px] tracking-wide mb-2">{release.title} ({new Date(release.release_date).getFullYear()})</h1>
     <Breadcrumb items={[{ href: '/music', label: 'Music' }, { href: `/music/${release.slug || release._id}`, label: release.title }]} />
     
     <div class="mt-8 flex flex-col md:flex-row gap-8">

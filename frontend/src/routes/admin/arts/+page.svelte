@@ -144,7 +144,7 @@
 
 <div>
   <div class="flex justify-between mb-8">
-    <h1 class="font-display text-3xl">Arts</h1>
+    <h1 class="font-display text-[24px]">Arts</h1>
     <button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Artwork</button>
   </div>
   

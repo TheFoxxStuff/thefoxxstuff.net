@@ -20,7 +20,7 @@
 </script>
 <svelte:head><title>Links Admin - TheFoxxStuff</title></svelte:head>
 <div>
-  <div class="flex justify-between mb-8"><h1 class="font-display text-3xl">Links</h1><button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Link</button></div>
+  <div class="flex justify-between mb-8"><h1 class="font-display text-[24px]">Links</h1><button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Link</button></div>
   {#if showForm}
     <div class="card p-6 mb-8">
       <h2 class="font-display text-xl mb-4">{editingId ? 'Edit' : 'New'} Link</h2>

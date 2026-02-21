@@ -53,7 +53,7 @@
 <svelte:head><title>Views Map - Admin</title></svelte:head>
 <div>
   <div class="flex items-center justify-between mb-6">
-    <h1 class="font-display text-3xl tracking-wide">Views Map</h1>
+    <h1 class="font-display text-[24px] tracking-wide">Views Map</h1>
     <div class="flex items-center gap-2">{#each [7,30,90,365] as d}<button onclick={() => changeDays(d)} class="px-3 py-1.5 text-sm rounded-lg transition-colors {days===d?'bg-accent-green text-dark-950 font-medium':'bg-[--w8] text-[--w60] hover:text-white'}">{d===365?'1Y':`${d}D`}</button>{/each}</div>
   </div>
   {#if loading}<div class="card p-8 animate-pulse"><div class="h-[400px] bg-[--w8] rounded-lg"></div></div>

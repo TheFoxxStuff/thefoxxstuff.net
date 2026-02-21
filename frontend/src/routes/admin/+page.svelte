@@ -62,7 +62,7 @@
 <svelte:head><title>Admin Dashboard - TheFoxxStuff</title></svelte:head>
 
 <div>
-  <h1 class="font-display text-3xl tracking-wide mb-8">Dashboard</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-8">Dashboard</h1>
   
   {#if loading}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[4px]">
@@ -77,34 +77,34 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[4px] mb-8">
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Music Releases</div>
-        <div class="text-3xl font-bold">{stats.music.count}</div>
+        <div class="text-[24px] font-bold">{stats.music.count}</div>
         <div class="text-[--w30] text-sm mt-1">{stats.music.views.toLocaleString()} views</div>
       </div>
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Blog Posts</div>
-        <div class="text-3xl font-bold">{stats.blog.count}</div>
+        <div class="text-[24px] font-bold">{stats.blog.count}</div>
         <div class="text-[--w30] text-sm mt-1">{stats.blog.views.toLocaleString()} views</div>
       </div>
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Artworks</div>
-        <div class="text-3xl font-bold">{stats.arts.count}</div>
+        <div class="text-[24px] font-bold">{stats.arts.count}</div>
         <div class="text-[--w30] text-sm mt-1">{stats.arts.views.toLocaleString()} views</div>
       </div>
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Links</div>
-        <div class="text-3xl font-bold">{stats.links.count}</div>
+        <div class="text-[24px] font-bold">{stats.links.count}</div>
       </div>
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Users</div>
-        <div class="text-3xl font-bold">{stats.users.count}</div>
+        <div class="text-[24px] font-bold">{stats.users.count}</div>
       </div>
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Images</div>
-        <div class="text-3xl font-bold">{stats.images?.count || 0}</div>
+        <div class="text-[24px] font-bold">{stats.images?.count || 0}</div>
       </div>
       <div class="card p-6 col-span-2 bg-gradient-to-r from-accent-green/10 to-accent-cyan/10">
         <div class="text-[--w60] text-sm mb-1">Total Views</div>
-        <div class="text-3xl font-bold text-gradient">{stats.total_views.toLocaleString()}</div>
+        <div class="text-[24px] font-bold text-gradient">{stats.total_views.toLocaleString()}</div>
       </div>
     </div>
     

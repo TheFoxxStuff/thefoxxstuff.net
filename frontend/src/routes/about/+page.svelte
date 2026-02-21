@@ -24,7 +24,7 @@
 <svelte:head><title>About | TheFoxxStuff</title></svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <h1 class="font-display text-3xl tracking-wide mb-2">About</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-[8px]">About</h1>
   <Breadcrumb items={[{ href: '/about', label: 'About' }]} />
   
   <div class="mt-8 flex flex-col md:flex-row gap-8">

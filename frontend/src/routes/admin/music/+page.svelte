@@ -355,7 +355,7 @@
 
 <div>
   <div class="flex justify-between mb-8">
-    <h1 class="font-display text-3xl">Music</h1>
+    <h1 class="font-display text-[24px]">Music</h1>
     <button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Release</button>
   </div>
   

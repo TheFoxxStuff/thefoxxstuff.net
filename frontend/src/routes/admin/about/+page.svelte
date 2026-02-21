@@ -19,7 +19,7 @@
 </script>
 <svelte:head><title>About Admin - TheFoxxStuff</title></svelte:head>
 <div>
-  <h1 class="font-display text-3xl tracking-wide mb-8">About</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-8">About</h1>
   {#if loading}<div class="card p-6 animate-pulse"><div class="space-y-4">{#each Array(6) as _}<div class="h-10 bg-[--w8] rounded"></div>{/each}</div></div>
   {:else}
     <form onsubmit={handleSubmit} class="card p-6 space-y-6">

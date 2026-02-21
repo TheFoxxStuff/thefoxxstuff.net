@@ -56,7 +56,7 @@
 
 <div>
   <div class="flex items-center justify-between mb-8">
-    <h1 class="font-display text-3xl tracking-wide">Users</h1>
+    <h1 class="font-display text-[24px] tracking-wide">Users</h1>
     <span class="count-badge">{users.length} total</span>
   </div>
 

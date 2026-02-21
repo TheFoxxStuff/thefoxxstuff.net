@@ -44,7 +44,7 @@
 <svelte:head><title>Blog | TheFoxxStuff</title></svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <h1 class="font-display text-3xl tracking-wide mb-2">Blog</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-2">Blog</h1>
   <Breadcrumb items={[{ href: '/blog', label: 'Blog' }]} />
   
   <div class="mt-8 flex justify-between gap-4 flex-wrap">

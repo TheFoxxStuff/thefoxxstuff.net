@@ -64,7 +64,7 @@
 
 <div>
   <div class="flex items-center justify-between mb-6">
-    <h1 class="font-display text-3xl tracking-wide">Media Manager</h1>
+    <h1 class="font-display text-[24px] tracking-wide">Media Manager</h1>
     <button onclick={runCleanup} disabled={cleaning} class="btn btn-danger text-sm">
       {cleaning ? 'Cleaning...' : 'Cleanup Unused'}
     </button>

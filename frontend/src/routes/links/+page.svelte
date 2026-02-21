@@ -8,7 +8,7 @@
 </script>
 <svelte:head><title>Links | TheFoxxStuff</title></svelte:head>
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <h1 class="font-display text-3xl tracking-wide mb-2">Links</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-2">Links</h1>
   <Breadcrumb items={[{ href: '/links', label: 'Links' }]} />
   <div class="mt-8 max-w-xl mx-auto space-y-4">
     {#if loading}{#each Array(4) as _}<div class="h-16 bg-dark-800 rounded-xl animate-pulse"></div>{/each}
@@ -30,7 +30,7 @@
 </script>
 <svelte:head><title>Links | TheFoxxStuff</title></svelte:head>
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <h1 class="font-display text-3xl tracking-wide mb-2">Links</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-2">Links</h1>
   <Breadcrumb items={[{ href: '/links', label: 'Links' }]} />
   <div class="">
     <div class="mt-6">

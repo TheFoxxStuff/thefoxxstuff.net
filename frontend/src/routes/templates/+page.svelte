@@ -48,7 +48,7 @@
 
   // ─── Typography scale ────────────────────────────────────────────────
   const typeScale = [
-    { label: 'Display / H1', size: '30px', weight: '500', font: 'DrukWideCyr', lineH: '1.1', tracking: 'wide', class: 'font-display text-3xl tracking-wide', sample: 'ASTRAL SUMMER (2020)' },
+    { label: 'Display / H1', size: '30px', weight: '500', font: 'DrukWideCyr', lineH: '1.1', tracking: 'wide', class: 'font-display text-[24px] tracking-wide', sample: 'ASTRAL SUMMER (2020)' },
     { label: 'Display H2', size: '24px', weight: '500', font: 'DrukWideCyr', lineH: '1.15', tracking: 'wide', class: 'font-display text-2xl tracking-wide', sample: 'Music' },
     { label: 'Display H3', size: '18px', weight: '500', font: 'DrukWideCyr', lineH: '1.2', tracking: 'wide', class: 'font-display text-lg tracking-wide', sample: 'Track List' },
     { label: 'Body Large', size: '18px', weight: '400', font: 'Golos', lineH: '1.5', tracking: 'normal', class: 'text-[18px] text-[--w]', sample: 'Название релиза и карточка' },

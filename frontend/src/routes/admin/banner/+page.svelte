@@ -110,7 +110,7 @@
 
 <div>
   <div class="flex justify-between mb-8">
-    <h1 class="font-display text-3xl">Banner Slider</h1>
+    <h1 class="font-display text-[24px]">Banner Slider</h1>
     <button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Slide</button>
   </div>
   

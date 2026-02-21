@@ -6,7 +6,7 @@
   .btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-50; }
   .btn-primary { @apply bg-accent-green text-dark-950 hover:bg-accent-green/90; }
   .btn-secondary { @apply bg-dark-800 text-white border border-dark-700 hover:bg-dark-700; }
-  .btn-breadcrumb { @apply inline-flex items-center justify-center gap-[12px] px-[14px] py-[8px] text-[14px] font-medium transition-all rounded-[8px] disabled:opacity-5 hover:bg-[--w5] }
+  .btn-breadcrumb { @apply inline-flex items-center justify-center gap-[6px] px-[12px] py-[6px] text-[14px] font-medium transition-all rounded-[8px] disabled:opacity-5 hover:bg-[--w5] }
   .btn-danger { @apply bg-accent-red text-white hover:bg-accent-red/90; }
   .card { background: var(--w5); border: 1px solid var(--w8); border-radius: 0.75rem; overflow: hidden; }
   .card-hover { transition: background 0.15s; } .card-hover:hover { background: var(--w8); }

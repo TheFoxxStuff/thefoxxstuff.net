@@ -36,7 +36,7 @@
 <svelte:head><title>Music | TheFoxxStuff</title></svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <h1 class="font-display text-3xl tracking-wide text-[--w] mb-2">Music</h1>
+  <h1 class="font-display text-[24px] tracking-wide text-[--w] mb-2">Music</h1>
   <Breadcrumb items={[{ href: '/music', label: 'Music' }]} />
 
   <div class="mt-8 space-y-10">

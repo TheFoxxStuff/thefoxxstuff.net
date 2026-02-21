@@ -23,7 +23,7 @@
 <svelte:head><title>Register | TheFoxxStuff</title></svelte:head>
 <div class="max-w-md mx-auto px-4 py-16">
   <div class="card p-8">
-    <h1 class="font-display text-3xl tracking-wide mb-6 text-center">Register</h1>
+    <h1 class="font-display text-[24px] tracking-wide mb-6 text-center">Register</h1>
     <p class="text-sm text-dark-400 text-center mb-6">First user will automatically become admin!</p>
     {#if error}<div class="mb-4 p-3 bg-accent-red/10 border border-accent-red/50 rounded-lg text-accent-red text-sm">{error}</div>{/if}
     <form onsubmit={handleSubmit} class="space-y-4">

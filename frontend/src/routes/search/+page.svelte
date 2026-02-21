@@ -37,7 +37,7 @@
 <svelte:head><title>Search{query ? `: ${query}` : ''} | TheFoxxStuff</title></svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  <h1 class="font-display text-3xl tracking-wide mb-6">Search</h1>
+  <h1 class="font-display text-[24px] tracking-wide mb-6">Search</h1>
 
   <form onsubmit={handleSubmit} class="flex gap-2 mb-8">
     <div class="flex-1 relative">
