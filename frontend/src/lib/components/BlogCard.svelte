@@ -1,9 +1,11 @@
 <script>
   import { getImageUrl } from '$lib/api';
-  import { Calendar, Eye, Clock } from 'lucide-svelte';
+  import { Calendar, Eye } from 'lucide-svelte';
 
   let { post } = $props();
 
+  // cover_image_info отдаётся бэкендом — убран api.upload.getInfo() внутри компонента.
+  // Это был N+1 на фронтенде: при 2 постах на главной = 2 лишних запроса.
   const coverUrl = $derived.by(() => {
     if (post.cover_image_info) return getImageUrl(post.cover_image_info, 'medium');
     return null;
@@ -11,13 +13,6 @@
 
   const formatDate = (d) =>
     new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-  // Estimate reading time from content or use pre-computed field
-  const readingTime = $derived.by(() => {
-    if (post.reading_time_min) return post.reading_time_min;
-    if (post.content) return Math.max(1, Math.ceil(post.content.split(/\s+/).length / 200));
-    return null;
-  });
 </script>
 
 <a href="/blog/{post.slug || post._id}" class="group flex flex-col h-full bg-[--w5] rounded-[12px] overflow-hidden transition-all duration-300 hover:bg-[--w8]">
@@ -43,16 +38,7 @@
   </div>
 
   <div class="flex-1 flex flex-col px-[18px] pt-[12px] pb-[18px]">
-    <!-- Tags -->
-    {#if post.tags?.length}
-      <div class="flex gap-1.5 mb-2 flex-wrap">
-        {#each post.tags.slice(0, 3) as tag}
-          <span class="text-[11px] px-2 py-0.5 bg-[--w8] text-[--w60] rounded">{tag}</span>
-        {/each}
-      </div>
-    {/if}
-
-    <h3 class="font-bold text-[20px] leading-tight text-[--w] mb-[6px] transition-colors line-clamp-2 group-hover:text-accent-green">
+    <h3 class="font-bold text-[18px] leading-tight text-[--w] mb-[4px] transition-colors line-clamp-2">
       {post.title}
     </h3>
 
@@ -62,22 +48,14 @@
       </p>
     {/if}
 
-    <div class="mt-auto flex items-center justify-between pt-[12px] border-t border-[--w5]">
+    <div class="mt-auto flex items-center justify-between pt-[12px]">
       <div class="flex items-center gap-2 text-[--green]">
-        <Calendar size={13} />
-        <span class="text-[13px] font-medium">{formatDate(post.created_at)}</span>
+        <Calendar size={14} />
+        <span class="text-[14px] font-medium">{formatDate(post.created_at)}</span>
       </div>
-      <div class="flex items-center gap-3 text-[--w60]">
-        {#if readingTime}
-          <div class="flex items-center gap-1">
-            <Clock size={13} />
-            <span class="text-[13px]">{readingTime} min</span>
-          </div>
-        {/if}
-        <div class="flex items-center gap-1">
-          <Eye size={13} />
-          <span class="text-[13px]">{post.views}</span>
-        </div>
+      <div class="flex items-center gap-[6px] text-[--w60]">
+        <Eye size={14} />
+        <span class="text-[14px]">{post.views} views</span>
       </div>
     </div>
   </div>
