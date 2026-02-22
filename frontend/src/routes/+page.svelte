@@ -41,7 +41,6 @@
     slideInterval = setInterval(nextSlide, 5000);
     return () => clearInterval(slideInterval);
   });
-</script>
 
   const homeJsonLd = [
     {
