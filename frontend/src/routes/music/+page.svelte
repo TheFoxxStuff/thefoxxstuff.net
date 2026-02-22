@@ -1,36 +1,24 @@
 <script>
-  import { onMount } from 'svelte';
   import { api } from '$lib/api';
   import { Breadcrumb, FeaturedRelease, MusicCard, Pagination } from '$lib/components';
 
-  let featured = $state(null);
-  let releases = $state({ items: [], page: 1, pages: 1 });
-  let loading = $state(true);
+  let { data } = $props();
+
+  let featured = $state(data.featured);
+  let releases = $state(data.releases);
+  let loading = $state(false);
   let page = $state(1);
   const LIMIT = 12;
 
   const loadPage = async (p) => {
+    loading = true;
     page = p;
     try {
       releases = await api.music.list(p, LIMIT);
-    } catch {}
-  };
-
-  onMount(async () => {
-    try {
-      // Грузим параллельно featured и список
-      const [f, m] = await Promise.all([
-        api.music.featured(),
-        api.music.list(1, LIMIT),
-      ]);
-      featured = f;
-      releases = m;
-    } catch (e) {
-      console.error(e);
-    } finally {
+    } catch {} finally {
       loading = false;
     }
-  });
+  };
 </script>
 
 <svelte:head><title>Music | TheFoxxStuff</title></svelte:head>
@@ -40,7 +28,7 @@
   <Breadcrumb items={[{ href: '/music', label: 'Music' }]} />
 
   <div class="mt-8 space-y-10">
-    {#if !loading && featured}
+    {#if featured}
       <FeaturedRelease release={featured} />
     {/if}
 

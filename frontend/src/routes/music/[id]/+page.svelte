@@ -1,15 +1,19 @@
 <script>
-  import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
   import { Breadcrumb, MarkdownRenderer } from '$lib/components';
   import { player } from '$lib/stores/player.js';
   import ImageLightbox from '$lib/components/ImageLightbox.svelte';
 
-  let release = $state(null);
-  let loading = $state(true);
-  let coverImageUrl = $state(null);
-  let ogImageUrl = $state(null);
+  let { data } = $props();
+
+  let release = $state(data.release);
+  let loading = $state(false);
+
+  let coverImageUrl = $derived(release?.cover_image_info ? getImageUrl(release.cover_image_info, 'medium') : null);
+  let ogImageUrl = $derived(release?.og_image_info
+    ? getImageUrl(release.og_image_info, 'original')
+    : coverImageUrl);
 
   // Lightbox state
   let lbOpen = $state(false);
@@ -62,18 +66,8 @@
     return s.release?._id === release?._id && s.currentIndex === index;
   }
 
-  onMount(async () => {
-    try {
-      release = await api.music.get($page.params.id);
-      if (release.cover_image_info) coverImageUrl = getImageUrl(release.cover_image_info, 'medium');
-      if (release.og_image_info) ogImageUrl = getImageUrl(release.og_image_info, 'original');
-      else if (coverImageUrl) ogImageUrl = coverImageUrl;
-      if (release._id) api.views.record('music', release._id);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      loading = false;
-    }
+  onMount(() => {
+    if (release?._id) api.views.record('music', release._id);
   });
 
   let seoTitle       = $derived(release?.meta_title || release?.title || 'Music');
@@ -101,19 +95,7 @@
 
 <!-- pb-28 = leaves room for the fixed music player at the bottom -->
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-28 min-[829px]:max-w-[828px] min-[829px]:px-0">
-  {#if loading}
-    <div class="animate-pulse space-y-4">
-      <div class="h-6 w-48 bg-dark-800 rounded"></div>
-      <div class="flex gap-6">
-        <div class="w-64 aspect-square bg-dark-800 rounded-xl flex-shrink-0"></div>
-        <div class="flex-1 space-y-3 pt-2">
-          <div class="h-5 bg-dark-800 rounded w-3/4"></div>
-          <div class="h-4 bg-dark-800 rounded w-1/2"></div>
-          <div class="h-4 bg-dark-800 rounded w-1/3"></div>
-        </div>
-      </div>
-    </div>
-  {:else if release}
+  {#if release}
     <Breadcrumb items={[{ href: '/music', label: 'Music' }, { href: `/music/${release.slug || release._id}`, label: release.title }]} />
 
     <!-- ── Hero ──────────────────────────────────────────────── -->
