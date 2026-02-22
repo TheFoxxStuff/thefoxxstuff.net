@@ -71,6 +71,7 @@ allowed_origins = [
     "https://thefoxxstuff.net",
     "https://www.thefoxxstuff.net",
     "https://dev.thefoxxstuff.net",
+    "http://dev.thefoxxstuff.net",
 ]
 
 app.add_middleware(
