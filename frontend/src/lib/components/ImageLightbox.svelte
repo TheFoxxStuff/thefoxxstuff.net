@@ -52,10 +52,11 @@
   <div
     class="lb-backdrop"
     onclick={handleBgClick}
+    onkeydown={(e) => { if (e.key === 'Escape') close(); }}
     role="dialog"
     aria-modal="true"
     aria-label="Image preview"
-    tabindex="-1"
+    tabindex="0"
   >
     <!-- Close button -->
     <button class="lb-close" onclick={close} aria-label="Close lightbox">
