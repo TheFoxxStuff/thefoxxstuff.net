@@ -1,29 +1,19 @@
 <script>
-  import { onMount } from 'svelte';
   import { api, API_BASE } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
   import { Shield, Trash2, User } from 'lucide-svelte';
 
-  let users = $state([]);
-  let loading = $state(true);
+  let { data } = $props();
+  let users = $state(data.users);
 
-  const loadUsers = async () => {
-    loading = true;
-    try { users = await api.auth.users(); }
-    catch (e) { console.error(e); }
-    finally { loading = false; }
-  };
-
-  onMount(loadUsers);
-
+  const loadUsers = async () => { users = await api.auth.users().catch(() => users); };
   const updateRole = async (userId, role) => {
-    try { await api.auth.updateRole(userId, role); loadUsers(); }
+    try { await api.auth.updateRole(userId, role); await loadUsers(); }
     catch (err) { alert(err.message); }
   };
-
   const deleteUser = async (userId) => {
     if (!confirm('Delete this user?')) return;
-    try { await api.auth.deleteUser(userId); loadUsers(); }
+    try { await api.auth.deleteUser(userId); await loadUsers(); }
     catch (err) { alert(err.message); }
   };
 
@@ -60,19 +50,6 @@
     <span class="count-badge">{users.length} total</span>
   </div>
 
-  {#if loading}
-    <div class="users-list">
-      {#each Array(4) as _}
-        <div class="user-card skeleton">
-          <div class="skel-avatar"></div>
-          <div class="skel-lines">
-            <div class="skel-line" style="width:140px"></div>
-            <div class="skel-line" style="width:200px; opacity:.5;"></div>
-          </div>
-        </div>
-      {/each}
-    </div>
-  {:else}
     <div class="users-list">
       {#each users as user}
         {@const isMe = user._id === $auth.user?._id}
@@ -147,7 +124,6 @@
         </div>
       {/each}
     </div>
-  {/if}
 </div>
 
 <style>

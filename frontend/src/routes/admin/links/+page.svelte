@@ -1,14 +1,13 @@
 <script>
-  import { onMount } from 'svelte';
   import { api } from '$lib/api';
-  let links = $state([]);
-  let loading = $state(true);
+  let { data } = $props();
+  let links = $state(data.links);
+  let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
   let form = $state({ title: '', url: '', icon: '', order: 0 });
   let error = $state('');
-  const loadLinks = async () => { loading = true; try { links = await api.links.list(); } catch (e) { console.error(e); } finally { loading = false; } };
-  onMount(loadLinks);
+  const loadLinks = async () => { try { links = await api.links.list(); } catch (e) { console.error(e); } };
   const resetForm = () => { form = { title: '', url: '', icon: '', order: 0 }; editingId = null; showForm = false; };
   const handleSubmit = async (e) => {
     e.preventDefault(); error = '';
@@ -36,11 +35,10 @@
       </form>
     </div>
   {/if}
-  {#if loading}<div class="space-y-4">{#each Array(4) as _}<div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>{/each}</div>
-  {:else}<div class="space-y-2">{#each links as link}
+  <div class="space-y-2">{#each links as link}
     <div class="card p-4 flex justify-between items-center">
       <div><h3 class="font-medium">{link.title}</h3><p class="text-sm text-[--w60]">{link.url}</p></div>
       <div class="flex gap-2"><button onclick={() => editLink(link)} class="btn btn-secondary text-sm">Edit</button><button onclick={() => deleteLink(link._id)} class="btn btn-danger text-sm">Delete</button></div>
     </div>
-  {/each}</div>{/if}
+  {/each}</div>
 </div>

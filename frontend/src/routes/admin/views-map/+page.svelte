@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api';
 
-  let mapData = $state(null);
-  let loading = $state(true);
+  let { data } = $props();
+  let mapData = $state(data.mapData);
+  let loading = $state(false);
   let days = $state(30);
   let mapContainer = $state(null);
   let tooltip = $state({ visible: false, x: 0, y: 0, text: '' });
@@ -40,7 +41,7 @@
     } catch (e) { console.error('World map load failed:', e); }
   }
 
-  onMount(() => { loadWorldMap(); loadData(); });
+  onMount(() => { loadWorldMap(); if (!mapData) loadData(); });
   async function changeDays(d) { days = d; await loadData(); }
   function project(lat, lon) { return { x: ((lon+180)/360)*MAP_W, y: ((90-lat)/180)*MAP_H }; }
   function radius(c) { if (!mapData?.locations?.length) return 4; const mx = Math.max(...mapData.locations.map(l=>l.count),1); return 3+Math.sqrt(c/mx)*14; }

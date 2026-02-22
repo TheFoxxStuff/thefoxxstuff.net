@@ -1,12 +1,12 @@
 <script>
-  import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
 
+  let { data } = $props();
   let activeTab = $state('images'); // 'images' | 'audio'
 
   // ── Images ──────────────────────────────────────────
-  let images = $state({ items: [], total: 0, page: 1, pages: 1 });
-  let loadingImages = $state(true);
+  let images = $state(data.images);
+  let loadingImages = $state(false);
   let imgPage = $state(1);
   let category = $state('');
   let unusedOnly = $state(false);
@@ -66,7 +66,7 @@
     finally { loadingAudio = false; }
   }
 
-  onMount(() => loadImages());
+
 
   $effect(() => {
     if (activeTab === 'images') loadImages();

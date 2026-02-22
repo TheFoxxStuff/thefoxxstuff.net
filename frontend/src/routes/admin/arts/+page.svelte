@@ -1,10 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
-  
-  let artworks = $state([]);
-  let loading = $state(true);
+
+  let { data } = $props();
+  let artworks = $state(data.artworks);
+  let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
   let form = $state({
@@ -26,17 +26,12 @@
   let showSeo = $state(false);
   
   const loadArtworks = async () => {
-    loading = true;
     try {
       artworks = (await api.arts.list(1, 100)).items;
     } catch (e) {
       console.error(e);
-    } finally {
-      loading = false;
     }
   };
-  
-  onMount(loadArtworks);
   
   const resetForm = () => {
     form = {
@@ -245,13 +240,6 @@
     </div>
   {/if}
   
-  {#if loading}
-    <div class="grid grid-cols-4 gap-4">
-      {#each Array(8) as _}
-        <div class="aspect-square bg-[--w8] rounded-xl animate-pulse"></div>
-      {/each}
-    </div>
-  {:else}
     <div class="grid grid-cols-4 gap-4">
       {#each artworks as artwork}
         <div class="card p-2 group relative">
@@ -299,5 +287,4 @@
         </div>
       {/each}
     </div>
-  {/if}
 </div>

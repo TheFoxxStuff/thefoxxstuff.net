@@ -1,39 +1,26 @@
 <script>
-  import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { api, API_BASE } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
   import { Shield, Settings, Calendar, ChevronRight } from 'lucide-svelte';
 
-  let profile      = $state(null);
-  let loading      = $state(true);
-  let error        = $state('');
-  let isOwnProfile = $state(false);
+  let { data } = $props();
+
+  let profile = $state(data.profile);
+  let loading = $state(false);
+  let error = $state(profile ? '' : 'Profile not found');
+  let isOwnProfile = $derived($auth.user?.username === profile?.username);
 
   function avUrl(p) { return p ? `${API_BASE}/upload/file/${p}` : null; }
-
   function nameHue(name) {
     let h = 0;
     for (let i = 0; i < (name||'').length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
     return h;
   }
-
   function formatDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
+    return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
-
-  onMount(async () => {
-    const username = $page.params.username;
-    try {
-      profile = await api.profile.get(username);
-      isOwnProfile = $auth.user?.username === username;
-    } catch (e) { error = e.message; }
-    finally { loading = false; }
-  });
-</script>
 
 <svelte:head>
   <title>{profile ? (profile.display_name || `@${profile.username}`) : 'Profile'} | TheFoxxStuff</title>
@@ -41,15 +28,7 @@
 
 <div class="page-wrap">
 
-  {#if loading}
-    <div class="profile-card">
-      <div class="sk-avatar"></div>
-      <div class="sk-line" style="width:160px;height:22px"></div>
-      <div class="sk-line" style="width:100px;height:14px;opacity:.45"></div>
-      <div class="sk-line" style="width:280px;height:13px;margin-top:8px"></div>
-    </div>
-
-  {:else if error}
+  {#if error}
     <div class="profile-card">
       <div class="error-icon">?</div>
       <p class="error-text">User not found</p>

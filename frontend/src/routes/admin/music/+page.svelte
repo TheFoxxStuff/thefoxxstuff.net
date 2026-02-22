@@ -1,10 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
-  
-  let releases = $state([]);
-  let loading = $state(true);
+
+  let { data } = $props();
+  let releases = $state(data.releases);
+  let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
   let form = $state({
@@ -43,17 +43,12 @@
   let uploadingAudioIndex = $state(-1);
   
   const loadReleases = async () => {
-    loading = true;
     try {
       releases = (await api.music.list(1, 100)).items;
     } catch (e) {
       console.error(e);
-    } finally {
-      loading = false;
     }
   };
-  
-  onMount(loadReleases);
   
   const resetForm = () => {
     form = {
@@ -634,13 +629,6 @@
     </div>
   {/if}
   
-  {#if loading}
-    <div class="space-y-4">
-      {#each Array(5) as _}
-        <div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>
-      {/each}
-    </div>
-  {:else}
     <div class="space-y-2">
       {#each releases as release}
         <div class="card p-4 flex justify-between items-center">
@@ -676,5 +664,4 @@
         </div>
       {/each}
     </div>
-  {/if}
 </div>

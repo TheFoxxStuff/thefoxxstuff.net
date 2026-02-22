@@ -1,12 +1,12 @@
 <script>
-  import { page } from '$app/stores';
-  import { onMount } from 'svelte';
   import { api } from '$lib/api';
   import { goto } from '$app/navigation';
   import { Search } from 'lucide-svelte';
 
-  let query = $state('');
-  let results = $state(null);
+  let { data } = $props();
+
+  let query = $state(data.query);
+  let results = $state(data.results);
   let loading = $state(false);
 
   async function doSearch(q) {
@@ -16,12 +16,6 @@
     catch (e) { console.error(e); }
     finally { loading = false; }
   }
-
-  onMount(() => {
-    const q = $page.url.searchParams.get('q') || '';
-    query = q;
-    if (q) doSearch(q);
-  });
 
   function handleSubmit(e) {
     e.preventDefault();

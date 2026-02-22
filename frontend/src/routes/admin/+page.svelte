@@ -1,30 +1,13 @@
 <script>
-  import { onMount } from 'svelte';
   import { api } from '$lib/api';
   
-  let stats = $state(null);
-  let chartData = $state(null);
-  let topContent = $state(null);
-  let loading = $state(true);
+  let { data } = $props();
+  let stats = $state(data.stats);
+  let chartData = $state(data.chartData);
+  let topContent = $state(data.topContent);
+  let loading = $state(false);
   let chartDays = $state(30);
   let chartLoading = $state(false);
-  
-  onMount(async () => {
-    try {
-      const [statsResult, chartResult, topResult] = await Promise.all([
-        api.stats.get(),
-        api.stats.viewsChart(chartDays),
-        api.stats.top(5)
-      ]);
-      stats = statsResult;
-      chartData = chartResult;
-      topContent = topResult;
-    } catch (e) {
-      console.error(e);
-    } finally {
-      loading = false;
-    }
-  });
   
   async function loadChart(days) {
     chartDays = days;
@@ -64,16 +47,7 @@
 <div>
   <h1 class="font-display text-[24px] tracking-wide mb-8">Dashboard</h1>
   
-  {#if loading}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[4px]">
-      {#each Array(6) as _}
-        <div class="card p-6 animate-pulse">
-          <div class="h-4 w-20 bg-[--w8] rounded mb-2"></div>
-          <div class="h-8 w-16 bg-[--w8] rounded"></div>
-        </div>
-      {/each}
-    </div>
-  {:else if stats}
+  {#if stats}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[4px] mb-8">
       <div class="card p-6">
         <div class="text-[--w60] text-sm mb-1">Music Releases</div>

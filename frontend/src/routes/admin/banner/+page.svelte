@@ -1,10 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
   import { api, getImageUrl } from '$lib/api';
   import { ImageUpload } from '$lib/components';
-  
-  let banner = $state({ slides: [] });
-  let loading = $state(true);
+
+  let { data } = $props();
+  let banner = $state(data.banner);
+  let loading = $state(false);
   let showForm = $state(false);
   let editingIndex = $state(-1);
   let form = $state({ title: '', image: '', link: '' });
@@ -13,17 +13,12 @@
   let saving = $state(false);
   
   const loadBanner = async () => {
-    loading = true;
     try {
       banner = await api.banner.get();
     } catch (e) {
       console.error(e);
-    } finally {
-      loading = false;
     }
   };
-  
-  onMount(loadBanner);
   
   const resetForm = () => {
     form = { title: '', image: '', link: '' };
@@ -146,13 +141,7 @@
     </div>
   {/if}
   
-  {#if loading}
-    <div class="space-y-4">
-      {#each Array(3) as _}
-        <div class="h-32 bg-[--w8] rounded-xl animate-pulse"></div>
-      {/each}
-    </div>
-  {:else if banner.slides.length === 0}
+  {#if banner.slides.length === 0}
     <div class="card p-12 text-center">
       <svg class="w-16 h-16 mx-auto text-[--w30] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />

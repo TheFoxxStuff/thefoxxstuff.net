@@ -1,10 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
-  
-  let posts = $state([]);
-  let loading = $state(true);
+
+  let { data } = $props();
+  let posts = $state(data.posts);
+  let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
   let form = $state({ 
@@ -24,17 +24,12 @@
   let showSeo = $state(false);
   
   const loadPosts = async () => {
-    loading = true;
     try {
       posts = (await api.blog.list(1, 100)).items;
     } catch (e) {
       console.error(e);
-    } finally {
-      loading = false;
     }
   };
-  
-  onMount(loadPosts);
   
   const resetForm = () => {
     form = { 
@@ -218,13 +213,6 @@
     </div>
   {/if}
   
-  {#if loading}
-    <div class="space-y-4">
-      {#each Array(5) as _}
-        <div class="h-16 bg-[--w8] rounded-xl animate-pulse"></div>
-      {/each}
-    </div>
-  {:else}
     <div class="space-y-2">
       {#each posts as post}
         <div class="card p-4 flex justify-between items-center">
@@ -260,5 +248,4 @@
         </div>
       {/each}
     </div>
-  {/if}
 </div>

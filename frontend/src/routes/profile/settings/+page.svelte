@@ -6,13 +6,15 @@
   import { AvatarCropper } from '$lib/components';
   import { Camera, Save, Trash2, Check, LogOut, Shield } from 'lucide-svelte';
 
-  let profile     = $state(null);
-  let loading     = $state(true);
+  let { data } = $props();
+
+  let profile     = $state(data.profile);
+  let loading     = $state(false);
   let saving      = $state(false);
   let error       = $state('');
   let success     = $state('');
-  let displayName = $state('');
-  let bio         = $state('');
+  let displayName = $state(profile?.display_name || '');
+  let bio         = $state(profile?.bio || '');
 
   // Кроппер
   let cropFile    = $state(null);  // File object — открывает кроппер
@@ -26,14 +28,8 @@
     return h;
   }
 
-  onMount(async () => {
-    if (!$auth.user) { goto('/auth/login'); return; }
-    try {
-      profile = await api.profile.me();
-      displayName = profile.display_name || '';
-      bio = profile.bio || '';
-    } catch (e) { error = e.message; }
-    finally { loading = false; }
+  onMount(() => {
+    if (!$auth.user) goto('/auth/login');
   });
 
   async function saveProfile() {
@@ -103,21 +99,7 @@
     <span class="bc-cur">Settings</span>
   </div>
 
-  {#if loading}
-    <div class="card">
-      <div class="sk-row">
-        <div class="sk-av"></div>
-        <div class="sk-lines">
-          <div class="sk-line" style="width:120px;height:16px"></div>
-          <div class="sk-line" style="width:80px;height:12px;opacity:.5"></div>
-        </div>
-      </div>
-      {#each [1,2,3] as _}
-        <div class="sk-line" style="height:44px;border-radius:10px"></div>
-      {/each}
-    </div>
-
-  {:else if profile}
+  {#if profile}
     {@const hue = nameHue(profile.username)}
     {@const thumb = avUrl(profile.avatar_thumb)}
 
