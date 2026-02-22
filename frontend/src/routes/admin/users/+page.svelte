@@ -3,8 +3,8 @@
   import { auth } from '$lib/stores/auth.js';
   import { Shield, Trash2, User } from 'lucide-svelte';
 
-  let { data } = $props();
-  let users = $state(data.users);
+  let { data: pageData } = $props();
+  let users = $state(pageData.users);
 
   const loadUsers = async () => { users = await api.auth.users().catch(() => users); };
   const updateRole = async (userId, role) => {
@@ -316,35 +316,6 @@
     background: rgba(239,68,68,0.1);
     border-color: rgba(239,68,68,0.2);
     color: #ef4444;
-  }
-
-  /* ── Skeleton ── */
-  .skeleton {
-    pointer-events: none;
-  }
-  .skel-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--w8);
-    animation: pulse 1.4s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-  .skel-lines {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-  }
-  .skel-line {
-    height: 12px;
-    background: var(--w8);
-    border-radius: 6px;
-    animation: pulse 1.4s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
   }
 
   /* ── Mobile ── */

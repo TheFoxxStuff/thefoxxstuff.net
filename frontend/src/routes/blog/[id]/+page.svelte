@@ -5,9 +5,9 @@
   import Badge from '../../../lib/components/Badge.svelte';
   import { Calendar, Eye } from 'lucide-svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let post = $state(data.post);
+  let post = $state(pageData.post);
   let coverImageUrl = $derived(post?.cover_image_info ? getImageUrl(post.cover_image_info, 'medium') : null);
   let ogImageUrl = $derived(post?.og_image_info ? getImageUrl(post.og_image_info, 'medium') : coverImageUrl);
 

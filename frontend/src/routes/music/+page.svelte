@@ -2,10 +2,10 @@
   import { api } from '$lib/api';
   import { Breadcrumb, FeaturedRelease, MusicCard, Pagination } from '$lib/components';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let featured = $state(data.featured);
-  let releases = $state(data.releases);
+  let featured = $state(pageData.featured);
+  let releases = $state(pageData.releases);
   let loading = $state(false);
   let page = $state(1);
   const LIMIT = 12;

@@ -2,8 +2,8 @@
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
 
-  let { data } = $props();
-  let releases = $state(data.releases);
+  let { data: pageData } = $props();
+  let releases = $state(pageData.releases);
   let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);

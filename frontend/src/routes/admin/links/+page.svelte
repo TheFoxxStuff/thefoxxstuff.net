@@ -1,7 +1,7 @@
 <script>
   import { api } from '$lib/api';
-  let { data } = $props();
-  let links = $state(data.links);
+  let { data: pageData } = $props();
+  let links = $state(pageData.links);
   let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);

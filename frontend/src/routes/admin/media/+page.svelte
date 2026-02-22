@@ -1,11 +1,11 @@
 <script>
   import { api, getImageUrl, API_BASE } from '$lib/api';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
   let activeTab = $state('images'); // 'images' | 'audio'
 
   // ── Images ──────────────────────────────────────────
-  let images = $state(data.images);
+  let images = $state(pageData.images);
   let loadingImages = $state(false);
   let imgPage = $state(1);
   let category = $state('');

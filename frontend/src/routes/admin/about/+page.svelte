@@ -1,7 +1,7 @@
 <script>
   import { api } from '$lib/api';
-  let { data } = $props();
-  const about = data.about;
+  let { data: pageData } = $props();
+  const about = pageData.about;
   let form = $state(about ? { ...about, social_links: about.social_links || {} } : { name: '', location: '', genres: [], bio: '', avatar: '', email: '', liner_notes: '', social_links: {} });
   let genresInput = $state((about?.genres || []).join(', '));
   let saving = $state(false);
@@ -9,7 +9,7 @@
   let success = $state('');
   const handleSubmit = async (e) => {
     e.preventDefault(); error = ''; success = ''; saving = true;
-    try { const data = { ...form, genres: genresInput.split(',').map(g => g.trim()).filter(Boolean) }; await api.about.update(data); success = 'Saved!'; }
+    try { const payload = { ...form, genres: genresInput.split(',').map(g => g.trim()).filter(Boolean) }; await api.about.update(payload); success = 'Saved!'; }
     catch (err) { error = err.message; } finally { saving = false; }
   };
 </script>

@@ -2,10 +2,10 @@
   import { api } from '$lib/api';
   import { Breadcrumb, ArtCard, Pagination } from '$lib/components';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let grouped = $state(data.grouped);
-  let years = $state(data.years);
+  let grouped = $state(pageData.grouped);
+  let years = $state(pageData.years);
   let selectedYear = $state(null);
   let loading = $state(false);
   let currentPage = $state(1);

@@ -2,9 +2,9 @@
   import { api } from '$lib/api';
   import { Breadcrumb, BlogCard, Pagination } from '$lib/components';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let posts = $state(data.posts);
+  let posts = $state(pageData.posts);
   let search = $state('');
   let sort = $state('newest');
   let loading = $state(false);

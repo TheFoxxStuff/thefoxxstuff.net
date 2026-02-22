@@ -7,12 +7,12 @@
   import Banner from '../lib/components/Banner.svelte';
   import GuestChat from '$lib/components/GuestChat.svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let music = $state(data.music);
-  let blog = $state(data.blog);
-  let arts = $state(data.arts);
-  let banner = $state(data.banner);
+  let music = $state(pageData.music);
+  let blog = $state(pageData.blog);
+  let arts = $state(pageData.arts);
+  let banner = $state(pageData.banner);
 
   let currentSlide = $state(0);
   let slideInterval;

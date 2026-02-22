@@ -5,9 +5,9 @@
   import { player } from '$lib/stores/player.js';
   import ImageLightbox from '$lib/components/ImageLightbox.svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let release = $state(data.release);
+  let release = $state(pageData.release);
   let loading = $state(false);
 
   let coverImageUrl = $derived(release?.cover_image_info ? getImageUrl(release.cover_image_info, 'medium') : null);

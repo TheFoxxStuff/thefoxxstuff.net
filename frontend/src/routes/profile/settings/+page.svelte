@@ -6,9 +6,9 @@
   import { AvatarCropper } from '$lib/components';
   import { Camera, Save, Trash2, Check, LogOut, Shield } from 'lucide-svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let profile     = $state(data.profile);
+  let profile     = $state(pageData.profile);
   let loading     = $state(false);
   let saving      = $state(false);
   let error       = $state('');
@@ -311,11 +311,4 @@
   }
   .acc-link:hover  { background:var(--w12); color:var(--w); }
   .acc-logout:hover { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.2); color:#ef4444; }
-
-  /* Skeleton */
-  .sk-row  { display:flex; align-items:center; gap:16px; }
-  .sk-av   { width:72px; height:72px; border-radius:50%; background:var(--w8); animation:skp 1.5s ease-in-out infinite; flex-shrink:0; }
-  .sk-lines{ display:flex; flex-direction:column; gap:8px; flex:1; }
-  .sk-line { background:var(--w8); border-radius:6px; animation:skp 1.5s ease-in-out infinite; }
-  @keyframes skp { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>

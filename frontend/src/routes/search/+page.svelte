@@ -3,10 +3,10 @@
   import { goto } from '$app/navigation';
   import { Search } from 'lucide-svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let query = $state(data.query);
-  let results = $state(data.results);
+  let query = $state(pageData.query);
+  let results = $state(pageData.results);
   let loading = $state(false);
 
   async function doSearch(q) {

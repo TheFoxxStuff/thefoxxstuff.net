@@ -5,9 +5,9 @@
   import { Calendar, Eye, Maximize, Download, Image as ImageIcon } from 'lucide-svelte';
   import Badge from '../../../lib/components/Badge.svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let artwork = $state(data.artwork);
+  let artwork = $state(pageData.artwork);
 
   let imageUrl = $derived(artwork?.image_info ? getImageUrl(artwork.image_info, 'medium') : null);
   let ogImageUrl = $derived(artwork?.og_image_info

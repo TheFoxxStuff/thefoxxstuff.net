@@ -2,8 +2,8 @@
   import { api, getImageUrl } from '$lib/api';
   import { ImageUpload } from '$lib/components';
 
-  let { data } = $props();
-  let banner = $state(data.banner);
+  let { data: pageData } = $props();
+  let banner = $state(pageData.banner);
   let loading = $state(false);
   let showForm = $state(false);
   let editingIndex = $state(-1);

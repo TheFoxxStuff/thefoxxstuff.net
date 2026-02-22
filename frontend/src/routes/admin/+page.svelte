@@ -1,10 +1,10 @@
 <script>
   import { api } from '$lib/api';
   
-  let { data } = $props();
-  let stats = $state(data.stats);
-  let chartData = $state(data.chartData);
-  let topContent = $state(data.topContent);
+  let { data: pageData } = $props();
+  let stats = $state(pageData.stats);
+  let chartData = $state(pageData.chartData);
+  let topContent = $state(pageData.topContent);
   let loading = $state(false);
   let chartDays = $state(30);
   let chartLoading = $state(false);

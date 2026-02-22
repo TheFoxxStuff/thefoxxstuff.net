@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api';
 
-  let { data } = $props();
-  let mapData = $state(data.mapData);
+  let { data: pageData } = $props();
+  let mapData = $state(pageData.mapData);
   let loading = $state(false);
   let days = $state(30);
   let mapContainer = $state(null);

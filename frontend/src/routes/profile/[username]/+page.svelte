@@ -4,9 +4,9 @@
   import { auth } from '$lib/stores/auth.js';
   import { Shield, Settings, Calendar, ChevronRight } from 'lucide-svelte';
 
-  let { data } = $props();
+  let { data: pageData } = $props();
 
-  let profile = $state(data.profile);
+  let profile = $state(pageData.profile);
   let loading = $state(false);
   let error = $state(profile ? '' : 'Profile not found');
   let isOwnProfile = $derived($auth.user?.username === profile?.username);
@@ -21,6 +21,7 @@
     if (!d) return '';
     return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
+</script>
 
 <svelte:head>
   <title>{profile ? (profile.display_name || `@${profile.username}`) : 'Profile'} | TheFoxxStuff</title>
@@ -292,20 +293,6 @@
     margin-top: 2px;
   }
   :global(.cta-chevron) { color: var(--w30); flex-shrink: 0; }
-
-  /* ── Skeleton ── */
-  .sk-avatar {
-    width: 96px; height: 96px;
-    border-radius: 50%;
-    background: var(--w8);
-    animation: skpulse 1.5s ease-in-out infinite;
-  }
-  .sk-line {
-    background: var(--w8);
-    border-radius: 6px;
-    animation: skpulse 1.5s ease-in-out infinite;
-  }
-  @keyframes skpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   /* ── Error ── */
   .error-icon {
