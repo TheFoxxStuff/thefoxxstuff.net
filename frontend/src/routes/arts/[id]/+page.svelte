@@ -1,18 +1,16 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import { Calendar, Eye, Maximize, Download, Image as ImageIcon } from 'lucide-svelte';
   import Badge from '../../../lib/components/Badge.svelte';
+  import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
 
   let { data: pageData } = $props();
-
   let artwork = $state(pageData.artwork);
 
   let imageUrl = $derived(artwork?.image_info ? getImageUrl(artwork.image_info, 'medium') : null);
-  let ogImageUrl = $derived(artwork?.og_image_info
-    ? getImageUrl(artwork.og_image_info, 'original')
-    : imageUrl);
+  let ogImageUrl = $derived(artwork?.og_image_info ? getImageUrl(artwork.og_image_info, 'original') : imageUrl);
 
   let aspectRatio = $derived.by(() => {
     if (!artwork?.dimensions) return '1/1';
@@ -20,9 +18,26 @@
     return `${w} / ${h}`;
   });
 
-  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
+  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const isoDate = (d) => d ? new Date(d).toISOString() : '';
+
+  let seoTitle = $derived(artwork?.meta_title || artwork?.title || 'Artwork');
+  let seoDescription = $derived(truncate(artwork?.meta_description || artwork?.description?.replace(/[#*`\[\]]/g, '').trim() || `Digital artwork by TheFoxxStuff`, 160));
+  let seoImage = $derived(ogImageUrl || imageUrl || SITE.defaultImage);
+  let seoKeywords = $derived(artwork?.meta_keywords || `art, digital art, ${artwork?.title || ''}, thefoxxstuff`);
+  let seoUrl = $derived(artwork ? canonicalUrl(`/arts/${artwork.slug || artwork._id}`) : canonicalUrl('/arts'));
+
+  let jsonLd = $derived(artwork ? {
+    '@context': 'https://schema.org',
+    '@type': 'VisualArtwork',
+    name: seoTitle,
+    description: seoDescription,
+    image: seoImage,
+    url: seoUrl,
+    dateCreated: isoDate(artwork.created_at),
+    artMedium: 'Digital',
+    creator: { '@type': 'Person', name: SITE.author, url: SITE.url },
+  } : null);
 
   async function handleDownload() {
     const url = getImageUrl(artwork.image_info, 'medium');
@@ -32,40 +47,27 @@
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      link.href = blobUrl; link.download = fileName;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      window.open(url, '_blank');
-    }
+    } catch { window.open(url, '_blank'); }
   }
-
-  let seoTitle = $derived(artwork?.meta_title || artwork?.title || 'Artwork');
-  let seoDescription = $derived(artwork?.meta_description || artwork?.description?.substring(0, 160) || '');
-  let seoImage = $derived(ogImageUrl || imageUrl || '');
-  let seoKeywords = $derived(artwork?.meta_keywords || '');
 
   onMount(() => {
     if (artwork?._id) api.views.record('arts', artwork._id);
   });
 </script>
 
-<svelte:head>
-  <title>{seoTitle} | TheFoxxStuff</title>
-  {#if seoDescription}<meta name="description" content={seoDescription} />{/if}
-  {#if seoKeywords}<meta name="keywords" content={seoKeywords} />{/if}
-  <meta property="og:title" content={seoTitle} />
-  {#if seoDescription}<meta property="og:description" content={seoDescription} />{/if}
-  {#if seoImage}<meta property="og:image" content={seoImage} />{/if}
-  <meta property="og:type" content="article" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={seoTitle} />
-  {#if seoDescription}<meta name="twitter:description" content={seoDescription} />{/if}
-  {#if seoImage}<meta name="twitter:image" content={seoImage} />{/if}
-</svelte:head>
+<SEO
+  title={seoTitle}
+  description={seoDescription}
+  keywords={seoKeywords}
+  image={seoImage}
+  imageAlt={seoTitle}
+  type="website"
+  url={seoUrl}
+  jsonLd={jsonLd}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   {#if !artwork}

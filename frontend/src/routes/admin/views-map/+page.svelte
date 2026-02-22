@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { onMount } from 'svelte';
   import { api } from '$lib/api';
 
@@ -51,7 +53,7 @@
   let filteredLocs = $derived(selectedCountry ? (mapData?.locations||[]).filter(l=>l.country===selectedCountry) : (mapData?.locations||[]));
   function flag(code) { if (!code||code==='XX') return '🌍'; try { return String.fromCodePoint(...[...code.toUpperCase()].map(c=>0x1F1E6+c.charCodeAt(0)-65)); } catch { return '🌍'; } }
 </script>
-<svelte:head><title>Views Map - Admin</title></svelte:head>
+<SEO titleFull="Views Map - Admin" noindex={true} url={canonicalUrl("/admin")} />
 <div>
   <div class="flex items-center justify-between mb-6">
     <h1 class="font-display text-[24px] tracking-wide">Views Map</h1>

@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
 
@@ -346,7 +348,7 @@
   }
 </script>
 
-<svelte:head><title>Music Admin - TheFoxxStuff</title></svelte:head>
+<SEO titleFull="Music Admin - TheFoxxStuff" noindex={true} url={canonicalUrl("/admin")} />
 
 <div>
   <div class="flex justify-between mb-8">

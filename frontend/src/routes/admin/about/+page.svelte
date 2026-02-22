@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { api } from '$lib/api';
   let { data: pageData } = $props();
   const about = pageData.about;
@@ -13,7 +15,7 @@
     catch (err) { error = err.message; } finally { saving = false; }
   };
 </script>
-<svelte:head><title>About Admin - TheFoxxStuff</title></svelte:head>
+<SEO titleFull="About Admin - TheFoxxStuff" noindex={true} url={canonicalUrl("/admin")} />
 <div>
   <h1 class="font-display text-[24px] tracking-wide mb-8">About</h1>
   <form onsubmit={handleSubmit} class="card p-6 space-y-6">

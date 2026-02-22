@@ -19,7 +19,17 @@
     finally { loading = false; }
   };
 </script>
-<svelte:head><title>Login | TheFoxxStuff</title></svelte:head>
+<SEO
+  title="Login"
+  description="Sign in to TheFoxxStuff"
+  url={canonicalUrl("/auth/login")}
+  noindex={true}
+/>|<SEO
+  title="Login"
+  description="Sign in to TheFoxxStuff"
+  url={canonicalUrl("/auth/login")}
+  noindex={true}
+/>
 <div class="max-w-md mx-auto px-4 py-16">
   <div class="card p-8">
     <h1 class="font-display text-[24px] tracking-wide mb-6 text-center">Login</h1>

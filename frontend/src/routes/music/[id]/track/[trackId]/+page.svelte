@@ -2,7 +2,8 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
+  import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
   import { player } from '$lib/stores/player.js';
   import ImageLightbox from '$lib/components/ImageLightbox.svelte';
 
@@ -72,15 +73,32 @@
     }
   });
 
-  let seoTitle = $derived(track ? `${track.title} — ${release?.title}` : 'Track');
+  let seoTitle   = $derived(track ? `${track.title} — ${release?.title}` : 'Track');
+  let seoDesc    = $derived(truncate(track?.notes || `${track?.title || 'Track'} from "${release?.title || ''}" by TheFoxxStuff`, 160));
+  let seoImg     = $derived(coverImageUrl || SITE.defaultImage);
+  let seoUrl     = $derived(release ? canonicalUrl(`/music/${release.slug || release._id}/track/${$page.params.trackId}`) : '');
+  let trackJsonLd = $derived(track && release ? {
+    '@context': 'https://schema.org',
+    '@type': 'MusicRecording',
+    name: track.title,
+    description: seoDesc,
+    image: seoImg,
+    url: seoUrl,
+    duration: track.duration,
+    inAlbum: { '@type': 'MusicAlbum', name: release.title, url: canonicalUrl(`/music/${release.slug || release._id}`) },
+    byArtist: { '@type': 'MusicGroup', name: SITE.name, url: SITE.url },
+  } : null);
 </script>
 
-<svelte:head>
-  <title>{seoTitle} | TheFoxxStuff</title>
-  <meta property="og:title" content={seoTitle} />
-  <meta property="og:type" content="music.song" />
-  {#if coverImageUrl}<meta property="og:image" content={coverImageUrl} />{/if}
-</svelte:head>
+<SEO
+  title={seoTitle}
+  description={seoDesc}
+  image={seoImg}
+  imageAlt={seoTitle}
+  type="music.song"
+  url={seoUrl}
+  jsonLd={trackJsonLd}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-28 min-[829px]:max-w-[828px] min-[829px]:px-0">
   {#if loading}

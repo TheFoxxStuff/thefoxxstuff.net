@@ -20,7 +20,17 @@
     finally { loading = false; }
   };
 </script>
-<svelte:head><title>Register | TheFoxxStuff</title></svelte:head>
+<SEO
+  title="Register"
+  description="Create an account on TheFoxxStuff"
+  url={canonicalUrl("/auth/register")}
+  noindex={true}
+/>|<SEO
+  title="Register"
+  description="Create an account on TheFoxxStuff"
+  url={canonicalUrl("/auth/register")}
+  noindex={true}
+/>
 <div class="max-w-md mx-auto px-4 py-16">
   <div class="card p-8">
     <h1 class="font-display text-[24px] tracking-wide mb-6 text-center">Register</h1>

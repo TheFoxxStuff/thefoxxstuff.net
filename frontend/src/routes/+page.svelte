@@ -1,11 +1,12 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl } from '$lib/api';
-  import { MusicCard, BlogCard, ArtCard, Pagination } from '$lib/components';
+  import { MusicCard, BlogCard, ArtCard, Pagination, SEO } from '$lib/components';
   import { ChevronRight } from 'lucide-svelte';
   import Button from '$lib/components/Button.svelte';
   import Banner from '../lib/components/Banner.svelte';
   import GuestChat from '$lib/components/GuestChat.svelte';
+  import { SITE, canonicalUrl } from '$lib/seo.js';
 
   let { data: pageData } = $props();
 
@@ -42,7 +43,35 @@
   });
 </script>
 
-<svelte:head><title>Homepage | TheFoxxStuff</title></svelte:head>
+  const homeJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: SITE.name,
+      url: SITE.url,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: `${SITE.url}/search?q={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MusicGroup',
+      name: SITE.name,
+      url: SITE.url,
+      description: SITE.description,
+      genre: ['Hardcore', 'Breakcore', "Drum'n'Bass"],
+      foundingLocation: { '@type': 'Place', name: 'Yakutsk, Republic of Sakha, Russia' },
+      sameAs: [SITE.twitterUrl, SITE.vkUrl, SITE.telegramUrl, SITE.bandcamp, SITE.soundcloud],
+    },
+  ];
+</script>
+
+<SEO
+  url={canonicalUrl('/')}
+  jsonLd={homeJsonLd}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0 space-y-[20px]">
 

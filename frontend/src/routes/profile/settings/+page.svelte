@@ -3,6 +3,8 @@
   import { api, API_BASE } from '$lib/api';
   import { auth, isAdmin } from '$lib/stores/auth.js';
   import { goto } from '$app/navigation';
+  import { SEO } from '$lib/components';
+  import { canonicalUrl } from '$lib/seo.js';
   import { AvatarCropper } from '$lib/components';
   import { Camera, Save, Trash2, Check, LogOut, Shield } from 'lucide-svelte';
 
@@ -83,7 +85,17 @@
   function doLogout() { auth.logout(); goto('/'); }
 </script>
 
-<svelte:head><title>Profile Settings | TheFoxxStuff</title></svelte:head>
+<SEO
+  title="Profile Settings"
+  description="Edit your TheFoxxStuff profile"
+  url={canonicalUrl("/profile/settings")}
+  noindex={true}
+/>|<SEO
+  title="Profile Settings"
+  description="Edit your TheFoxxStuff profile"
+  url={canonicalUrl("/profile/settings")}
+  noindex={true}
+/>
 
 <!-- Кроппер рендерится поверх всего когда выбран файл -->
 {#if cropFile}

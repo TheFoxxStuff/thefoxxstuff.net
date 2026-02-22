@@ -1,6 +1,7 @@
 <script>
   import { api } from '$lib/api';
-  import { Breadcrumb, ArtCard, Pagination } from '$lib/components';
+  import { Breadcrumb, ArtCard, Pagination, SEO } from '$lib/components';
+  import { canonicalUrl } from '$lib/seo.js';
 
   let { data: pageData } = $props();
 
@@ -27,7 +28,20 @@
   const selectYear = (y) => { selectedYear = selectedYear === y ? null : y; currentPage = 1; loadArts(); };
 </script>
 
-<svelte:head><title>Arts | TheFoxxStuff</title></svelte:head>
+<SEO
+  title="Arts"
+  description="Digital artworks and illustrations by TheFoxxStuff — music producer from Yakutia, Russia."
+  keywords="art, digital art, illustration, thefoxxstuff, yakutia"
+  url={canonicalUrl('/arts')}
+  type="website"
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
+    name: 'TheFoxxStuff Arts',
+    url: canonicalUrl('/arts'),
+    author: { '@type': 'Person', name: 'TheFoxxStuff' },
+  }}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   <h1 class="font-display text-[24px] tracking-wide text-[--w] mb-2">Arts</h1>

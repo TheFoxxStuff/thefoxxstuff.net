@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import { player } from '$lib/stores/player.js';
   import ImageLightbox from '$lib/components/ImageLightbox.svelte';
 
@@ -70,28 +70,46 @@
     if (release?._id) api.views.record('music', release._id);
   });
 
+  import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
+
   let seoTitle       = $derived(release?.meta_title || release?.title || 'Music');
-  let seoDescription = $derived(release?.meta_description || release?.description?.substring(0, 160) || '');
-  let seoImage       = $derived(ogImageUrl || coverImageUrl || '');
-  let seoKeywords    = $derived(release?.meta_keywords || '');
+  let seoDescription = $derived(truncate(release?.meta_description || release?.description?.replace(/[#*`\[\]]/g, '').trim() || `${release?.title || 'Music'} — ${release?.genre || 'Electronic'} by TheFoxxStuff`, 160));
+  let seoImage       = $derived(ogImageUrl || coverImageUrl || SITE.defaultImage);
+  let seoKeywords    = $derived(release?.meta_keywords || `${release?.title || ''}, ${release?.genre || ''}, thefoxxstuff, music`);
+  let seoUrl         = $derived(release ? canonicalUrl(`/music/${release.slug || release._id}`) : canonicalUrl('/music'));
 
   // How many tracks have download options
   let hasDownloads = $derived(release?.tracks?.some(t => t.audio_original || t.audio_mp3_320 || t.audio_mp3_128));
+
+  let jsonLd = $derived(release ? {
+    '@context': 'https://schema.org',
+    '@type': 'MusicAlbum',
+    name: seoTitle,
+    description: seoDescription,
+    image: seoImage,
+    url: seoUrl,
+    datePublished: release.release_date || release.created_at,
+    genre: release.genre,
+    byArtist: { '@type': 'MusicGroup', name: SITE.name, url: SITE.url },
+    track: release.tracks?.map((t, i) => ({
+      '@type': 'MusicRecording',
+      name: t.title,
+      position: i + 1,
+      byArtist: { '@type': 'MusicGroup', name: SITE.name },
+    })) || [],
+  } : null);
 </script>
 
-<svelte:head>
-  <title>{seoTitle} | TheFoxxStuff</title>
-  {#if seoDescription}<meta name="description" content={seoDescription} />{/if}
-  {#if seoKeywords}<meta name="keywords" content={seoKeywords} />{/if}
-  <meta property="og:title" content={seoTitle} />
-  {#if seoDescription}<meta property="og:description" content={seoDescription} />{/if}
-  {#if seoImage}<meta property="og:image" content={seoImage} />{/if}
-  <meta property="og:type" content="music.album" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={seoTitle} />
-  {#if seoDescription}<meta name="twitter:description" content={seoDescription} />{/if}
-  {#if seoImage}<meta name="twitter:image" content={seoImage} />{/if}
-</svelte:head>
+<SEO
+  title={seoTitle}
+  description={seoDescription}
+  keywords={seoKeywords}
+  image={seoImage}
+  imageAlt={seoTitle}
+  type="music.album"
+  url={seoUrl}
+  jsonLd={jsonLd}
+/>
 
 <!-- pb-28 = leaves room for the fixed music player at the bottom -->
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-28 min-[829px]:max-w-[828px] min-[829px]:px-0">

@@ -1,9 +1,10 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import Badge from '../../../lib/components/Badge.svelte';
   import { Calendar, Eye } from 'lucide-svelte';
+  import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
 
   let { data: pageData } = $props();
 
@@ -12,30 +13,52 @@
   let ogImageUrl = $derived(post?.og_image_info ? getImageUrl(post.og_image_info, 'medium') : coverImageUrl);
 
   const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const isoDate = (d) => d ? new Date(d).toISOString() : '';
 
   let seoTitle = $derived(post?.meta_title || post?.title || 'Blog');
-  let seoDescription = $derived(post?.meta_description || post?.excerpt || '');
-  let seoImage = $derived(ogImageUrl || coverImageUrl || '');
-  let seoKeywords = $derived(post?.meta_keywords || '');
+  let seoDescription = $derived(truncate(post?.meta_description || post?.excerpt || post?.content?.replace(/[#*`\[\]]/g, '').trim() || '', 160));
+  let seoImage = $derived(ogImageUrl || coverImageUrl || SITE.defaultImage);
+  let seoKeywords = $derived(post?.meta_keywords || SITE.keywords);
+  let seoUrl = $derived(post ? canonicalUrl(`/blog/${post.slug || post._id}`) : canonicalUrl('/blog'));
+
+  let articleMeta = $derived(post ? {
+    publishedTime: isoDate(post.created_at),
+    modifiedTime: isoDate(post.updated_at || post.created_at),
+    author: SITE.author,
+    section: 'Blog',
+    tags: post.meta_keywords ? post.meta_keywords.split(',').map(k => k.trim()) : [],
+  } : null);
+
+  let jsonLd = $derived(post ? {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: seoTitle,
+    description: seoDescription,
+    image: seoImage,
+    url: seoUrl,
+    datePublished: isoDate(post.created_at),
+    dateModified: isoDate(post.updated_at || post.created_at),
+    author: { '@type': 'Person', name: SITE.author, url: SITE.url },
+    publisher: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': seoUrl },
+  } : null);
 
   onMount(() => {
     if (post?._id) api.views.record('blog', post._id);
   });
 </script>
 
-<svelte:head>
-  <title>{seoTitle} | TheFoxxStuff</title>
-  {#if seoDescription}<meta name="description" content={seoDescription} />{/if}
-  {#if seoKeywords}<meta name="keywords" content={seoKeywords} />{/if}
-  <meta property="og:title" content={seoTitle} />
-  {#if seoDescription}<meta property="og:description" content={seoDescription} />{/if}
-  {#if seoImage}<meta property="og:image" content={seoImage} />{/if}
-  <meta property="og:type" content="article" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={seoTitle} />
-  {#if seoDescription}<meta name="twitter:description" content={seoDescription} />{/if}
-  {#if seoImage}<meta name="twitter:image" content={seoImage} />{/if}
-</svelte:head>
+<SEO
+  title={seoTitle}
+  description={seoDescription}
+  keywords={seoKeywords}
+  image={seoImage}
+  imageAlt={seoTitle}
+  type="article"
+  url={seoUrl}
+  article={articleMeta}
+  jsonLd={jsonLd}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   {#if !post}

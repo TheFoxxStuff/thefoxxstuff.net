@@ -2,7 +2,9 @@
   import { page } from '$app/stores';
   import { api, API_BASE } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
+  import { SEO } from '$lib/components';
   import { Shield, Settings, Calendar, ChevronRight } from 'lucide-svelte';
+  import { SITE, canonicalUrl } from '$lib/seo.js';
 
   let { data: pageData } = $props();
 
@@ -21,11 +23,22 @@
     if (!d) return '';
     return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
+
+  let profileName = $derived(profile?.display_name || (profile ? `@${profile.username}` : 'Profile'));
+  let profileBio  = $derived(profile?.bio || `${profileName} on TheFoxxStuff`);
+  let profileImg  = $derived(profile?.avatar_thumb ? avUrl(profile.avatar_thumb) : SITE.defaultImage);
+  let profileUrl  = $derived(profile ? canonicalUrl(`/profile/${profile.username}`) : canonicalUrl('/'));
 </script>
 
-<svelte:head>
-  <title>{profile ? (profile.display_name || `@${profile.username}`) : 'Profile'} | TheFoxxStuff</title>
-</svelte:head>
+<SEO
+  title={profileName}
+  description={profileBio}
+  image={profileImg}
+  imageAlt={profileName}
+  type="profile"
+  url={profileUrl}
+  profile={{ username: profile?.username }}
+/>
 
 <div class="page-wrap">
 

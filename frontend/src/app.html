@@ -1,17 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-		<!-- Preconnect к API — экономит DNS+TCP при первом запросе -->
-		<link rel="preconnect" href="https://api.thefoxxstuff.net" />
+		<!-- ── Favicon & Touch Icons ── -->
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="any" />
+		<!-- apple-touch-icon: place a 180x180 PNG as /static/apple-touch-icon.png -->
+		<link rel="apple-touch-icon" sizes="180x180" href="%sveltekit.assets%/apple-touch-icon.png" />
+		<link rel="manifest" href="%sveltekit.assets%/site.webmanifest" />
 
-		<!-- Шрифты -->
+		<!-- ── Global fallback SEO (overridden per-page via SEO.svelte) ── -->
+		<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+		<meta name="theme-color" content="#00FF88" />
+		<meta name="color-scheme" content="dark" />
+
+		<!-- ── Performance: preconnect to critical origins ── -->
+		<link rel="preconnect" href="https://api.thefoxxstuff.net" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+		<!-- ── Fonts ── -->
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
 		%sveltekit.head%
 	</head>

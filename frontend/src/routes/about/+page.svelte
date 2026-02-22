@@ -1,6 +1,7 @@
 <script>
-  import { Breadcrumb } from '$lib/components';
-  
+  import { Breadcrumb, SEO } from '$lib/components';
+  import { SITE, canonicalUrl } from '$lib/seo.js';
+
   // Static about information - edit this directly
   const about = {
     name: 'TheFoxxStuff',
@@ -19,9 +20,33 @@
     },
     liner_notes: "So I spent a few hours in this world, until I felt it was time to return to reality. I opened my eyes and felt that my mind was cleansed and filled with new knowledge. I was ready for new challenges in life, knowing that the world where summer reigns will always be with me."
   };
+
+  const aboutJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: about.name,
+    url: SITE.url,
+    description: about.bio,
+    email: about.email,
+    image: `${SITE.url}${about.avatar}`,
+    jobTitle: 'Music Producer',
+    knowsAbout: about.genres,
+    address: { '@type': 'PostalAddress', addressLocality: about.city, addressCountry: 'RU' },
+    sameAs: Object.values(about.social_links).filter(Boolean),
+  };
 </script>
 
-<svelte:head><title>About | TheFoxxStuff</title></svelte:head>
+<SEO
+  title="About"
+  description={`TheFoxxStuff — music producer from ${about.city}, ${about.location}. Creates ${about.genres.join(', ')} music.`}
+  keywords={`${about.name}, about, musician, ${about.genres.join(', ')}, yakutia, yakutsk`}
+  image={`${SITE.url}${about.avatar}`}
+  imageAlt="TheFoxxStuff"
+  type="profile"
+  url={canonicalUrl('/about')}
+  profile={{ username: 'thefoxxstuff' }}
+  jsonLd={aboutJsonLd}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   <h1 class="font-display text-[24px] tracking-wide mb-[8px]">About</h1>

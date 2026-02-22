@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { api } from '$lib/api';
   
   let { data: pageData } = $props();
@@ -42,7 +44,7 @@
   }
 </script>
 
-<svelte:head><title>Admin Dashboard - TheFoxxStuff</title></svelte:head>
+<SEO titleFull="Admin Dashboard - TheFoxxStuff" noindex={true} url={canonicalUrl("/admin")} />
 
 <div>
   <h1 class="font-display text-[24px] tracking-wide mb-8">Dashboard</h1>

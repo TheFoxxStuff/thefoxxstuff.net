@@ -2,6 +2,8 @@
   import { api } from '$lib/api';
   import { goto } from '$app/navigation';
   import { Search } from 'lucide-svelte';
+  import { SEO } from '$lib/components';
+  import { canonicalUrl } from '$lib/seo.js';
 
   let { data: pageData } = $props();
 
@@ -28,7 +30,12 @@
   let total = $derived(results ? (results.music?.length || 0) + (results.blog?.length || 0) + (results.arts?.length || 0) : 0);
 </script>
 
-<svelte:head><title>Search{query ? `: ${query}` : ''} | TheFoxxStuff</title></svelte:head>
+<SEO
+  title={query ? `Search: ${query}` : 'Search'}
+  description={query ? `Search results for "${query}" on TheFoxxStuff` : 'Search music, blog posts and artworks on TheFoxxStuff'}
+  url={canonicalUrl(query ? `/search?q=${encodeURIComponent(query)}` : '/search')}
+  noindex={true}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   <h1 class="font-display text-[24px] tracking-wide mb-6">Search</h1>

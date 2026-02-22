@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { api, API_BASE } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
   import { Shield, Trash2, User } from 'lucide-svelte';
@@ -42,7 +44,7 @@
   }
 </script>
 
-<svelte:head><title>Users — Admin</title></svelte:head>
+<SEO titleFull="Users — Admin" noindex={true} url={canonicalUrl("/admin")} />
 
 <div>
   <div class="flex items-center justify-between mb-8">

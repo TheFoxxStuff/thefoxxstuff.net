@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, API_BASE } from '$lib/api';
 
   let { data: pageData } = $props();
@@ -143,7 +145,7 @@
   let totalAudioSize = $derived(audioFiles.reduce((s, a) => s + (a.size || 0), 0));
 </script>
 
-<svelte:head><title>Media Manager - Admin</title></svelte:head>
+<SEO titleFull="Media Manager - Admin" noindex={true} url={canonicalUrl("/admin")} />
 
 <div>
   <div class="flex items-center justify-between mb-6">

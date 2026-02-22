@@ -26,9 +26,16 @@
 
 
 <script>
-  import { Breadcrumb } from '$lib/components';
+  import { Breadcrumb, SEO } from '$lib/components';
+  import { canonicalUrl } from '$lib/seo.js';
 </script>
-<svelte:head><title>Links | TheFoxxStuff</title></svelte:head>
+
+<SEO
+  title="Links"
+  description="All social networks and streaming platforms where you can find TheFoxxStuff music — Spotify, VK Music, Bandcamp, SoundCloud, YouTube, Telegram and more."
+  keywords="links, social, spotify, bandcamp, soundcloud, youtube, vk, telegram, thefoxxstuff"
+  url={canonicalUrl('/links')}
+/>
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   <h1 class="font-display text-[24px] tracking-wide mb-2">Links</h1>
   <Breadcrumb items={[{ href: '/links', label: 'Links' }]} />

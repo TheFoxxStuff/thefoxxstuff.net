@@ -1,4 +1,6 @@
 <script>
+  import { SEO } from "$lib/components";
+  import { canonicalUrl } from "$lib/seo.js";
   import { api } from '$lib/api';
   let { data: pageData } = $props();
   let links = $state(pageData.links);
@@ -17,7 +19,7 @@
   const editLink = (l) => { editingId = l._id; form = { title: l.title, url: l.url, icon: l.icon || '', order: l.order }; showForm = true; };
   const deleteLink = async (id) => { if (!confirm('Delete?')) return; try { await api.links.delete(id); loadLinks(); } catch (err) { alert(err.message); } };
 </script>
-<svelte:head><title>Links Admin - TheFoxxStuff</title></svelte:head>
+<SEO titleFull="Links Admin - TheFoxxStuff" noindex={true} url={canonicalUrl("/admin")} />
 <div>
   <div class="flex justify-between mb-8"><h1 class="font-display text-[24px]">Links</h1><button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Link</button></div>
   {#if showForm}

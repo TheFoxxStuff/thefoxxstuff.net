@@ -1,6 +1,7 @@
 <script>
   import { api } from '$lib/api';
-  import { Breadcrumb, FeaturedRelease, MusicCard, Pagination } from '$lib/components';
+  import { Breadcrumb, FeaturedRelease, MusicCard, Pagination, SEO } from '$lib/components';
+  import { canonicalUrl } from '$lib/seo.js';
 
   let { data: pageData } = $props();
 
@@ -21,7 +22,20 @@
   };
 </script>
 
-<svelte:head><title>Music | TheFoxxStuff</title></svelte:head>
+<SEO
+  title="Music"
+  description="Discography of TheFoxxStuff — Hardcore, Breakcore and Drum'n'Bass releases. Stream and download."
+  keywords="music, discography, hardcore, breakcore, drum and bass, releases, thefoxxstuff"
+  url={canonicalUrl('/music')}
+  type="website"
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'MusicGroup',
+    name: 'TheFoxxStuff',
+    url: canonicalUrl('/music'),
+    genre: ['Hardcore', 'Breakcore', "Drum'n'Bass"],
+  }}
+/>
 
 <div class="mx-auto max-w-6xl px-4 pt-[20px] pb-8 min-[829px]:max-w-[828px] min-[829px]:px-0">
   <h1 class="font-display text-[24px] tracking-wide text-[--w] mb-2">Music</h1>
