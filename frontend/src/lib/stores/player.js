@@ -3,8 +3,6 @@ import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
 const STORAGE_KEY = 'player_state';
-
-// Поля, которые сохраняем между сессиями
 const PERSIST_FIELDS = ['volume', 'repeat'];
 
 function loadPersistedState() {
@@ -13,7 +11,6 @@ function loadPersistedState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Берём только безопасные поля (трек/позиция восстанавливаются отдельно)
       return {
         volume: typeof parsed.volume === 'number' ? parsed.volume : 0.8,
         repeat: ['none', 'all', 'one'].includes(parsed.repeat) ? parsed.repeat : 'none',
@@ -51,14 +48,43 @@ function createPlayerStore() {
     return state;
   }
 
+  // Find next playable track index starting from `from`, wrapping if needed
+  function findNext(tracks, from, wrap = false) {
+    let idx = from + 1;
+    while (idx < tracks.length) {
+      if (tracks[idx]?.audio_opus) return idx;
+      idx++;
+    }
+    if (wrap) {
+      idx = 0;
+      while (idx < from) {
+        if (tracks[idx]?.audio_opus) return idx;
+        idx++;
+      }
+    }
+    return -1;
+  }
+
+  function findPrev(tracks, from) {
+    let idx = from - 1;
+    while (idx >= 0) {
+      if (tracks[idx]?.audio_opus) return idx;
+      idx--;
+    }
+    return -1;
+  }
+
   return {
     subscribe,
     playRelease(release, startIndex = 0) {
-      const audioTracks = (release.tracks || []).filter(t => t.audio_opus);
-      if (audioTracks.length === 0) return;
+      const tracks = release.tracks || [];
+      // Find first playable track at or after startIndex
+      let idx = startIndex;
+      while (idx < tracks.length && !tracks[idx]?.audio_opus) idx++;
+      if (idx >= tracks.length) return; // no playable tracks at all
       update(s => persist({
         ...s,
-        tracks: release.tracks || [],
+        tracks,
         release: {
           title: release.title,
           slug: release.slug,
@@ -66,7 +92,7 @@ function createPlayerStore() {
           cover_image_info: release.cover_image_info,
           genre: release.genre
         },
-        currentIndex: startIndex,
+        currentIndex: idx,
         isPlaying: true,
         visible: true
       }));
@@ -82,25 +108,15 @@ function createPlayerStore() {
     play() { update(s => ({ ...s, isPlaying: true })); },
     next() {
       update(s => {
-        let next = s.currentIndex + 1;
-        while (next < s.tracks.length && !s.tracks[next]?.audio_opus) next++;
-        if (next >= s.tracks.length) {
-          if (s.repeat === 'all') {
-            next = 0;
-            while (next < s.tracks.length && !s.tracks[next]?.audio_opus) next++;
-            if (next >= s.tracks.length) return { ...s, isPlaying: false };
-            return { ...s, currentIndex: next, isPlaying: true };
-          }
-          return { ...s, isPlaying: false };
-        }
+        const next = findNext(s.tracks, s.currentIndex, s.repeat === 'all');
+        if (next === -1) return { ...s, isPlaying: false };
         return { ...s, currentIndex: next, isPlaying: true };
       });
     },
     prev() {
       update(s => {
-        let prev = s.currentIndex - 1;
-        while (prev >= 0 && !s.tracks[prev]?.audio_opus) prev--;
-        if (prev < 0) return s;
+        const prev = findPrev(s.tracks, s.currentIndex);
+        if (prev === -1) return s;
         return { ...s, currentIndex: prev, isPlaying: true };
       });
     },
@@ -118,7 +134,7 @@ function createPlayerStore() {
       update(s => persist({
         tracks: [], release: null, currentIndex: -1,
         isPlaying: false, visible: false,
-        repeat: s.repeat, volume: s.volume // сохраняем настройки
+        repeat: s.repeat, volume: s.volume
       }));
     },
     getAudioUrl(track) {

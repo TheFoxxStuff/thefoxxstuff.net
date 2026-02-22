@@ -21,7 +21,7 @@
   .admin-link { @apply flex items-center gap-3 px-4 py-3 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors; }
   .admin-link-active { @apply bg-dark-800 text-white; }
   .filter { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-50 bg-[--w5] text-[--w60] hover:text-[--w] hover:bg-[--w8]; }
-  .search { @apply  w-full focus:outline-none focus:border-[--w];}
+  .search { @apply w-full focus:outline-none focus:border-[--w];}
 }
 
 @layer utilities {
@@ -38,7 +38,7 @@
 
 @font-face {
   font-family: 'Golos-Regular';
-  src: url('/fonts/Golos-Text_Regular.woff2') format('woff2-variations');
+  src: url('/fonts/Golos-Text_Medium.woff2') format('woff2-variations');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -64,6 +64,14 @@
 html {
   scrollbar-gutter: stable;
 }
+
+/* FIX: correct body colors — accent colors are NOT base colors */
+body {
+  font-family: 'Golos-Regular';
+  color: var(--w);
+  background-color: var(--bg);
+}
+
 ::selection {
   background: rgb(255, 255, 255, 0.10);
   color: #88ff00;
@@ -71,22 +79,53 @@ html {
   text-shadow: none;
 }
 
-*::-webkit-scrollbar {
-  width: 12px;
+*::-webkit-scrollbar { width: 12px; }
+*::-webkit-scrollbar-track { background: #111; }
+*::-webkit-scrollbar-thumb { background-color: #7e7e7e; border-radius: 20px; border: 3px solid #111; }
+
+/* ── Equalizer animation ─────────────────────────────── */
+.equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.equalizer .bar {
+  width: 3px;
+  background: var(--green);
+  border-radius: 2px;
+  animation: eq-bar 0.8s ease-in-out infinite alternate;
+}
+.equalizer .bar:nth-child(1) { animation-delay: 0s;    animation-duration: 0.7s; }
+.equalizer .bar:nth-child(2) { animation-delay: 0.15s; animation-duration: 0.9s; }
+.equalizer .bar:nth-child(3) { animation-delay: 0.05s; animation-duration: 0.6s; }
+.equalizer .bar:nth-child(4) { animation-delay: 0.22s; animation-duration: 0.8s; }
+@keyframes eq-bar {
+  from { height: 3px; }
+  to   { height: 14px; }
 }
 
-*::-webkit-scrollbar-track {
-  background: #111;
+/* ── Fade-slide-in animation for cards ───────────────── */
+@keyframes fade-slide-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fade-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-*::-webkit-scrollbar-thumb {
-  background-color: #7e7e7e;
-  border-radius: 20px;
-  border: 3px solid #111;
+/* ── Reading progress bar ────────────────────────────── */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--green);
+  z-index: 9999;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(115, 238, 7, 0.6);
 }
 
-body {
-  font-family: 'Golos-Regular';
-  color:#73EE07;
-  background-color: #47ADFF;
-}
+/* ── Custom cursor (foxx paw) ────────────────────────── */
+body { cursor: default; }
+a, button, [role="button"], [role="link"] { cursor: pointer; }

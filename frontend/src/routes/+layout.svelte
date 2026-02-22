@@ -1,6 +1,6 @@
 <script>
   import '../app.css';
-  import { Header, Footer } from '$lib/components';
+  import { Header, Footer, MobileNav } from '$lib/components';
   import Background from '$lib/components/Background.svelte';
   import GlowingBackground from '../lib/components/GlowingBackground.svelte';
   import MusicPlayer from '$lib/components/MusicPlayer.svelte';
@@ -22,9 +22,12 @@
   <GlowingBackground />
   <Background />
   <Header />
-  <main class="flex-1 relative z-10">
+  <main class="flex-1 relative z-10 pb-16 md:pb-0">
     {@render children()}
   </main>
   <Footer />
 </div>
+
+<!-- Fixed elements (outside main flow) -->
 <MusicPlayer />
+<MobileNav />
