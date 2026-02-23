@@ -31,8 +31,8 @@ router = APIRouter(prefix="/api/presence", tags=["presence"])
 
 # ─── Конфигурация ─────────────────────────────────────────────────────────────
 PRESENCE_TTL = 60           # TTL ключей в Redis
-HEARTBEAT_INTERVAL = 15     # Клиент шлёт heartbeat каждые 30 сек
-PUSH_INTERVAL = 1          # Сервер пушит state каждые 10 сек (было 3)
+HEARTBEAT_INTERVAL = 30     # Клиент шлёт heartbeat каждые 30 сек
+PUSH_INTERVAL = 3          # Сервер пушит state каждые 10 сек (было 3)
 MAX_ONLINE_USERS = 100      # Лимит пользователей в ответе (для UI)
 PROFILE_CACHE_TTL = 300     # Кеш профиля 5 мин
 
