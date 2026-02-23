@@ -214,7 +214,20 @@ export const api = {
   },
   views: {
     record: (entityType, entityId) => {
-      request(`/views/record?entity_type=${entityType}&entity_id=${entityId}`, { method: 'POST' }).catch(() => {});
+      // Deduplicate per session: don't record if already done this session
+      if (browser) {
+        const key = `view_recorded_${entityType}_${entityId}`;
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, '1');
+      }
+      // Use fetch directly to avoid cache and ensure POST is sent
+      const token = getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      fetch(`${API_BASE}/views/record?entity_type=${entityType}&entity_id=${entityId}`, {
+        method: 'POST',
+        headers,
+      }).catch(() => {});
     },
     map: (days = 30) => request(`/views/map?days=${days}`),
     recent: (page = 1, limit = 50) => request(`/views/recent?page=${page}&limit=${limit}`)

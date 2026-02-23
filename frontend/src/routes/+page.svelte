@@ -139,14 +139,21 @@
   </section>
 
   <!-- Online Users -->
-  {#if $presence.onlineCount > 0}
-    <section class="card p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-medium text-[--w60] uppercase tracking-wider">Online now</h2>
-        <span class="text-xs text-[--w30]">{$presence.onlineCount} user{$presence.onlineCount !== 1 ? 's' : ''}</span>
+  <section class="card p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></span>
+        <h2 class="text-sm font-medium text-[--w60] uppercase tracking-wider">Who's Online</h2>
       </div>
+      <span class="text-xs text-[--w30]">
+        {$presence.onlineCount} user{$presence.onlineCount !== 1 ? 's' : ''}
+      </span>
+    </div>
+    {#if $presence.onlineCount > 0}
       <OnlineUsers users={$presence.online} count={$presence.onlineCount} />
-    </section>
-  {/if}
+    {:else}
+      <p class="text-xs text-[--w30] py-2">No users online right now</p>
+    {/if}
+  </section>
 
 </div>

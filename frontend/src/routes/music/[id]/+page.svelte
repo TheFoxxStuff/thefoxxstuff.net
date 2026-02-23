@@ -4,6 +4,8 @@
   import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import { player } from '$lib/stores/player.js';
   import ImageLightbox from '$lib/components/ImageLightbox.svelte';
+  import ViewingNow from '$lib/components/ViewingNow.svelte';
+  import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
 
@@ -67,7 +69,11 @@
   }
 
   onMount(() => {
-    if (release?._id) api.views.record('music', release._id);
+    if (release?._id) {
+      api.views.record('music', release._id);
+      const stopPresence = presence.start('music', release._id);
+      return () => stopPresence?.();
+    }
   });
 
   import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
@@ -185,6 +191,12 @@
             </a>
           {/if}
         </div>
+
+        {#if $presence.viewingCount > 0}
+          <div class="mt-4">
+            <ViewingNow users={$presence.viewing} count={$presence.viewingCount} entityType="music" />
+          </div>
+        {/if}
       </div>
     </div>
 

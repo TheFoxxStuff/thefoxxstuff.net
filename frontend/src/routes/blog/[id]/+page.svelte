@@ -3,8 +3,10 @@
   import { api, getImageUrl, API_BASE } from '$lib/api';
   import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import Badge from '../../../lib/components/Badge.svelte';
+  import ViewingNow from '../../../lib/components/ViewingNow.svelte';
   import { Calendar, Eye } from 'lucide-svelte';
   import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
+  import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
 
@@ -44,7 +46,11 @@
   } : null);
 
   onMount(() => {
-    if (post?._id) api.views.record('blog', post._id);
+    if (post?._id) {
+      api.views.record('blog', post._id);
+      const stopPresence = presence.start('blog', post._id);
+      return () => stopPresence?.();
+    }
   });
 </script>
 
@@ -83,6 +89,12 @@
           <Badge text={formatDate(post.created_at)} icon={Calendar} />
           <Badge text="{post.views} views" icon={Eye} />
         </div>
+
+        {#if $presence.viewingCount > 0}
+          <div class="mb-[20px]">
+            <ViewingNow users={$presence.viewing} count={$presence.viewingCount} entityType="blog" />
+          </div>
+        {/if}
 
         <MarkdownRenderer content={post.content} />
       </div>

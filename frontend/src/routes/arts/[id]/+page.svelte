@@ -4,7 +4,9 @@
   import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import { Calendar, Eye, Maximize, Download, Image as ImageIcon } from 'lucide-svelte';
   import Badge from '../../../lib/components/Badge.svelte';
+  import ViewingNow from '../../../lib/components/ViewingNow.svelte';
   import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
+  import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
   let artwork = $state(pageData.artwork);
@@ -54,7 +56,11 @@
   }
 
   onMount(() => {
-    if (artwork?._id) api.views.record('arts', artwork._id);
+    if (artwork?._id) {
+      api.views.record('arts', artwork._id);
+      const stopPresence = presence.start('arts', artwork._id);
+      return () => stopPresence?.();
+    }
   });
 </script>
 
@@ -105,6 +111,12 @@
             </button>
           {/if}
         </div>
+
+        {#if $presence.viewingCount > 0}
+          <div class="mb-6">
+            <ViewingNow users={$presence.viewing} count={$presence.viewingCount} entityType="arts" />
+          </div>
+        {/if}
 
         {#if artwork.description}
           <h2 class="text-xl font-bold text-[--w] mb-4">Description</h2>
