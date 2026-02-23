@@ -277,16 +277,19 @@
     if (index !== -1) showInstant(index);
 
     if ($auth.token && $auth.user) {
+      // FIX: таймаут 5 сек — authChecking не зависает если сервер недоступен
+      const timeout = setTimeout(() => { authChecking = false; }, 5000);
       try {
         const profile = await api.profile.me();
         auth.updateUser({
-          avatar_thumb: profile.avatar_thumb,
+          avatar_thumb:    profile.avatar_thumb,
           avatar_original: profile.avatar_original,
-          display_name: profile.display_name
+          display_name:    profile.display_name,
         });
       } catch {
-        // Игнорируем ошибку
+        // При ошибке просто продолжаем — закешированные данные остаются
       } finally {
+        clearTimeout(timeout);
         authChecking = false;
       }
     } else {

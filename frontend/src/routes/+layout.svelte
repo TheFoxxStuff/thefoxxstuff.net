@@ -11,21 +11,29 @@
   let { children } = $props();
 
   onMount(() => {
+    // FIX: обновляем профиль только при наличии токена
+    // FIX: НЕ делаем logout при сетевой ошибке — только при явном 401
     if ($auth.token) {
-      api.auth.me().then(user => {
-        auth.setUser({ ...$auth.user, ...user, avatar_thumb: user.avatar_thumb ?? $auth.user?.avatar_thumb, avatar_original: user.avatar_original ?? $auth.user?.avatar_original });
-      }).catch(() => auth.logout());
+      api.auth.me()
+        .then(user => {
+          auth.setUser({
+            ...$auth.user,
+            ...user,
+            avatar_thumb:     user.avatar_thumb     ?? $auth.user?.avatar_thumb,
+            avatar_original:  user.avatar_original   ?? $auth.user?.avatar_original,
+          });
+        })
+        .catch(err => {
+          // Логаутим только при явной ошибке аутентификации, не при сетевых проблемах
+          if (err.message === 'Not authenticated') {
+            auth.logout();
+          }
+          // При timeout / 500 / сети — просто продолжаем с закешированными данными
+        });
     }
 
-    // Запускаем presence один раз для всего сайта.
-    // Отдельные страницы вызывают presence.start(type, id) для is-here,
-    // но само WebSocket-соединение живёт здесь — на любой странице сайта.
+    // Presence запускается один раз на весь сеанс
     presence.startGlobal();
-
-    return () => {
-      // presence.stop() НЕ вызываем — соединение переиспользуется между страницами.
-      // Оно закроется только при закрытии вкладки.
-    };
   });
 </script>
 
