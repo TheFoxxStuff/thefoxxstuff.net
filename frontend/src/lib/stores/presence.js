@@ -10,7 +10,7 @@ import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
 const HEARTBEAT_INTERVAL = 30_000; // 30 сек — обновляем TTL в Redis
-const POLL_INTERVAL      =  5_000; // 5 сек  — обновляем UI
+const POLL_INTERVAL      = 15_000; // 15 сек — real-time без спама
 
 function getToken() {
   if (!browser) return null;
