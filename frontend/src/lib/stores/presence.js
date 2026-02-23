@@ -1,34 +1,34 @@
 /**
  * Presence store — управляет heartbeat и состоянием онлайн.
- *
- * Использование:
- *   presence.start(entityType, entityId)  — начать heartbeat (вызывается на странице контента)
- *   presence.stop()                        — остановить (при уходе)
- *   presence.startGlobal()                 — только "онлайн", без контента (главная)
- *
- * Автоматически:
- *   - Шлёт heartbeat каждые 30 сек
- *   - Останавливается при скрытии вкладки (visibilitychange)
- *   - Восстанавливается при возврате
- *   - Вызывает DELETE при выходе (beforeunload)
  */
 
-import { writable, get } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
-const INTERVAL = 30_000; // 30 секунд
+const INTERVAL = 30_000;
 
 function getToken() {
   if (!browser) return null;
-  try { const s = localStorage.getItem('auth'); if (s) { const p = JSON.parse(s); if (p?.token) return p.token; } return localStorage.getItem('auth_token'); } catch { return null; }
+  try {
+    // Auth store сохраняет { token, user } под ключом 'auth'
+    const s = localStorage.getItem('auth');
+    if (s) {
+      const p = JSON.parse(s);
+      if (p?.token) return p.token;
+    }
+    // Fallback на старый ключ
+    return localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
 }
 
 function createPresenceStore() {
   const { subscribe, set, update } = writable({
-    online: [],        // [{user_id, username, display_name, avatar_thumb, role}]
+    online: [],
     onlineCount: 0,
-    viewing: [],       // кто смотрит текущий контент
+    viewing: [],
     viewingCount: 0,
     ready: false,
   });
@@ -36,22 +36,27 @@ function createPresenceStore() {
   let _intervalId = null;
   let _entityType = null;
   let _entityId = null;
-  let _leaveUrl = null;  // DELETE URL при уходе
+  let _listenersAdded = false;
 
   async function beat() {
     const token = getToken();
-    if (!token) return; // анонимы не трекаются
+    if (!token) return;
 
     const params = new URLSearchParams();
     if (_entityType) params.set('entity_type', _entityType);
     if (_entityId)   params.set('entity_id', _entityId);
 
     try {
-      await fetch(`${API_BASE}/presence/heartbeat?${params}`, {
+      const res = await fetch(`${API_BASE}/presence/heartbeat?${params}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
-    } catch { /* игнорируем — offline graceful */ }
+      if (!res.ok) {
+        console.warn('[presence] heartbeat failed:', res.status);
+      }
+    } catch (e) {
+      console.warn('[presence] heartbeat error:', e);
+    }
   }
 
   async function fetchOnline() {
@@ -61,7 +66,7 @@ function createPresenceStore() {
         const data = await res.json();
         update(s => ({ ...s, online: data.users, onlineCount: data.count, ready: true }));
       }
-    } catch { /* игнорируем */ }
+    } catch {}
   }
 
   async function fetchViewing() {
@@ -72,7 +77,7 @@ function createPresenceStore() {
         const data = await res.json();
         update(s => ({ ...s, viewing: data.users, viewingCount: data.count }));
       }
-    } catch { /* игнорируем */ }
+    } catch {}
   }
 
   async function tick() {
@@ -91,16 +96,24 @@ function createPresenceStore() {
   async function _leave() {
     _stop();
     const token = getToken();
-    if (!token || !_leaveUrl) return;
+    if (!token) return;
+    const params = new URLSearchParams();
+    if (_entityType) params.set('entity_type', _entityType);
+    if (_entityId)   params.set('entity_id', _entityId);
     try {
-      navigator.sendBeacon
-        ? navigator.sendBeacon(_leaveUrl) // надёжнее при unload
-        : await fetch(_leaveUrl, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }, keepalive: true });
-    } catch { /* */ }
+      const url = `${API_BASE}/presence/heartbeat?${params}`;
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url);
+      } else {
+        fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }, keepalive: true }).catch(() => {});
+      }
+    } catch {}
   }
 
-  function _setupVisibilityHandler() {
-    if (!browser) return;
+  function _setupListeners() {
+    if (!browser || _listenersAdded) return;
+    _listenersAdded = true;
+
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         _stop();
@@ -109,6 +122,7 @@ function createPresenceStore() {
         _intervalId = setInterval(tick, INTERVAL);
       }
     });
+
     window.addEventListener('beforeunload', _leave);
   }
 
@@ -119,21 +133,12 @@ function createPresenceStore() {
     _entityType = entityType;
     _entityId = entityId;
 
-    // URL для DELETE при уходе
-    const leaveParams = new URLSearchParams();
-    if (entityType) leaveParams.set('entity_type', entityType);
-    if (entityId)   leaveParams.set('entity_id', entityId);
-    _leaveUrl = `${API_BASE}/presence/heartbeat?${leaveParams}`;
-
-    // Сразу тикаем, потом по интервалу
+    _setupListeners();
     tick();
     _intervalId = setInterval(tick, INTERVAL);
-    _setupVisibilityHandler();
 
-    // Возвращаем функцию cleanup для onDestroy / $effect cleanup
     return () => {
       _stop();
-      // Убираем из viewing но не убиваем глобальное присутствие
       if (entityType && entityId) {
         const token = getToken();
         if (token) {
