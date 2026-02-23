@@ -1,16 +1,34 @@
 /**
- * Presence store — управляет heartbeat и real-time состоянием онлайн.
+ * Presence store — WebSocket + Redis pub/sub.
  *
- * Heartbeat: каждые 30 сек (обновляет TTL в Redis)
- * Polling online/viewing: каждые 5 сек (real-time обновление UI)
+ * Одно постоянное WS соединение вместо HTTP polling.
+ * Сервер пушит обновления мгновенно при любом изменении.
+ * Heartbeat идёт через то же соединение — не создаёт HTTP запросов.
+ *
+ * Сообщения клиент → сервер:
+ *   { type: "heartbeat", entity_type: "blog", entity_id: "abc" }
+ *   { type: "leave" }
+ *   { type: "ping" }
+ *
+ * Сообщения сервер → клиент:
+ *   { type: "update", online: [...], onlineCount: N, viewing: [...], viewingCount: N }
+ *   { type: "pong" }
  */
 
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
-const HEARTBEAT_INTERVAL = 30_000; // 30 сек — обновляем TTL в Redis
-const POLL_INTERVAL      = 15_000; // 15 сек — real-time без спама
+const HEARTBEAT_INTERVAL = 30_000; // 30 сек
+const RECONNECT_DELAY    = 3_000;  // 3 сек до переподключения
+const MAX_RECONNECT      = 10;     // максимум попыток подряд
+
+// ws:// или wss:// из API_BASE (http -> ws, https -> wss)
+function wsUrl(token) {
+  const base = API_BASE.replace(/^http/, 'ws');
+  const url = `${base}/presence/ws`;
+  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+}
 
 function getToken() {
   if (!browser) return null;
@@ -28,143 +46,203 @@ function getToken() {
 
 function createPresenceStore() {
   const { subscribe, update } = writable({
-    online: [],
-    onlineCount: 0,
-    viewing: [],
+    online:       [],
+    onlineCount:  0,
+    viewing:      [],
     viewingCount: 0,
-    ready: false,
+    connected:    false,
+    ready:        false,
   });
 
-  let _heartbeatId = null;
-  let _pollId      = null;
-  let _entityType  = null;
-  let _entityId    = null;
+  let _ws             = null;
+  let _heartbeatId    = null;
+  let _reconnectId    = null;
+  let _reconnectCount = 0;
+  let _entityType     = null;
+  let _entityId       = null;
+  let _stopped        = false;
   let _listenersAdded = false;
 
-  // ── Heartbeat: только сообщаем серверу что живы ──────────────────
-  async function beat() {
-    const token = getToken();
-    if (!token) return;
+  // ── Отправить сообщение если соединение открыто ───────────────────
+  function _send(msg) {
+    if (_ws && _ws.readyState === WebSocket.OPEN) {
+      _ws.send(JSON.stringify(msg));
+    }
+  }
 
-    const params = new URLSearchParams();
-    if (_entityType) params.set('entity_type', _entityType);
-    if (_entityId)   params.set('entity_id', _entityId);
-
-    try {
-      await fetch(`${API_BASE}/presence/heartbeat?${params}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+  // ── Heartbeat через WS ────────────────────────────────────────────
+  function _startHeartbeat() {
+    _stopHeartbeat();
+    _heartbeatId = setInterval(() => {
+      _send({
+        type:        'heartbeat',
+        entity_type: _entityType,
+        entity_id:   _entityId,
       });
-    } catch {}
+    }, HEARTBEAT_INTERVAL);
   }
 
-  // ── Polling: читаем актуальное состояние ─────────────────────────
-  async function fetchOnline() {
-    try {
-      const res = await fetch(`${API_BASE}/presence/online`);
-      if (res.ok) {
-        const data = await res.json();
-        update(s => ({ ...s, online: data.users, onlineCount: data.count, ready: true }));
-      }
-    } catch {}
+  function _stopHeartbeat() {
+    if (_heartbeatId) {
+      clearInterval(_heartbeatId);
+      _heartbeatId = null;
+    }
   }
 
-  async function fetchViewing() {
-    if (!_entityType || !_entityId) return;
-    try {
-      const res = await fetch(`${API_BASE}/presence/viewing/${_entityType}/${_entityId}`);
-      if (res.ok) {
-        const data = await res.json();
-        update(s => ({ ...s, viewing: data.users, viewingCount: data.count }));
-      }
-    } catch {}
-  }
+  // ── Подключение ───────────────────────────────────────────────────
+  function _connect() {
+    if (!browser || _stopped) return;
+    if (_ws && (_ws.readyState === WebSocket.OPEN || _ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
 
-  // Первый тик — сразу и heartbeat и fetch
-  async function firstTick() {
-    await beat();
-    await fetchOnline();
-    await fetchViewing();
-  }
-
-  // Polling тик — только читаем, не шлём heartbeat
-  async function pollTick() {
-    await fetchOnline();
-    await fetchViewing();
-  }
-
-  function _stopAll() {
-    if (_heartbeatId) { clearInterval(_heartbeatId); _heartbeatId = null; }
-    if (_pollId)      { clearInterval(_pollId);      _pollId = null; }
-  }
-
-  async function _leave() {
-    _stopAll();
     const token = getToken();
-    if (!token) return;
-    const params = new URLSearchParams();
-    if (_entityType) params.set('entity_type', _entityType);
-    if (_entityId)   params.set('entity_id', _entityId);
+    const url = wsUrl(token);
+
     try {
-      const url = `${API_BASE}/presence/heartbeat?${params}`;
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(url);
-      } else {
-        fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }, keepalive: true }).catch(() => {});
+      _ws = new WebSocket(url);
+    } catch (e) {
+      _scheduleReconnect();
+      return;
+    }
+
+    _ws.onopen = () => {
+      _reconnectCount = 0;
+
+      update(s => ({ ...s, connected: true }));
+
+      // Сразу шлём heartbeat с текущей страницей
+      _send({
+        type:        'heartbeat',
+        entity_type: _entityType,
+        entity_id:   _entityId,
+      });
+
+      _startHeartbeat();
+    };
+
+    _ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === 'update') {
+          update(s => ({
+            ...s,
+            online:       msg.online       ?? s.online,
+            onlineCount:  msg.onlineCount  ?? s.onlineCount,
+            viewing:      msg.viewing      ?? s.viewing,
+            viewingCount: msg.viewingCount ?? s.viewingCount,
+            ready:        true,
+          }));
+        }
+        // pong — игнорируем, просто подтверждение живости
+      } catch {}
+    };
+
+    _ws.onclose = (event) => {
+      _stopHeartbeat();
+      update(s => ({ ...s, connected: false }));
+
+      // Не переподключаемся если сами закрыли (code 1000) или _stopped
+      if (!_stopped && event.code !== 1000) {
+        _scheduleReconnect();
       }
-    } catch {}
+    };
+
+    _ws.onerror = () => {
+      // onclose вызовется после onerror автоматически
+    };
   }
 
+  // ── Переподключение с экспоненциальной задержкой ──────────────────
+  function _scheduleReconnect() {
+    if (_stopped || _reconnectCount >= MAX_RECONNECT) return;
+
+    const delay = Math.min(RECONNECT_DELAY * Math.pow(1.5, _reconnectCount), 30_000);
+    _reconnectCount++;
+
+    _reconnectId = setTimeout(() => {
+      if (!_stopped) _connect();
+    }, delay);
+  }
+
+  // ── Закрытие соединения ───────────────────────────────────────────
+  function _disconnect(clean = true) {
+    _stopHeartbeat();
+    if (_reconnectId) {
+      clearTimeout(_reconnectId);
+      _reconnectId = null;
+    }
+    if (_ws) {
+      if (clean && _ws.readyState === WebSocket.OPEN) {
+        _send({ type: 'leave' });
+        _ws.close(1000, 'leaving');
+      } else {
+        _ws.close();
+      }
+      _ws = null;
+    }
+    update(s => ({ ...s, connected: false }));
+  }
+
+  // ── Восстановление при возврате на вкладку ────────────────────────
   function _setupListeners() {
     if (!browser || _listenersAdded) return;
     _listenersAdded = true;
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        _stopAll();
+        // Вкладка скрыта — останавливаем heartbeat, но соединение держим
+        _stopHeartbeat();
       } else {
-        // Вернулись на вкладку — сразу обновляем
-        firstTick();
-        _heartbeatId = setInterval(beat, HEARTBEAT_INTERVAL);
-        _pollId      = setInterval(pollTick, POLL_INTERVAL);
+        // Вернулись — переподключаемся если надо, шлём heartbeat сразу
+        if (!_ws || _ws.readyState !== WebSocket.OPEN) {
+          _connect();
+        } else {
+          _send({
+            type:        'heartbeat',
+            entity_type: _entityType,
+            entity_id:   _entityId,
+          });
+          _startHeartbeat();
+        }
       }
     });
 
-    window.addEventListener('beforeunload', _leave);
+    window.addEventListener('beforeunload', () => {
+      _send({ type: 'leave' });
+    });
   }
+
+  // ── Публичное API ─────────────────────────────────────────────────
 
   function start(entityType = null, entityId = null) {
     if (!browser) return () => {};
 
-    _stopAll();
+    _stopped    = false;
     _entityType = entityType;
     _entityId   = entityId;
 
     _setupListeners();
+    _connect();
 
-    // Сразу тикаем
-    firstTick();
+    // Если уже подключены — обновляем страницу через heartbeat
+    if (_ws && _ws.readyState === WebSocket.OPEN) {
+      _send({
+        type:        'heartbeat',
+        entity_type: _entityType,
+        entity_id:   _entityId,
+      });
+    }
 
-    // Heartbeat каждые 30 сек
-    _heartbeatId = setInterval(beat, HEARTBEAT_INTERVAL);
-
-    // Polling каждые 5 сек
-    _pollId = setInterval(pollTick, POLL_INTERVAL);
-
-    // Cleanup при уходе со страницы
+    // Cleanup при навигации на другую страницу
     return () => {
-      _stopAll();
+      // Сообщаем серверу что ушли с этого контента
       if (entityType && entityId) {
-        const token = getToken();
-        if (token) {
-          const params = new URLSearchParams({ entity_type: entityType, entity_id: entityId });
-          fetch(`${API_BASE}/presence/heartbeat?${params}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-            keepalive: true,
-          }).catch(() => {});
-        }
+        _send({ type: 'leave' });
       }
+      _stopHeartbeat();
+      // Соединение не закрываем — переиспользуем на следующей странице
     };
   }
 
@@ -172,7 +250,12 @@ function createPresenceStore() {
     return start(null, null);
   }
 
-  return { subscribe, start, startGlobal };
+  function stop() {
+    _stopped = true;
+    _disconnect(true);
+  }
+
+  return { subscribe, start, startGlobal, stop };
 }
 
 export const presence = createPresenceStore();

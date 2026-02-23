@@ -7,7 +7,7 @@ import asyncio
 import logging
 
 from logging_config import setup_logging
-setup_logging()  # первым делом
+setup_logging()
 
 from database import connect_db, close_db, get_db
 from cache import init_cache, close_cache, is_rate_limited, flush_view_buffers
@@ -45,7 +45,6 @@ async def lifespan(app: FastAPI):
     except asyncio.CancelledError:
         pass
 
-    # Финальный flush перед выключением
     try:
         await flush_view_buffers(get_db())
     except Exception:
@@ -58,7 +57,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="TheFoxxStuff API", version="1.0.0", lifespan=lifespan)
 
-# CORS
 allowed_origins = [
     settings.frontend_url,
     "http://localhost:5173",
@@ -86,7 +84,6 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Ensure CORS headers are present even on unhandled 500 errors."""
     origin = request.headers.get("origin", "")
     headers = {}
     if origin in allowed_origins:
@@ -100,14 +97,12 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Rate limiting через Redis
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    # Статические файлы и presence polling не лимитируем
+    # WebSocket и статика — без лимитов
     if request.url.path.startswith("/api/upload/file/"):
         return await call_next(request)
-    if request.url.path in ("/api/presence/online", "/api/presence/viewing") or \
-       request.url.path.startswith("/api/presence/viewing/") and request.method == "GET":
+    if request.url.path.startswith("/api/presence/ws"):
         return await call_next(request)
 
     client_ip = (
@@ -115,9 +110,18 @@ async def rate_limit_middleware(request: Request, call_next):
         or (request.client.host if request.client else "0.0.0.0")
     )
 
-    if await is_rate_limited(client_ip, limit=600, window=60):
+    if await is_rate_limited(client_ip, limit=300, window=60):
         logger.warning("Rate limited: %s %s", client_ip, request.url.path)
-        return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+        origin = request.headers.get("origin", "")
+        headers = {}
+        if origin in allowed_origins:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many requests"},
+            headers=headers,
+        )
 
     return await call_next(request)
 
