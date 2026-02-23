@@ -1,23 +1,25 @@
 /**
- * Presence store — управляет heartbeat и состоянием онлайн.
+ * Presence store — управляет heartbeat и real-time состоянием онлайн.
+ *
+ * Heartbeat: каждые 30 сек (обновляет TTL в Redis)
+ * Polling online/viewing: каждые 5 сек (real-time обновление UI)
  */
 
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
-const INTERVAL = 30_000;
+const HEARTBEAT_INTERVAL = 30_000; // 30 сек — обновляем TTL в Redis
+const POLL_INTERVAL      =  5_000; // 5 сек  — обновляем UI
 
 function getToken() {
   if (!browser) return null;
   try {
-    // Auth store сохраняет { token, user } под ключом 'auth'
     const s = localStorage.getItem('auth');
     if (s) {
       const p = JSON.parse(s);
       if (p?.token) return p.token;
     }
-    // Fallback на старый ключ
     return localStorage.getItem('auth_token');
   } catch {
     return null;
@@ -25,7 +27,7 @@ function getToken() {
 }
 
 function createPresenceStore() {
-  const { subscribe, set, update } = writable({
+  const { subscribe, update } = writable({
     online: [],
     onlineCount: 0,
     viewing: [],
@@ -33,11 +35,13 @@ function createPresenceStore() {
     ready: false,
   });
 
-  let _intervalId = null;
-  let _entityType = null;
-  let _entityId = null;
+  let _heartbeatId = null;
+  let _pollId      = null;
+  let _entityType  = null;
+  let _entityId    = null;
   let _listenersAdded = false;
 
+  // ── Heartbeat: только сообщаем серверу что живы ──────────────────
   async function beat() {
     const token = getToken();
     if (!token) return;
@@ -47,18 +51,14 @@ function createPresenceStore() {
     if (_entityId)   params.set('entity_id', _entityId);
 
     try {
-      const res = await fetch(`${API_BASE}/presence/heartbeat?${params}`, {
+      await fetch(`${API_BASE}/presence/heartbeat?${params}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        console.warn('[presence] heartbeat failed:', res.status);
-      }
-    } catch (e) {
-      console.warn('[presence] heartbeat error:', e);
-    }
+    } catch {}
   }
 
+  // ── Polling: читаем актуальное состояние ─────────────────────────
   async function fetchOnline() {
     try {
       const res = await fetch(`${API_BASE}/presence/online`);
@@ -80,21 +80,26 @@ function createPresenceStore() {
     } catch {}
   }
 
-  async function tick() {
+  // Первый тик — сразу и heartbeat и fetch
+  async function firstTick() {
     await beat();
     await fetchOnline();
     await fetchViewing();
   }
 
-  function _stop() {
-    if (_intervalId) {
-      clearInterval(_intervalId);
-      _intervalId = null;
-    }
+  // Polling тик — только читаем, не шлём heartbeat
+  async function pollTick() {
+    await fetchOnline();
+    await fetchViewing();
+  }
+
+  function _stopAll() {
+    if (_heartbeatId) { clearInterval(_heartbeatId); _heartbeatId = null; }
+    if (_pollId)      { clearInterval(_pollId);      _pollId = null; }
   }
 
   async function _leave() {
-    _stop();
+    _stopAll();
     const token = getToken();
     if (!token) return;
     const params = new URLSearchParams();
@@ -116,10 +121,12 @@ function createPresenceStore() {
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        _stop();
+        _stopAll();
       } else {
-        tick();
-        _intervalId = setInterval(tick, INTERVAL);
+        // Вернулись на вкладку — сразу обновляем
+        firstTick();
+        _heartbeatId = setInterval(beat, HEARTBEAT_INTERVAL);
+        _pollId      = setInterval(pollTick, POLL_INTERVAL);
       }
     });
 
@@ -129,16 +136,24 @@ function createPresenceStore() {
   function start(entityType = null, entityId = null) {
     if (!browser) return () => {};
 
-    _stop();
+    _stopAll();
     _entityType = entityType;
-    _entityId = entityId;
+    _entityId   = entityId;
 
     _setupListeners();
-    tick();
-    _intervalId = setInterval(tick, INTERVAL);
 
+    // Сразу тикаем
+    firstTick();
+
+    // Heartbeat каждые 30 сек
+    _heartbeatId = setInterval(beat, HEARTBEAT_INTERVAL);
+
+    // Polling каждые 5 сек
+    _pollId = setInterval(pollTick, POLL_INTERVAL);
+
+    // Cleanup при уходе со страницы
     return () => {
-      _stop();
+      _stopAll();
       if (entityType && entityId) {
         const token = getToken();
         if (token) {
