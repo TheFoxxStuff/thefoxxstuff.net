@@ -72,14 +72,14 @@ allowed_origins = [
     "http://dev.thefoxxstuff.net",
 ]
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=allowed_origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-#     expose_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 
 @app.exception_handler(Exception)
@@ -112,17 +112,18 @@ async def rate_limit_middleware(request: Request, call_next):
 
     if await is_rate_limited(client_ip, limit=300, window=60):
         logger.warning("Rate limited: %s %s", client_ip, request.url.path)
-        # Удалите или закомментируйте блок ниже:
-        # origin = request.headers.get("origin", "")
-        # headers = {}
-        # if origin in allowed_origins:
-        #     headers["Access-Control-Allow-Origin"] = origin
-        #     headers["Access-Control-Allow-Credentials"] = "true"
+        origin = request.headers.get("origin", "")
+        headers = {}
+        if origin in allowed_origins:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
         return JSONResponse(
             status_code=429,
             content={"detail": "Too many requests"},
-            # headers=headers,  <-- уберите это
-    )
+            headers=headers,
+        )
+
+    return await call_next(request)
 
 
 app.include_router(auth.router)
