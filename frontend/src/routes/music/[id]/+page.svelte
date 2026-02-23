@@ -1,8 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer, SEO, ViewingNow } from '$lib/components';
-  import { presence } from '$lib/stores/presence.js';
+  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import { player } from '$lib/stores/player.js';
   import ImageLightbox from '$lib/components/ImageLightbox.svelte';
 
@@ -69,8 +68,6 @@
 
   onMount(() => {
     if (release?._id) api.views.record('music', release._id);
-    const stopPresence = presence.start('music', release?._id);
-    return stopPresence;
   });
 
   import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
@@ -162,13 +159,12 @@
         <div>
           <p class="text-xs text-dark-500 mb-1 uppercase tracking-widest">{release.release_type}</p>
           <h1 class="font-display text-3xl md:text-4xl tracking-wide mb-3 text-white leading-tight">{release.title}</h1>
-          <div class="space-y-1 text-sm text-dark-400 mb-4">
+          <div class="space-y-1 text-sm text-dark-400 mb-6">
             <p>Released: {formatDate(release.release_date)}</p>
             {#if release.genre}<p>Genre: {release.genre}</p>{/if}
             <p>{release.tracks?.length || 0} track{release.tracks?.length !== 1 ? 's' : ''}</p>
             {#if release.price}<p>{release.price}</p>{/if}
           </div>
-          <ViewingNow users={$presence.viewing} count={$presence.viewingCount} entityType="music" />
         </div>
         <div class="flex gap-3 flex-wrap">
           {#if release.download_flac}

@@ -1,13 +1,12 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl } from '$lib/api';
-  import { MusicCard, BlogCard, ArtCard, Pagination, SEO, OnlineUsers } from '$lib/components';
+  import { MusicCard, BlogCard, ArtCard, Pagination, SEO } from '$lib/components';
   import { ChevronRight } from 'lucide-svelte';
   import Button from '$lib/components/Button.svelte';
   import Banner from '../lib/components/Banner.svelte';
   import GuestChat from '$lib/components/GuestChat.svelte';
   import { SITE, canonicalUrl } from '$lib/seo.js';
-  import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
 
@@ -40,12 +39,9 @@
 
   onMount(() => {
     slideInterval = setInterval(nextSlide, 5000);
-    const stopPresence = presence.startGlobal();
-    return () => {
-      clearInterval(slideInterval);
-      stopPresence();
-    };
+    return () => clearInterval(slideInterval);
   });
+</script>
 
   const homeJsonLd = [
     {
@@ -137,16 +133,5 @@
   <section>
     <GuestChat />
   </section>
-
-  <!-- Online Users -->
-  {#if $presence.onlineCount > 0}
-    <section class="card p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-medium text-[--w60] uppercase tracking-wider">Online now</h2>
-        <span class="text-xs text-[--w30]">{$presence.onlineCount} user{$presence.onlineCount !== 1 ? 's' : ''}</span>
-      </div>
-      <OnlineUsers users={$presence.online} count={$presence.onlineCount} />
-    </section>
-  {/if}
 
 </div>

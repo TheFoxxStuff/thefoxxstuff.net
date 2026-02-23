@@ -90,6 +90,11 @@
   description="Edit your TheFoxxStuff profile"
   url={canonicalUrl("/profile/settings")}
   noindex={true}
+/>|<SEO
+  title="Profile Settings"
+  description="Edit your TheFoxxStuff profile"
+  url={canonicalUrl("/profile/settings")}
+  noindex={true}
 />
 
 <!-- Кроппер рендерится поверх всего когда выбран файл -->

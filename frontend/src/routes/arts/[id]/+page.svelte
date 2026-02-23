@@ -1,10 +1,9 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer, SEO, ViewingNow } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
   import { Calendar, Eye, Maximize, Download, Image as ImageIcon } from 'lucide-svelte';
   import Badge from '../../../lib/components/Badge.svelte';
-  import { presence } from '$lib/stores/presence.js';
   import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
 
   let { data: pageData } = $props();
@@ -56,8 +55,6 @@
 
   onMount(() => {
     if (artwork?._id) api.views.record('arts', artwork._id);
-    const stopPresence = presence.start('arts', artwork?._id);
-    return stopPresence;
   });
 </script>
 
@@ -97,7 +94,7 @@
           {artwork.title}
         </h1>
 
-        <div class="flex flex-wrap items-center gap-[8px] mb-4">
+        <div class="flex flex-wrap items-center gap-[8px] mb-8">
           <Badge text={formatDate(artwork.created_at)} icon={Calendar} />
           <Badge text="{artwork.views} views" icon={Eye} />
           <div class="flex-1"></div>
@@ -107,10 +104,6 @@
               <Badge text="Download ({artwork.file_size || 'Original'})" icon={Download} />
             </button>
           {/if}
-        </div>
-
-        <div class="mb-6">
-          <ViewingNow users={$presence.viewing} count={$presence.viewingCount} entityType="arts" />
         </div>
 
         {#if artwork.description}

@@ -2,14 +2,10 @@
   import { goto } from '$app/navigation';
   import { api } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
-  import { SEO } from '$lib/components';
-  import { canonicalUrl } from '$lib/seo.js';
-
   let username = $state('');
   let password = $state('');
   let error = $state('');
   let loading = $state(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     error = ''; loading = true;
@@ -23,14 +19,17 @@
     finally { loading = false; }
   };
 </script>
-
 <SEO
   title="Login"
   description="Sign in to TheFoxxStuff"
   url={canonicalUrl("/auth/login")}
   noindex={true}
+/>|<SEO
+  title="Login"
+  description="Sign in to TheFoxxStuff"
+  url={canonicalUrl("/auth/login")}
+  noindex={true}
 />
-
 <div class="max-w-md mx-auto px-4 py-16">
   <div class="card p-8">
     <h1 class="font-display text-[24px] tracking-wide mb-6 text-center">Login</h1>

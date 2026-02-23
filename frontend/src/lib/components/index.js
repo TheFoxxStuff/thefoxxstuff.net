@@ -1,8 +1,6 @@
 export { default as Header } from './Header.svelte';
 export { default as Footer } from './Footer.svelte';
 export { default as SEO } from './SEO.svelte';
-export { default as OnlineUsers } from './OnlineUsers.svelte';
-export { default as ViewingNow } from './ViewingNow.svelte';
 export { default as Breadcrumb } from './Breadcrumb.svelte';
 export { default as Pagination } from './Pagination.svelte';
 export { default as MusicCard } from './MusicCard.svelte';
