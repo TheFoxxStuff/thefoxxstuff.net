@@ -53,6 +53,11 @@ async def close_cache() -> None:
 def get_redis() -> Optional[Redis]:
     return _redis
 
+def get_pool():
+    """Возвращает ConnectionPool Redis для pub/sub subscriber-клиентов."""
+    return _pool
+
+
 
 # ─── Базовые хелперы ─────────────────────────────────────────────────────────
 

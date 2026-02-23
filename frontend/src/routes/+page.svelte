@@ -40,10 +40,9 @@
 
   onMount(() => {
     slideInterval = setInterval(nextSlide, 5000);
-    const stopPresence = presence.startGlobal();
+    // presence.startGlobal() вызывается в +layout.svelte — не нужно здесь
     return () => {
       clearInterval(slideInterval);
-      stopPresence();
     };
   });
 

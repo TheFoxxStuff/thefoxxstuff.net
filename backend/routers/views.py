@@ -5,10 +5,24 @@ from database import get_db
 from auth import get_current_admin
 from cache import get_redis
 import json
+import time
 import struct
 import socket
 
 router = APIRouter(prefix="/api/views", tags=["views"])
+
+
+async def _publish_view_change(entity_type: str, entity_id: str):
+    """Публикуем событие просмотра — presence WS сразу получит push с новым счётчиком."""
+    redis = get_redis()
+    if not redis:
+        return
+    try:
+        import json as _json
+        msg = _json.dumps({"change": "view", "entity_type": entity_type, "entity_id": entity_id, "ts": time.time()})
+        await redis.publish("presence_changes", msg)
+    except Exception:
+        pass
 
 
 def ip_to_int(ip: str) -> int:
@@ -127,6 +141,7 @@ async def record_view_with_ip(request: Request, entity_type: str, entity_id: str
     if col_name and ObjectId.is_valid(entity_id):
         await db[col_name].update_one({"_id": ObjectId(entity_id)}, {"$inc": {"views": 1}})
 
+    await _publish_view_change(entity_type, entity_id)
     return {"recorded": True, "unique": True}
 
 

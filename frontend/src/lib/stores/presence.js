@@ -1,16 +1,18 @@
 /**
- * Presence store — WebSocket + Redis pub/sub.
+ * Presence store — WebSocket + Redis Pub/Sub.
  *
- * Одно постоянное WS соединение вместо HTTP polling.
- * Сервер пушит обновления мгновенно при любом изменении.
- * Heartbeat идёт через то же соединение — не создаёт HTTP запросов.
+ * Принцип работы:
+ *   - Одно постоянное WS-соединение на всё время пребывания на сайте
+ *   - Запускается из +layout.svelte → работает на каждой странице
+ *   - Отдельные страницы вызывают presence.start('blog', id) для "is here"
+ *   - Сервер пушит обновления мгновенно через Redis Pub/Sub — polling убран
+ *   - Heartbeat раз в 30 сек держит TTL в Redis и сообщает текущую страницу
  *
- * Сообщения клиент → сервер:
+ * Клиент → сервер:
  *   { type: "heartbeat", entity_type: "blog", entity_id: "abc" }
- *   { type: "leave" }
  *   { type: "ping" }
  *
- * Сообщения сервер → клиент:
+ * Сервер → клиент:
  *   { type: "update", online: [...], onlineCount: N, viewing: [...], viewingCount: N }
  *   { type: "pong" }
  */
@@ -19,14 +21,13 @@ import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
-const HEARTBEAT_INTERVAL = 30_000; // 30 сек
-const RECONNECT_DELAY    = 3_000;  // 3 сек до переподключения
-const MAX_RECONNECT      = 10;     // максимум попыток подряд
+const HEARTBEAT_INTERVAL = 30_000;  // 30 сек — держит TTL в Redis
+const RECONNECT_BASE     = 2_000;   // базовая задержка реконнекта
+const MAX_RECONNECT      = 12;      // макс. попыток до паузы
 
-// ws:// или wss:// из API_BASE (http -> ws, https -> wss)
 function wsUrl(token) {
   const base = API_BASE.replace(/^http/, 'ws');
-  const url = `${base}/presence/ws`;
+  const url  = `${base}/presence/ws`;
   return token ? `${url}?token=${encodeURIComponent(token)}` : url;
 }
 
@@ -60,25 +61,23 @@ function createPresenceStore() {
   let _reconnectCount = 0;
   let _entityType     = null;
   let _entityId       = null;
-  let _stopped        = false;
+  let _globalStarted  = false;
   let _listenersAdded = false;
 
-  // ── Отправить сообщение если соединение открыто ───────────────────
+  // ── Отправить если соединение открыто ────────────────────────────────
   function _send(msg) {
     if (_ws && _ws.readyState === WebSocket.OPEN) {
       _ws.send(JSON.stringify(msg));
     }
   }
 
-  // ── Heartbeat через WS ────────────────────────────────────────────
+  // ── Heartbeat — держим TTL в Redis и сообщаем текущую страницу ───────
   function _startHeartbeat() {
     _stopHeartbeat();
+    // Отправляем сразу
+    _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
     _heartbeatId = setInterval(() => {
-      _send({
-        type:        'heartbeat',
-        entity_type: _entityType,
-        entity_id:   _entityId,
-      });
+      _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
     }, HEARTBEAT_INTERVAL);
   }
 
@@ -89,42 +88,32 @@ function createPresenceStore() {
     }
   }
 
-  // ── Подключение ───────────────────────────────────────────────────
+  // ── Подключение ───────────────────────────────────────────────────────
   function _connect() {
-    if (!browser || _stopped) return;
+    if (!browser) return;
     if (_ws && (_ws.readyState === WebSocket.OPEN || _ws.readyState === WebSocket.CONNECTING)) {
       return;
     }
 
     const token = getToken();
-    const url = wsUrl(token);
+    const url   = wsUrl(token);
 
     try {
       _ws = new WebSocket(url);
-    } catch (e) {
+    } catch {
       _scheduleReconnect();
       return;
     }
 
     _ws.onopen = () => {
       _reconnectCount = 0;
-
       update(s => ({ ...s, connected: true }));
-
-      // Сразу шлём heartbeat с текущей страницей
-      _send({
-        type:        'heartbeat',
-        entity_type: _entityType,
-        entity_id:   _entityId,
-      });
-
       _startHeartbeat();
     };
 
     _ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-
         if (msg.type === 'update') {
           update(s => ({
             ...s,
@@ -135,124 +124,125 @@ function createPresenceStore() {
             ready:        true,
           }));
         }
-        // pong — игнорируем, просто подтверждение живости
+        // pong — просто подтверждение живости, ничего не делаем
       } catch {}
     };
 
     _ws.onclose = (event) => {
       _stopHeartbeat();
       update(s => ({ ...s, connected: false }));
-
-      // Не переподключаемся если сами закрыли (code 1000) или _stopped
-      if (!_stopped && event.code !== 1000) {
+      // Переподключаемся кроме случаев: явное закрытие или сказали stop()
+      if (!_globalStopped && event.code !== 1000) {
         _scheduleReconnect();
       }
     };
 
     _ws.onerror = () => {
-      // onclose вызовется после onerror автоматически
+      // onclose сработает следом — там делаем реконнект
     };
   }
 
-  // ── Переподключение с экспоненциальной задержкой ──────────────────
+  let _globalStopped = false;
+
+  // ── Экспоненциальный реконнект ────────────────────────────────────────
   function _scheduleReconnect() {
-    if (_stopped || _reconnectCount >= MAX_RECONNECT) return;
-
-    const delay = Math.min(RECONNECT_DELAY * Math.pow(1.5, _reconnectCount), 30_000);
+    if (_globalStopped || _reconnectCount >= MAX_RECONNECT) return;
+    const delay = Math.min(RECONNECT_BASE * Math.pow(1.5, _reconnectCount), 30_000);
     _reconnectCount++;
-
     _reconnectId = setTimeout(() => {
-      if (!_stopped) _connect();
+      if (!_globalStopped) _connect();
     }, delay);
   }
 
-  // ── Закрытие соединения ───────────────────────────────────────────
-  function _disconnect(clean = true) {
-    _stopHeartbeat();
-    if (_reconnectId) {
-      clearTimeout(_reconnectId);
-      _reconnectId = null;
-    }
-    if (_ws) {
-      if (clean && _ws.readyState === WebSocket.OPEN) {
-        _send({ type: 'leave' });
-        _ws.close(1000, 'leaving');
-      } else {
-        _ws.close();
-      }
-      _ws = null;
-    }
-    update(s => ({ ...s, connected: false }));
-  }
-
-  // ── Восстановление при возврате на вкладку ────────────────────────
+  // ── Слушаем видимость вкладки ─────────────────────────────────────────
   function _setupListeners() {
     if (!browser || _listenersAdded) return;
     _listenersAdded = true;
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        // Вкладка скрыта — останавливаем heartbeat, но соединение держим
         _stopHeartbeat();
       } else {
-        // Вернулись — переподключаемся если надо, шлём heartbeat сразу
         if (!_ws || _ws.readyState !== WebSocket.OPEN) {
           _connect();
         } else {
-          _send({
-            type:        'heartbeat',
-            entity_type: _entityType,
-            entity_id:   _entityId,
-          });
+          _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
           _startHeartbeat();
         }
       }
     });
 
     window.addEventListener('beforeunload', () => {
+      // Уведомляем сервер немедленно (sendBeacon не нужен — WS onclose работает быстро)
       _send({ type: 'leave' });
     });
   }
 
-  // ── Публичное API ─────────────────────────────────────────────────
+  // ── Публичное API ─────────────────────────────────────────────────────
 
+  /**
+   * Глобальный старт из +layout.svelte.
+   * Подключается один раз и живёт весь сеанс.
+   */
+  function startGlobal() {
+    if (!browser) return;
+    _globalStopped = false;
+    _globalStarted = true;
+    _setupListeners();
+    _connect();
+  }
+
+  /**
+   * Вызывается из отдельных страниц с контентом (blog/[id], arts/[id], music/[id]).
+   * Обновляет entity_type/entity_id — сервер узнает что ты сейчас смотришь.
+   * Возвращает cleanup-функцию для onMount.
+   */
   function start(entityType = null, entityId = null) {
     if (!browser) return () => {};
 
-    _stopped    = false;
     _entityType = entityType;
     _entityId   = entityId;
 
-    _setupListeners();
-    _connect();
-
-    // Если уже подключены — обновляем страницу через heartbeat
+    // Если соединение уже открыто — сразу шлём heartbeat с новой страницей
     if (_ws && _ws.readyState === WebSocket.OPEN) {
-      _send({
-        type:        'heartbeat',
-        entity_type: _entityType,
-        entity_id:   _entityId,
-      });
+      _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
+      _startHeartbeat(); // перезапускаем таймер чтобы интервал отсчитывался заново
+    } else if (!_globalStarted) {
+      // Если layout ещё не подключился (edge-case) — подключаемся сами
+      _globalStopped = false;
+      _setupListeners();
+      _connect();
     }
 
-    // Cleanup при навигации на другую страницу
+    // Cleanup при уходе со страницы
     return () => {
-      // Сообщаем серверу что ушли с этого контента
-      if (entityType && entityId) {
-        _send({ type: 'leave' });
-      }
-      _stopHeartbeat();
-      // Соединение не закрываем — переиспользуем на следующей странице
+      // Сбрасываем entity — пользователь больше не смотрит этот контент
+      _entityType = null;
+      _entityId   = null;
+
+      // Обнуляем viewing в сторе сразу, не ждём следующего push
+      update(s => ({ ...s, viewing: [], viewingCount: 0 }));
+
+      // Сервер узнает через следующий heartbeat (entity_type=null)
+      _send({ type: 'heartbeat', entity_type: null, entity_id: null });
     };
   }
 
-  function startGlobal() {
-    return start(null, null);
-  }
-
   function stop() {
-    _stopped = true;
-    _disconnect(true);
+    _globalStopped = true;
+    _globalStarted = false;
+    _stopHeartbeat();
+    if (_reconnectId) { clearTimeout(_reconnectId); _reconnectId = null; }
+    if (_ws) {
+      if (_ws.readyState === WebSocket.OPEN) {
+        _send({ type: 'leave' });
+        _ws.close(1000, 'stopped');
+      } else {
+        _ws.close();
+      }
+      _ws = null;
+    }
+    update(s => ({ ...s, connected: false }));
   }
 
   return { subscribe, start, startGlobal, stop };
