@@ -1,29 +1,21 @@
 /**
  * Presence store — WebSocket + Redis Pub/Sub.
  *
- * Принцип работы:
- *   - Одно постоянное WS-соединение на всё время пребывания на сайте
- *   - Запускается из +layout.svelte → работает на каждой странице
- *   - Отдельные страницы вызывают presence.start('blog', id) для "is here"
- *   - Сервер пушит обновления мгновенно через Redis Pub/Sub — polling убран
- *   - Heartbeat раз в 30 сек держит TTL в Redis и сообщает текущую страницу
- *
- * Клиент → сервер:
- *   { type: "heartbeat", entity_type: "blog", entity_id: "abc" }
- *   { type: "ping" }
- *
- * Сервер → клиент:
- *   { type: "update", online: [...], onlineCount: N, viewing: [...], viewingCount: N }
- *   { type: "pong" }
+ * - Одно постоянное WS-соединение на весь сеанс (стартует из +layout.svelte)
+ * - Сервер пушит обновления мгновенно через Redis Pub/Sub — polling убран
+ * - Grace period: при уходе юзера не убираем его сразу из UI (4 сек дебаунс)
+ *   → исчезают прыжки при reload/переходах между страницами
+ * - Heartbeat раз в 30 сек держит TTL в Redis
  */
 
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
-const HEARTBEAT_INTERVAL = 30_000;  // 30 сек — держит TTL в Redis
+const HEARTBEAT_INTERVAL = 30_000;  // держим TTL в Redis
 const RECONNECT_BASE     = 2_000;   // базовая задержка реконнекта
-const MAX_RECONNECT      = 12;      // макс. попыток до паузы
+const MAX_RECONNECT      = 12;
+const DISAPPEAR_DELAY    = 4_000;   // мс — ждём перед тем как убрать юзера из UI
 
 function wsUrl(token) {
   const base = API_BASE.replace(/^http/, 'ws');
@@ -46,7 +38,7 @@ function getToken() {
 }
 
 function createPresenceStore() {
-  const { subscribe, update } = writable({
+  const store = writable({
     online:       [],
     onlineCount:  0,
     viewing:      [],
@@ -54,6 +46,7 @@ function createPresenceStore() {
     connected:    false,
     ready:        false,
   });
+  const { subscribe, update } = store;
 
   let _ws             = null;
   let _heartbeatId    = null;
@@ -62,7 +55,12 @@ function createPresenceStore() {
   let _entityType     = null;
   let _entityId       = null;
   let _globalStarted  = false;
+  let _globalStopped  = false;
   let _listenersAdded = false;
+
+  // Дебаунс исчезновения юзеров
+  let _disappearTimer = null;
+  let _pendingUpdate  = null;
 
   // ── Отправить если соединение открыто ────────────────────────────────
   function _send(msg) {
@@ -71,10 +69,77 @@ function createPresenceStore() {
     }
   }
 
-  // ── Heartbeat — держим TTL в Redis и сообщаем текущую страницу ───────
+  // ── Применение обновления с дебаунсом ────────────────────────────────
+  function _commitUpdate(msg) {
+    update(s => ({
+      ...s,
+      online:       msg.online       ?? s.online,
+      onlineCount:  msg.onlineCount  ?? s.onlineCount,
+      viewing:      msg.viewing      ?? s.viewing,
+      viewingCount: msg.viewingCount ?? s.viewingCount,
+      ready:        true,
+    }));
+  }
+
+  function _applyUpdate(msg) {
+    const newOnline  = msg.online  ?? [];
+    const newViewing = msg.viewing ?? [];
+
+    const current    = get(store);
+    const prevOnline  = current.online  ?? [];
+    const prevViewing = current.viewing ?? [];
+
+    const onlineShrunk  = newOnline.length  < prevOnline.length;
+    const viewingShrunk = newViewing.length < prevViewing.length;
+
+    if (onlineShrunk || viewingShrunk) {
+      // Кто-то пропал — держим дебаунс, вдруг он переподключается
+      clearTimeout(_disappearTimer);
+      _pendingUpdate = msg;
+
+      // Сразу добавляем новых юзеров (без задержки), но не убираем старых
+      const onlineIds  = new Set(newOnline.map(u => u.user_id));
+      const viewingIds = new Set(newViewing.map(u => u.user_id));
+
+      // Мёрджим: старые остаются пока не истечёт таймер, новые добавляются сразу
+      const mergedOnline  = [...prevOnline];
+      const mergedViewing = [...prevViewing];
+
+      newOnline.forEach(u => {
+        if (!mergedOnline.find(o => o.user_id === u.user_id)) mergedOnline.push(u);
+      });
+      newViewing.forEach(u => {
+        if (!mergedViewing.find(o => o.user_id === u.user_id)) mergedViewing.push(u);
+      });
+
+      update(s => ({
+        ...s,
+        online:       mergedOnline,
+        onlineCount:  Math.max(msg.onlineCount ?? 0, mergedOnline.length),
+        viewing:      mergedViewing,
+        viewingCount: Math.max(msg.viewingCount ?? 0, mergedViewing.length),
+        ready:        true,
+      }));
+
+      // Через DISAPPEAR_DELAY применяем реальное состояние
+      _disappearTimer = setTimeout(() => {
+        if (_pendingUpdate) {
+          _commitUpdate(_pendingUpdate);
+          _pendingUpdate = null;
+        }
+      }, DISAPPEAR_DELAY);
+
+    } else {
+      // Кто-то пришёл или ничего не изменилось — применяем мгновенно
+      clearTimeout(_disappearTimer);
+      _pendingUpdate = null;
+      _commitUpdate(msg);
+    }
+  }
+
+  // ── Heartbeat ─────────────────────────────────────────────────────────
   function _startHeartbeat() {
     _stopHeartbeat();
-    // Отправляем сразу
     _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
     _heartbeatId = setInterval(() => {
       _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
@@ -115,36 +180,26 @@ function createPresenceStore() {
       try {
         const msg = JSON.parse(event.data);
         if (msg.type === 'update') {
-          update(s => ({
-            ...s,
-            online:       msg.online       ?? s.online,
-            onlineCount:  msg.onlineCount  ?? s.onlineCount,
-            viewing:      msg.viewing      ?? s.viewing,
-            viewingCount: msg.viewingCount ?? s.viewingCount,
-            ready:        true,
-          }));
+          _applyUpdate(msg);
         }
-        // pong — просто подтверждение живости, ничего не делаем
+        // pong — просто подтверждение живости
       } catch {}
     };
 
     _ws.onclose = (event) => {
       _stopHeartbeat();
       update(s => ({ ...s, connected: false }));
-      // Переподключаемся кроме случаев: явное закрытие или сказали stop()
       if (!_globalStopped && event.code !== 1000) {
         _scheduleReconnect();
       }
     };
 
     _ws.onerror = () => {
-      // onclose сработает следом — там делаем реконнект
+      // onclose сработает следом
     };
   }
 
-  let _globalStopped = false;
-
-  // ── Экспоненциальный реконнект ────────────────────────────────────────
+  // ── Реконнект с экспоненциальной задержкой ────────────────────────────
   function _scheduleReconnect() {
     if (_globalStopped || _reconnectCount >= MAX_RECONNECT) return;
     const delay = Math.min(RECONNECT_BASE * Math.pow(1.5, _reconnectCount), 30_000);
@@ -154,7 +209,7 @@ function createPresenceStore() {
     }, delay);
   }
 
-  // ── Слушаем видимость вкладки ─────────────────────────────────────────
+  // ── Видимость вкладки ─────────────────────────────────────────────────
   function _setupListeners() {
     if (!browser || _listenersAdded) return;
     _listenersAdded = true;
@@ -173,8 +228,8 @@ function createPresenceStore() {
     });
 
     window.addEventListener('beforeunload', () => {
-      // Уведомляем сервер немедленно (sendBeacon не нужен — WS onclose работает быстро)
-      _send({ type: 'leave' });
+      // НЕ шлём leave — браузер режет WS до того как send отработает.
+      // Сервер сам поймёт через onclose → grace period → TTL в Redis.
     });
   }
 
@@ -193,9 +248,8 @@ function createPresenceStore() {
   }
 
   /**
-   * Вызывается из отдельных страниц с контентом (blog/[id], arts/[id], music/[id]).
+   * Вызывается из страниц с контентом (blog/[id], arts/[id], music/[id]).
    * Обновляет entity_type/entity_id — сервер узнает что ты сейчас смотришь.
-   * Возвращает cleanup-функцию для onMount.
    */
   function start(entityType = null, entityId = null) {
     if (!browser) return () => {};
@@ -203,27 +257,23 @@ function createPresenceStore() {
     _entityType = entityType;
     _entityId   = entityId;
 
-    // Если соединение уже открыто — сразу шлём heartbeat с новой страницей
     if (_ws && _ws.readyState === WebSocket.OPEN) {
       _send({ type: 'heartbeat', entity_type: _entityType, entity_id: _entityId });
-      _startHeartbeat(); // перезапускаем таймер чтобы интервал отсчитывался заново
+      _startHeartbeat();
     } else if (!_globalStarted) {
-      // Если layout ещё не подключился (edge-case) — подключаемся сами
       _globalStopped = false;
       _setupListeners();
       _connect();
     }
 
-    // Cleanup при уходе со страницы
     return () => {
-      // Сбрасываем entity — пользователь больше не смотрит этот контент
       _entityType = null;
       _entityId   = null;
 
-      // Обнуляем viewing в сторе сразу, не ждём следующего push
+      // Сразу сбрасываем viewing локально
       update(s => ({ ...s, viewing: [], viewingCount: 0 }));
 
-      // Сервер узнает через следующий heartbeat (entity_type=null)
+      // Сервер узнает через следующий heartbeat
       _send({ type: 'heartbeat', entity_type: null, entity_id: null });
     };
   }
@@ -232,10 +282,10 @@ function createPresenceStore() {
     _globalStopped = true;
     _globalStarted = false;
     _stopHeartbeat();
+    clearTimeout(_disappearTimer);
     if (_reconnectId) { clearTimeout(_reconnectId); _reconnectId = null; }
     if (_ws) {
       if (_ws.readyState === WebSocket.OPEN) {
-        _send({ type: 'leave' });
         _ws.close(1000, 'stopped');
       } else {
         _ws.close();
