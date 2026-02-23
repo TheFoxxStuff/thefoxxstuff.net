@@ -21,7 +21,7 @@ const INTERVAL = 30_000; // 30 секунд
 
 function getToken() {
   if (!browser) return null;
-  try { return localStorage.getItem('auth_token'); } catch { return null; }
+  try { const s = localStorage.getItem('auth'); if (s) { const p = JSON.parse(s); if (p?.token) return p.token; } return localStorage.getItem('auth_token'); } catch { return null; }
 }
 
 function createPresenceStore() {
