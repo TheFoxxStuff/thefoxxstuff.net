@@ -3,17 +3,15 @@ Presence system — WebSocket + Redis Pub/Sub.
 
 Архитектура:
   - Клиент подключается → сразу регистрируется в Redis (online)
-  - При любом изменении (join/leave/move) → redis.publish("presence_changes", data)
-  - Все активные WS-обработчики подписаны через отдельный pubsub-клиент
-  - Как только в канале появилось сообщение → сервер мгновенно пушит update клиентам
-  - Polling убран полностью: тишина = 0 трафика, активность = мгновенные обновления
+  - При любом изменении → redis.publish("presence_changes", data)
+  - Все активные WS-обработчики подписаны через pubsub-клиент
+  - Мгновенные обновления, нет polling
 
-Redis ключи:
-  presence:user:{user_id}       — данные пользователя (JSON string с TTL)
-  presence:online               — Set всех онлайн user_id
-  presence:viewing:{type}:{id}  — Set user_id просматривающих контент
-  presence:profile:{user_id}    — кеш профиля пользователя (5 мин)
-  presence_changes              — Pub/Sub канал событий
+Grace period (только для навигации между страницами):
+  - При закрытии вкладки (code 1000/аномальное) → удаляем сразу после короткой паузы (2 сек)
+  - При SvelteKit-навигации (code 1001 "going away") → grace period 5 сек
+  - Если юзер переподключился за grace period → удаление отменяется
+  - publish("leave") вызывается ПОСЛЕ реального удаления из Redis
 """
 
 import asyncio
@@ -27,7 +25,7 @@ from fastapi.websockets import WebSocketState
 from jose import JWTError, jwt
 from bson import ObjectId
 
-from cache import get_redis
+from cache import get_redis, get_pool
 from database import get_db
 from config import settings
 from auth import ALGORITHM
@@ -37,23 +35,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/presence", tags=["presence"])
 
 # ─── Конфигурация ─────────────────────────────────────────────────────────────
-PRESENCE_TTL      = 75   # TTL ключей в Redis (сек) — чуть больше heartbeat клиента
-HEARTBEAT_TIMEOUT = 70   # Ждём сообщение от клиента не более 70 сек
-GRACE_PERIOD       = 8    # Сек до реального удаления после disconnect (время на переподключение)
-PROFILE_CACHE_TTL = 300  # Кеш профиля 5 мин
-MAX_ONLINE_USERS  = 100  # Лимит в UI-ответе
+PRESENCE_TTL        = 75   # TTL одной записи пользователя (сек)
+HEARTBEAT_TIMEOUT   = 70   # Ждём сообщение от клиента не более 70 сек
+PROFILE_CACHE_TTL   = 300  # Кеш профиля 5 мин
+MAX_ONLINE_USERS    = 100  # Лимит в UI-ответе
+
+GRACE_NAVIGATE      = 5    # Сек — при SPA-навигации (code 1001)
+GRACE_CLOSE         = 2    # Сек — при закрытии вкладки (минимум для надёжности)
 
 PUBSUB_CHANNEL = "presence_changes"
 
 # ─── Redis ключи ──────────────────────────────────────────────────────────────
-def _user_key(user_id: str) -> str:
-    return f"presence:user:{user_id}"
+def _user_key(uid: str) -> str:
+    return f"presence:user:{uid}"
 
 def _viewing_key(entity_type: str, entity_id: str) -> str:
     return f"presence:viewing:{entity_type}:{entity_id}"
 
-def _profile_key(user_id: str) -> str:
-    return f"presence:profile:{user_id}"
+def _profile_key(uid: str) -> str:
+    return f"presence:profile:{uid}"
+
+def _grace_key(uid: str) -> str:
+    return f"presence:grace:{uid}"
 
 # ─── Сериализация ─────────────────────────────────────────────────────────────
 def _serialize_user(user: dict, entity_type=None, entity_id=None) -> dict:
@@ -129,14 +132,26 @@ async def _fetch_online(redis) -> list:
         for uid in user_ids:
             pipe.get(_user_key(uid))
         results = await pipe.execute()
+
         users = []
-        for raw in results:
+        stale_ids = []
+        for uid, raw in zip(user_ids, results):
             if not raw:
+                # Запись протухла (TTL истёк) — убираем из Set
+                stale_ids.append(uid)
                 continue
             try:
                 users.append(_serialize_for_response(json.loads(raw)))
             except Exception:
                 pass
+
+        # Чистим протухшие ID из Set
+        if stale_ids:
+            pipe2 = redis.pipeline()
+            for uid in stale_ids:
+                pipe2.srem("presence:online", uid)
+            await pipe2.execute()
+
         return users
     except Exception as e:
         logger.error(f"Failed to fetch online: {e}")
@@ -153,20 +168,31 @@ async def _fetch_viewing(redis, entity_type: str, entity_id: str) -> list:
         for uid in user_ids:
             pipe.get(_user_key(uid))
         results = await pipe.execute()
+
         users = []
-        for raw in results:
+        stale_ids = []
+        for uid, raw in zip(user_ids, results):
             if not raw:
+                stale_ids.append(uid)
                 continue
             try:
                 users.append(_serialize_for_response(json.loads(raw)))
             except Exception:
                 pass
+
+        if stale_ids:
+            vk = _viewing_key(entity_type, entity_id)
+            pipe2 = redis.pipeline()
+            for uid in stale_ids:
+                pipe2.srem(vk, uid)
+            await pipe2.execute()
+
         return users
     except Exception as e:
         logger.error(f"Failed to fetch viewing: {e}")
         return []
 
-# ─── Запись / удаление presence ───────────────────────────────────────────────
+# ─── Запись presence ──────────────────────────────────────────────────────────
 async def _set_presence(redis, user: dict, entity_type: Optional[str], entity_id: Optional[str]):
     user_id = str(user.get("_id") or user.get("user_id"))
     key = _user_key(user_id)
@@ -185,62 +211,74 @@ async def _set_presence(redis, user: dict, entity_type: Optional[str], entity_id
     payload = _serialize_user(user, entity_type, entity_id)
 
     pipe = redis.pipeline()
+    # Отменяем отложенное удаление если было (юзер переподключился)
+    pipe.delete(_grace_key(user_id))
     if old_entity:
         pipe.srem(_viewing_key(old_entity[0], old_entity[1]), user_id)
-    # Удаляем grace-маркер — отменяем отложенное удаление если было
-    pipe.delete(f"presence:grace:{user_id}")
     pipe.setex(key, PRESENCE_TTL, json.dumps(payload))
     pipe.sadd("presence:online", user_id)
-    pipe.expire("presence:online", PRESENCE_TTL)
+    # НЕ ставим expire на presence:online — Set живёт пока в нём есть записи
     if entity_type and entity_id:
         vk = _viewing_key(entity_type, entity_id)
         pipe.sadd(vk, user_id)
         pipe.expire(vk, PRESENCE_TTL)
     await pipe.execute()
 
-
-async def _del_presence(redis, user_id: str, entity_type=None, entity_id=None):
+# ─── Удаление presence с grace period ────────────────────────────────────────
+async def _del_presence_graceful(redis, user_id: str, entity_type, entity_id, close_code: int):
     """
-    Удаляем presence с grace period — даём GRACE_PERIOD секунд на переподключение.
-    Если юзер переподключится в этот период, новый _set_presence перезапишет ключи
-    и удаление не произойдёт (ключа уже не будет с нужным grace-маркером).
+    Удаляем с паузой — различаем навигацию и закрытие вкладки.
+    
+    close_code 1001 = браузер "going away" (SPA-навигация, F5)
+    close_code 1000 = нормальное закрытие
+    остальные       = аномальное закрытие (сеть упала и т.д.)
+    
+    publish("leave") вызывается ПОСЛЕ реального удаления из Redis
+    чтобы все клиенты получили актуальный state без юзера.
     """
-    grace_key = f"presence:grace:{user_id}"
-    marker = f"{entity_type}:{entity_id}"
+    grace = GRACE_NAVIGATE if close_code == 1001 else GRACE_CLOSE
+    marker = f"{time.time()}"  # уникальный маркер этой сессии
 
-    pipe = redis.pipeline()
-    pipe.setex(grace_key, GRACE_PERIOD, marker)
-    await pipe.execute()
-
-    # Планируем реальное удаление через GRACE_PERIOD
-    asyncio.create_task(_delayed_del(redis, user_id, entity_type, entity_id, marker))
-
-
-async def _delayed_del(redis, user_id: str, entity_type, entity_id, marker: str):
-    """Реальное удаление — только если юзер не переподключился за grace period."""
-    await asyncio.sleep(GRACE_PERIOD)
+    # Записываем маркер — если юзер переподключится, он удалит его
     try:
-        grace_key = f"presence:grace:{user_id}"
-        current_marker = await redis.get(grace_key)
+        await redis.setex(_grace_key(user_id), grace + 1, marker)
+    except Exception:
+        pass
 
-        # Если маркер изменился — юзер переподключился, не удаляем
-        if current_marker != marker:
+    asyncio.create_task(_do_del(redis, user_id, entity_type, entity_id, marker, grace))
+
+
+async def _do_del(redis, user_id: str, entity_type, entity_id, marker: str, grace: int):
+    """Реальное удаление после паузы — только если юзер не переподключился."""
+    await asyncio.sleep(grace)
+    try:
+        current = await redis.get(_grace_key(user_id))
+        if current != marker:
+            # Маркер изменился — юзер переподключился, отменяем
+            logger.debug(f"Grace cancelled for {user_id} (reconnected)")
             return
 
+        # Удаляем из Redis
         pipe = redis.pipeline()
         pipe.delete(_user_key(user_id))
         pipe.srem("presence:online", user_id)
-        pipe.delete(grace_key)
+        pipe.delete(_grace_key(user_id))
         if entity_type and entity_id:
             pipe.srem(_viewing_key(entity_type, entity_id), user_id)
         await pipe.execute()
+
+        # Публикуем leave ТОЛЬКО после реального удаления
+        # Теперь все клиенты получат актуальный state — без этого юзера
+        await _publish_change(redis, "leave", user_id, entity_type, entity_id)
+
+        logger.debug(f"Presence deleted for {user_id} (grace={grace}s)")
+
     except Exception as e:
-        logger.debug(f"Delayed del error for {user_id}: {e}")
+        logger.error(f"_do_del error for {user_id}: {e}")
 
-
+# ─── Публикация события ───────────────────────────────────────────────────────
 async def _publish_change(redis, change_type: str, user_id: str,
                           entity_type: Optional[str], entity_id: Optional[str]):
-    """Публикуем событие → все WS-обработчики получат его мгновенно."""
     try:
         msg = json.dumps({
             "change":      change_type,
@@ -269,11 +307,12 @@ async def presence_ws(
     user    = await _get_user(token)
     user_id = str(user.get("_id") or user.get("user_id")) if user else None
 
-    cur_type: Optional[str] = None
-    cur_id:   Optional[str] = None
-    is_active = True
+    cur_type:   Optional[str] = None
+    cur_id:     Optional[str] = None
+    is_active   = True
+    close_code  = 1000  # будет обновлён в onclose
 
-    # ── Сборка и отправка текущего состояния ─────────────────────────────
+    # ── Push текущего состояния ───────────────────────────────────────────
     async def push_state() -> bool:
         if websocket.client_state != WebSocketState.CONNECTED:
             return False
@@ -292,20 +331,13 @@ async def presence_ws(
             logger.debug(f"Push state failed: {e}")
             return False
 
-    # ── Pub/Sub: слушаем канал и пушим при каждом изменении ──────────────
+    # ── Redis Pub/Sub — мгновенные обновления ─────────────────────────────
     async def pubsub_loop():
-        """
-        Создаём отдельный subscriber-клиент (Redis pub/sub требует
-        выделенного соединения). Как только в канале появляется сообщение
-        — сразу отправляем актуальный state нашему клиенту.
-        Тишина = 0 трафика.
-        """
-        from redis.asyncio import Redis as AioRedis
-        from cache import get_pool
-
         pool = get_pool()
         if not pool:
             return
+
+        from redis.asyncio import Redis as AioRedis
         sub_client = AioRedis(connection_pool=pool)
         pubsub     = sub_client.pubsub()
 
@@ -318,7 +350,6 @@ async def presence_ws(
                     break
                 if message["type"] != "message":
                     continue
-                # Пришло изменение — пушим актуальный state немедленно
                 if not await push_state():
                     break
         except asyncio.CancelledError:
@@ -335,7 +366,7 @@ async def presence_ws(
 
     # ── Обработка сообщений от клиента ───────────────────────────────────
     async def recv_loop():
-        nonlocal cur_type, cur_id, is_active
+        nonlocal cur_type, cur_id, is_active, close_code
 
         try:
             while is_active:
@@ -364,11 +395,9 @@ async def presence_ws(
 
                     if user:
                         await _set_presence(redis, user, et, ei)
-                        # Публикуем изменение — все клиенты получат push
                         change = "move" if (prev_type != et or prev_id != ei) else "heartbeat"
                         await _publish_change(redis, change, user_id, et, ei)
 
-                    # Сразу отправляем state нашему клиенту
                     await push_state()
 
                 elif msg_type == "ping":
@@ -376,20 +405,24 @@ async def presence_ws(
                         await websocket.send_json({"type": "pong"})
 
                 elif msg_type == "leave":
-                    return
+                    # SPA-навигация: клиент явно говорит что уходит со страницы
+                    # НЕ закрываем соединение — просто обновляем entity
+                    cur_type = None
+                    cur_id   = None
+                    if user:
+                        await _set_presence(redis, user, None, None)
+                        await _publish_change(redis, "move", user_id, None, None)
 
-        except WebSocketDisconnect:
-            pass
+        except WebSocketDisconnect as e:
+            close_code = getattr(e, 'code', 1000)
         except Exception as e:
             logger.debug(f"WS recv error: {e}")
 
-    # ── Старт: регистрируем сразу при подключении ────────────────────────
+    # ── Старт ─────────────────────────────────────────────────────────────
     if user:
-        # Регистрируем как online ещё до первого heartbeat (фиксит who's online)
         await _set_presence(redis, user, None, None)
         await _publish_change(redis, "join", user_id, None, None)
 
-    # Первый push — клиент сразу видит текущее состояние
     await push_state()
 
     recv_task   = asyncio.create_task(recv_loop())
@@ -413,13 +446,12 @@ async def presence_ws(
         recv_task.cancel()
         pubsub_task.cancel()
 
-        # Cleanup: убираем из Redis и уведомляем остальных
         if user and user_id:
             try:
-                await _del_presence(redis, user_id, cur_type, cur_id)
-                await _publish_change(redis, "leave", user_id, cur_type, cur_id)
+                # Grace period зависит от типа закрытия
+                await _del_presence_graceful(redis, user_id, cur_type, cur_id, close_code)
             except Exception as e:
-                logger.error(f"Failed to del presence on close: {e}")
+                logger.error(f"Failed to schedule presence deletion: {e}")
 
         try:
             if websocket.client_state == WebSocketState.CONNECTED:
@@ -427,10 +459,10 @@ async def presence_ws(
         except Exception:
             pass
 
-        logger.debug(f"WS closed uid={user_id}")
+        logger.debug(f"WS closed uid={user_id} code={close_code}")
 
 
-# ─── REST fallback (отладка / фолбэк) ────────────────────────────────────────
+# ─── REST fallback ────────────────────────────────────────────────────────────
 @router.get("/online")
 async def get_online():
     redis = get_redis()

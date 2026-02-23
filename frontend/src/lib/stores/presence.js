@@ -273,8 +273,9 @@ function createPresenceStore() {
       // Сразу сбрасываем viewing локально
       update(s => ({ ...s, viewing: [], viewingCount: 0 }));
 
-      // Сервер узнает через следующий heartbeat
-      _send({ type: 'heartbeat', entity_type: null, entity_id: null });
+      // Сообщаем серверу что ушли с контента
+      // Соединение НЕ закрываем — переиспользуем на следующей странице
+      _send({ type: 'leave' });
     };
   }
 
