@@ -29,7 +29,7 @@ async def init_cache() -> None:
     try:
         _pool = ConnectionPool.from_url(
             settings.redis_url,
-            max_connections=10,
+            max_connections=50,
             decode_responses=True,
         )
         _redis = Redis(connection_pool=_pool)
