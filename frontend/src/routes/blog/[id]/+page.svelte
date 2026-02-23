@@ -1,8 +1,9 @@
 <script>
   import { onMount } from 'svelte';
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { Breadcrumb, MarkdownRenderer, SEO } from '$lib/components';
+  import { Breadcrumb, MarkdownRenderer, SEO, ViewingNow } from '$lib/components';
   import Badge from '../../../lib/components/Badge.svelte';
+  import { presence } from '$lib/stores/presence.js';
   import { Calendar, Eye } from 'lucide-svelte';
   import { SITE, canonicalUrl, truncate } from '$lib/seo.js';
 
@@ -45,6 +46,8 @@
 
   onMount(() => {
     if (post?._id) api.views.record('blog', post._id);
+    const stopPresence = presence.start('blog', post?._id);
+    return stopPresence;
   });
 </script>
 
@@ -79,9 +82,13 @@
       <div class="p-[36px] pb-[56px] md:p-[36px] md:pb-[42px]">
         <h1 class="font-display text-[24px] md:text-4xl tracking-wide mb-[18px]">{post.title}</h1>
 
-        <div class="flex gap-[8px] text-sm text-dark-400 mb-[20px] pb-[20px] border-b border-[rgba(255,255,255,0.05)]">
+        <div class="flex gap-[8px] text-sm text-dark-400 mb-[12px] pb-[12px] border-b border-[rgba(255,255,255,0.05)]">
           <Badge text={formatDate(post.created_at)} icon={Calendar} />
           <Badge text="{post.views} views" icon={Eye} />
+        </div>
+
+        <div class="mb-[20px]">
+          <ViewingNow users={$presence.viewing} count={$presence.viewingCount} entityType="blog" />
         </div>
 
         <MarkdownRenderer content={post.content} />

@@ -12,7 +12,7 @@ setup_logging()  # первым делом
 from database import connect_db, close_db, get_db
 from cache import init_cache, close_cache, is_rate_limited, flush_view_buffers
 from config import settings
-from routers import music, blog, arts, links, auth, stats, upload, banner, views, profile, chat
+from routers import music, blog, arts, links, auth, stats, upload, banner, views, profile, chat, presence
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +130,7 @@ app.include_router(banner.router)
 app.include_router(views.router)
 app.include_router(profile.router)
 app.include_router(chat.router)
+app.include_router(presence.router)
 
 
 @app.get("/api/health")

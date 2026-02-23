@@ -233,7 +233,13 @@ export const api = {
   },
   chat: {
     messages: (limit = 50) => request(`/chat/messages?limit=${limit}`)
-  }
+  },
+  presence: {
+    online: () => fetch(`${API_BASE}/presence/online`).then(r => r.ok ? r.json() : { users: [], count: 0 }),
+    viewing: (entityType, entityId) =>
+      fetch(`${API_BASE}/presence/viewing/${entityType}/${entityId}`)
+        .then(r => r.ok ? r.json() : { users: [], count: 0 }),
+  },
 };
 
 // ─── Image URL helpers ────────────────────────────────────────────────
