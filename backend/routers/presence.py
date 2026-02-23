@@ -39,6 +39,7 @@ router = APIRouter(prefix="/api/presence", tags=["presence"])
 # ─── Конфигурация ─────────────────────────────────────────────────────────────
 PRESENCE_TTL      = 75   # TTL ключей в Redis (сек) — чуть больше heartbeat клиента
 HEARTBEAT_TIMEOUT = 70   # Ждём сообщение от клиента не более 70 сек
+GRACE_PERIOD       = 8    # Сек до реального удаления после disconnect (время на переподключение)
 PROFILE_CACHE_TTL = 300  # Кеш профиля 5 мин
 MAX_ONLINE_USERS  = 100  # Лимит в UI-ответе
 
@@ -186,6 +187,8 @@ async def _set_presence(redis, user: dict, entity_type: Optional[str], entity_id
     pipe = redis.pipeline()
     if old_entity:
         pipe.srem(_viewing_key(old_entity[0], old_entity[1]), user_id)
+    # Удаляем grace-маркер — отменяем отложенное удаление если было
+    pipe.delete(f"presence:grace:{user_id}")
     pipe.setex(key, PRESENCE_TTL, json.dumps(payload))
     pipe.sadd("presence:online", user_id)
     pipe.expire("presence:online", PRESENCE_TTL)
@@ -197,12 +200,42 @@ async def _set_presence(redis, user: dict, entity_type: Optional[str], entity_id
 
 
 async def _del_presence(redis, user_id: str, entity_type=None, entity_id=None):
+    """
+    Удаляем presence с grace period — даём GRACE_PERIOD секунд на переподключение.
+    Если юзер переподключится в этот период, новый _set_presence перезапишет ключи
+    и удаление не произойдёт (ключа уже не будет с нужным grace-маркером).
+    """
+    grace_key = f"presence:grace:{user_id}"
+    marker = f"{entity_type}:{entity_id}"
+
     pipe = redis.pipeline()
-    pipe.delete(_user_key(user_id))
-    pipe.srem("presence:online", user_id)
-    if entity_type and entity_id:
-        pipe.srem(_viewing_key(entity_type, entity_id), user_id)
+    pipe.setex(grace_key, GRACE_PERIOD, marker)
     await pipe.execute()
+
+    # Планируем реальное удаление через GRACE_PERIOD
+    asyncio.create_task(_delayed_del(redis, user_id, entity_type, entity_id, marker))
+
+
+async def _delayed_del(redis, user_id: str, entity_type, entity_id, marker: str):
+    """Реальное удаление — только если юзер не переподключился за grace period."""
+    await asyncio.sleep(GRACE_PERIOD)
+    try:
+        grace_key = f"presence:grace:{user_id}"
+        current_marker = await redis.get(grace_key)
+
+        # Если маркер изменился — юзер переподключился, не удаляем
+        if current_marker != marker:
+            return
+
+        pipe = redis.pipeline()
+        pipe.delete(_user_key(user_id))
+        pipe.srem("presence:online", user_id)
+        pipe.delete(grace_key)
+        if entity_type and entity_id:
+            pipe.srem(_viewing_key(entity_type, entity_id), user_id)
+        await pipe.execute()
+    except Exception as e:
+        logger.debug(f"Delayed del error for {user_id}: {e}")
 
 
 async def _publish_change(redis, change_type: str, user_id: str,
