@@ -9,7 +9,7 @@
     city: 'Yakutsk',
     genres: ['Hardcore', 'Breakcore', "Drum'n'Bass"],
     bio: 'He has his own unique style and is able to convey his character in each composition. His music is characterized by its lightness and atmosphere, a quality that is influenced by his unique place of residence. His roots in Yakutia and his understanding of local culture and traditions give him a special source of strength that he uses to create music with a sound and atmosphere that is extremely unique to his region.',
-    avatar: '/about.jpg', // Place avatar.jpg in static folder
+    avatar: null, // Set to '/about.jpg' after placing the file in static/ folder
     email: 'mail@thefoxxstuff.net',
     social_links: {
       bandcamp: 'https://thefoxxstuff.bandcamp.com',
