@@ -43,24 +43,24 @@
   } = $props();
 
   // Computed values
-  const finalTitle = titleFull || (title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`);
-  const finalDescription = truncate(description || SITE.description, 160);
-  const finalImage = image || SITE.defaultImage;
-  const finalImageAlt = imageAlt || title || SITE.name;
-  const finalImageWidth = image ? imageWidth : SITE.defaultImageWidth;
-  const finalImageHeight = image ? imageHeight : SITE.defaultImageHeight;
-  const finalUrl = url || SITE.url;
-  const finalKeywords = keywords || SITE.keywords;
-  const robots = [
+  const finalTitle = $derived(titleFull || (title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`));
+  const finalDescription = $derived(truncate(description || SITE.description, 160));
+  const finalImage = $derived(image || SITE.defaultImage);
+  const finalImageAlt = $derived(imageAlt || title || SITE.name);
+  const finalImageWidth = $derived(image ? imageWidth : SITE.defaultImageWidth);
+  const finalImageHeight = $derived(image ? imageHeight : SITE.defaultImageHeight);
+  const finalUrl = $derived(url || SITE.url);
+  const finalKeywords = $derived(keywords || SITE.keywords);
+  const robots = $derived([
     noindex ? 'noindex' : 'index',
     nofollow ? 'nofollow' : 'follow',
     'max-snippet:-1',
     'max-image-preview:large',
     'max-video-preview:-1',
-  ].join(', ');
+  ].join(', '));
 
   // JSON-LD serialization
-  const jsonLdStr = jsonLd ? JSON.stringify(Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : null;
+  const jsonLdStr = $derived(jsonLd ? JSON.stringify(Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : null);
 </script>
 
 <svelte:head>
