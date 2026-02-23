@@ -27,6 +27,6 @@ starlette==0.52.1
 typing_extensions==4.15.0
 uvicorn==0.40.0
 httpx
-websockets
+wsproto
 redis[asyncio]==5.2.1
 mutagen
