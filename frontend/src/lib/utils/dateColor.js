@@ -1,50 +1,108 @@
 /**
- * Smart Date Indication
- * Returns gradient & icon color info based on how recent the date is.
+ * Smart Date Indication — continuous color timeline
+ *
+ * Вместо жёстких диапазонов — один мастер-градиент по оси времени.
+ * Пост "едет" по нему: чем старше, тем дальше сдвигается "окно" цветов.
+ *
+ * Мастер-ось (день → цвет):
+ *   0  дней  →  #BCFF00  (салатовый)
+ *   2  дня   →  #45D0C1  (светлая бирюза)
+ *   6  дней  →  #00CED1  (насыщенная бирюза)
+ *   14 дней  →  #91219E  (фиолетовый)
+ *   21 день  →  #FF2D78  (ярко-розовый)
+ *   28 дней  →  #8B00FF  (глубокий фиолет)
+ *   40 дней  →  #808080  (серый, финал)
  */
 
+// Keyframes: [dayThreshold, [r, g, b]]
+const TIMELINE = [
+  [0,  [188, 255,   0]],   // #BCFF00 — lime
+  [2,  [ 69, 208, 193]],   // #45D0C1 — light teal
+  [6,  [  0, 206, 209]],   // #00CED1 — dark teal
+  [14, [145,  33, 158]],   // #91219E — purple
+  [21, [255,  45, 120]],   // #FF2D78 — hot pink
+  [28, [139,   0, 255]],   // #8B00FF — deep violet
+  [40, [128, 128, 128]],   // #808080 — neutral gray
+];
+
+/** Линейно интерполирует число */
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+/** Интерполирует [r,g,b] между двумя соседними keyframe по оси дней */
+function colorAtDay(days) {
+  // Зажимаем на последнем keyframe
+  if (days >= TIMELINE[TIMELINE.length - 1][0]) {
+    return TIMELINE[TIMELINE.length - 1][1];
+  }
+  if (days <= 0) {
+    return TIMELINE[0][1];
+  }
+
+  for (let i = 0; i < TIMELINE.length - 1; i++) {
+    const [d0, c0] = TIMELINE[i];
+    const [d1, c1] = TIMELINE[i + 1];
+
+    if (days >= d0 && days < d1) {
+      const t = (days - d0) / (d1 - d0);  // 0..1 внутри сегмента
+      return [
+        Math.round(lerp(c0[0], c1[0], t)),
+        Math.round(lerp(c0[1], c1[1], t)),
+        Math.round(lerp(c0[2], c1[2], t)),
+      ];
+    }
+  }
+
+  return TIMELINE[TIMELINE.length - 1][1];
+}
+
+/** RGB массив → hex строка */
+function toHex([r, g, b]) {
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Возвращает { gradient, iconColor } для поста.
+ *
+ * "Окно" градиента — это отрезок [days, days + window] на мастер-оси.
+ * Чем старше пост, тем дальше оба цвета сдвинулись по спектру.
+ * При diffDays > 40 — статичный серый (градиент не нужен).
+ */
 export function getDateColorInfo(dateStr) {
   const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now - date;
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const diffDays = (now - new Date(dateStr)) / (1000 * 60 * 60 * 24);
 
-  if (diffDays < 2) {
-    // Up to 2 days — lime → teal
-    return {
-      gradient: 'linear-gradient(90deg, #BCFF00, #45D0C1)',
-      iconColor: '#BCFF00',
-      label: 'fresh'
-    };
-  } else if (diffDays < 14) {
-    if (diffDays < 6) {
-      // 2–6 days — teal → purple
-      return {
-        gradient: 'linear-gradient(90deg, #00CED1, #91219E)',
-        iconColor: '#00CED1',
-        label: 'recent'
-      };
-    } else {
-      // 6 days – 2 weeks — teal → purple (same range as spec)
-      return {
-        gradient: 'linear-gradient(90deg, #00CED1, #91219E)',
-        iconColor: '#00CED1',
-        label: 'recent'
-      };
-    }
-  } else if (diffDays < 30) {
-    // 2–4 weeks — bright pink → purple
-    return {
-      gradient: 'linear-gradient(90deg, #FF2D78, #8B00FF)',
-      iconColor: '#FF2D78',
-      label: 'weeks'
-    };
-  } else {
-    // Older — neutral gray
+  // После 40 дней — нейтральный серый
+  if (diffDays >= 40) {
     return {
       gradient: null,
       iconColor: '#808080',
-      label: 'old'
+      label: 'old',
     };
   }
+
+  // "Ширина окна" градиента — фиксированная в днях.
+  // Позволяет видеть плавный переход вокруг текущей позиции.
+  const WINDOW = 8;
+
+  const startDay = Math.max(0, diffDays - WINDOW / 2);
+  const endDay   = Math.min(39, diffDays + WINDOW / 2);
+
+  const colorStart = toHex(colorAtDay(startDay));
+  const colorEnd   = toHex(colorAtDay(endDay));
+
+  // Иконка — цвет в точной позиции поста (без окна)
+  const iconColor = toHex(colorAtDay(diffDays));
+
+  const label =
+    diffDays < 2  ? 'fresh'  :
+    diffDays < 14 ? 'recent' :
+    diffDays < 28 ? 'weeks'  : 'fading';
+
+  return {
+    gradient: `linear-gradient(90deg, ${colorStart}, ${colorEnd})`,
+    iconColor,
+    label,
+  };
 }
