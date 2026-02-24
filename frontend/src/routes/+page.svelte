@@ -11,10 +11,10 @@
 
   let { data: pageData } = $props();
 
-  let music = $state(pageData.music);
-  let blog = $state(pageData.blog);
-  let arts = $state(pageData.arts);
-  let banner = $state(pageData.banner);
+  let music = $derived(pageData.music);
+  let blog = $derived(pageData.blog);
+  let arts = $derived(pageData.arts);
+  let banner = $derived(pageData.banner);
 
   let currentSlide = $state(0);
   let slideInterval;

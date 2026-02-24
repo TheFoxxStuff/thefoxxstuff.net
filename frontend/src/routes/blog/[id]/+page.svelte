@@ -10,7 +10,7 @@
 
   let { data: pageData } = $props();
 
-  let post = $state(pageData.post);
+  let post = $derived(pageData.post);
   let coverImageUrl = $derived(post?.cover_image_info ? getImageUrl(post.cover_image_info, 'medium') : null);
   let ogImageUrl = $derived(post?.og_image_info ? getImageUrl(post.og_image_info, 'medium') : coverImageUrl);
 

@@ -9,7 +9,7 @@
 
   let { data: pageData } = $props();
 
-  let release = $state(pageData.release);
+  let release = $derived(pageData.release);
   let loading = $state(false);
 
   let coverImageUrl = $derived(release?.cover_image_info ? getImageUrl(release.cover_image_info, 'medium') : null);

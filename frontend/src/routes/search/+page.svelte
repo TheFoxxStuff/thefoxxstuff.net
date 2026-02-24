@@ -7,8 +7,8 @@
 
   let { data: pageData } = $props();
 
-  let query = $state(pageData.query);
-  let results = $state(pageData.results);
+  let query = $derived(pageData.query);
+  let results = $derived(pageData.results);
   let loading = $state(false);
 
   async function doSearch(q) {

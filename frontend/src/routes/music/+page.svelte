@@ -5,8 +5,8 @@
 
   let { data: pageData } = $props();
 
-  let featured = $state(pageData.featured);
-  let releases = $state(pageData.releases);
+  let featured = $derived(pageData.featured);
+  let releases = $derived(pageData.releases);
   let loading = $state(false);
   let page = $state(1);
   const LIMIT = 12;

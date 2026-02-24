@@ -85,7 +85,7 @@
     <section>
       <h3 class="font-display text-2xl tracking-wide mb-4">Contacts</h3>
       <p class="text-dark-400">
-        Email: <a href="/cdn-cgi/l/email-protection#6d160c0f0218194308000c040110" class="text-accent-green hover:underline">{about.email}</a>
+        Email: <a href="/cdn-cgi/l/email-protection#2952484b465c5d074c4448404554" class="text-accent-green hover:underline">{about.email}</a>
       </p>
     </section>
     

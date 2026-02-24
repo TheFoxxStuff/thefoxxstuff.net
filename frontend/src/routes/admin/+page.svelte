@@ -4,9 +4,9 @@
   import { api } from '$lib/api';
   
   let { data: pageData } = $props();
-  let stats = $state(pageData.stats);
-  let chartData = $state(pageData.chartData);
-  let topContent = $state(pageData.topContent);
+  let stats = $derived(pageData.stats);
+  let chartData = $derived(pageData.chartData);
+  let topContent = $derived(pageData.topContent);
   let loading = $state(false);
   let chartDays = $state(30);
   let chartLoading = $state(false);

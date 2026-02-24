@@ -5,8 +5,8 @@
 
   let { data: pageData } = $props();
 
-  let grouped = $state(pageData.grouped);
-  let years = $state(pageData.years);
+  let grouped = $derived(pageData.grouped);
+  let years = $derived(pageData.years);
   let selectedYear = $state(null);
   let loading = $state(false);
   let currentPage = $state(1);

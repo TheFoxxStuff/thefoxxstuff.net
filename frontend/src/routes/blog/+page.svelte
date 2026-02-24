@@ -5,7 +5,7 @@
 
   let { data: pageData } = $props();
 
-  let posts = $state(pageData.posts);
+  let posts = $derived(pageData.posts);
   let search = $state('');
   let sort = $state('newest');
   let loading = $state(false);

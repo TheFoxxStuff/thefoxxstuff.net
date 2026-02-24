@@ -9,7 +9,7 @@
   import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
-  let artwork = $state(pageData.artwork);
+  let artwork = $derived(pageData.artwork);
 
   let imageUrl = $derived(artwork?.image_info ? getImageUrl(artwork.image_info, 'medium') : null);
   let ogImageUrl = $derived(artwork?.og_image_info ? getImageUrl(artwork.og_image_info, 'original') : imageUrl);
