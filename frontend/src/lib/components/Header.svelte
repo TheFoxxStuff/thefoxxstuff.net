@@ -457,7 +457,7 @@
 
       <!-- Навигация -->
       <div bind:this={navWrapperElement} class="relative">
-        <nav class="nav-container rounded-[8px] px-[16px] py-[6px] backdrop-blur-[5px] bg-[--w6]">
+        <nav class="nav-container rounded-[8px] px-[16px] py-[6px] backdrop-blur-[5px] bg-[--w8]">
           
           <!-- Навигационные ссылки -->
           <div class="nav-block {searchOpen ? 'collapsed' : ''}">
