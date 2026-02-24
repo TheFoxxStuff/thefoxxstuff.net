@@ -591,10 +591,8 @@
                   <img 
                     src={getAvatarUrl($auth.user.avatar_thumb)} 
                     alt=""
-                    class="w-[48px] h-[48px] rounded-full object-cover"
                   />
                 {:else}
-                  <div class="w-[48px] h-[48px] rounded-full bg-[--w18] flex items-center justify-center">
                     <User size={28} class="text-[--w60]" />
                   </div>
                 {/if}
