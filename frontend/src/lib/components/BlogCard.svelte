@@ -60,7 +60,7 @@
 
     <div class="mt-auto flex items-center justify-between pt-[12px]">
       <!-- 🎨 Smart date indicator with gradient -->
-      <div class="flex items-center gap-[4px]">
+      <div class="flex items-center gap-[5px]">
         <!-- Icon gets the first gradient color -->
         <span style="color: {dateColor.iconColor}; flex-shrink: 0; display: flex; align-items: center;">
           <Calendar size={16} />
@@ -70,7 +70,7 @@
           {formatDate(post.created_at)}
         </span>
       </div>
-      <div class="flex items-center gap-[4px] text-[--w60]">
+      <div class="flex items-center gap-[5px] text-[--w60]">
         <Eye size={16} />
         <span class="text-[14px]">{post.views} views</span>
       </div>
