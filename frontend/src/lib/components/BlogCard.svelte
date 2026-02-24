@@ -60,7 +60,7 @@
 
     <div class="mt-auto flex items-center justify-between pt-[12px]">
       <!-- 🎨 Smart date indicator with gradient -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-[4px]">
         <!-- Icon gets the first gradient color -->
         <span style="color: {dateColor.iconColor}; flex-shrink: 0; display: flex; align-items: center;">
           <Calendar size={16} />
