@@ -457,7 +457,7 @@
 
       <!-- Навигация -->
       <div bind:this={navWrapperElement} class="relative">
-        <nav class="nav-container rounded-[8px] px-[16px] py-[6px] backdrop-blur-[5px] bg-[--w8]">
+        <nav class="nav-container rounded-[8px] px-[16px] py-[6px] backdrop-blur-[5px] bg-[--w6]">
           
           <!-- Навигационные ссылки -->
           <div class="nav-block {searchOpen ? 'collapsed' : ''}">
@@ -574,7 +574,8 @@
         {#if userMenuVisible && $auth.user}
           <div 
             bind:this={userMenuElement}
-            class="user-menu-dropdown bg-[--w5] backdrop-blur-xl border-[--w12] rounded-[8px] shadow-2xl overflow-hidden"
+            class="user-menu-dropdown backdrop-blur-xl border-[--w12] rounded-[8px] shadow-2xl overflow-hidden" 
+     style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), rgba(0, 0, 0, 0.6);"
           >
             <!-- Профиль -->
             <a 
@@ -607,7 +608,7 @@
             </a>
 
             <!-- Меню -->
-            <div class="p-[6px] flex flex-col gap-0.5">
+            <div class="px-[6px] pb-[6px] pt-[4px] flex flex-col gap-0.5">
               <a 
                 href="/profile/settings" 
                 onclick={() => userMenuVisible = false}
