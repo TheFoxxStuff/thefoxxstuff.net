@@ -63,7 +63,7 @@
       <div class="flex items-center gap-2">
         <!-- Icon gets the first gradient color -->
         <span style="color: {dateColor.iconColor}; flex-shrink: 0; display: flex; align-items: center;">
-          <Calendar size={14} />
+          <Calendar size={16} />
         </span>
         <!-- Date text gets the full gradient -->
         <span class="text-[14px] font-medium" style={gradientTextStyle}>
@@ -71,7 +71,7 @@
         </span>
       </div>
       <div class="flex items-center gap-[6px] text-[--w60]">
-        <Eye size={14} />
+        <Eye size={16} />
         <span class="text-[14px]">{post.views} views</span>
       </div>
     </div>
