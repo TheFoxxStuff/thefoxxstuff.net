@@ -574,7 +574,7 @@
         {#if userMenuVisible && $auth.user}
           <div 
             bind:this={userMenuElement}
-            class="user-menu-dropdown bg-[--select] backdrop-blur-xl border border-[--w12] rounded-2xl shadow-2xl overflow-hidden"
+            class="user-menu-dropdown bg-[--w5] backdrop-blur-xl border-[--w12] rounded-[8px] shadow-2xl overflow-hidden"
           >
             <!-- Профиль -->
             <a 
@@ -582,7 +582,7 @@
               onclick={() => userMenuVisible = false}
               class="block no-underline"
             >
-              <div class="mx-2 mt-2 mb-0 rounded-xl bg-[--w8] hover:bg-[--w12] transition px-4 py-4 flex flex-col items-center gap-2.5 cursor-pointer">
+              <div class="mx-[6px] mt-[6px] rounded-[6px] transition hover:bg-[--w5] px-[8px] py-[12px] flex flex-col items-center gap-[4px] cursor-pointer">
                 {#if $auth.user.avatar_thumb}
                   <img 
                     src={getAvatarUrl($auth.user.avatar_thumb)} 
@@ -607,32 +607,32 @@
             </a>
 
             <!-- Меню -->
-            <div class="p-1.5 mt-1 flex flex-col gap-0.5">
+            <div class="p-[6px] flex flex-col gap-0.5">
               <a 
                 href="/profile/settings" 
                 onclick={() => userMenuVisible = false}
-                class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[10px] transition hover:bg-[--w8] hover:text-[--w] no-underline"
+                class="flex items-center gap-[4px] px-[12px] py-[6px] text-[14px] text-[--w60] rounded-[6px] transition hover:bg-[--w8] hover:text-[--w] no-underline"
               >
                 <Settings size={16} /> 
-                <span>Settings</span>
+                <span>Profile settings</span>
               </a>
               
               {#if isAdmin($auth.user)}
                 <a 
                   href="/admin" 
                   onclick={() => userMenuVisible = false}
-                  class="flex items-center gap-2.5 px-2.5 py-2 text-sm text-[--w60] rounded-[10px] transition hover:bg-[--w8] hover:text-[--w] no-underline"
+                  class="flex items-center gap-[4px] px-[12px] py-[6px] text-[14px] text-[--w60] rounded-[6px] transition hover:bg-[--w8] hover:text-[--w] no-underline"
                 >
                   <Shield size={16} /> 
                   <span>Admin</span>
                 </a>
               {/if}
 
-              <div class="h-px bg-[--w8] my-0.5 mx-1"></div>
+              <div class="h-px bg-[--w8] my-0.5"></div>
 
               <button 
                 onclick={handleLogout}
-                class="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-red-400 rounded-[10px] transition hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                class="flex items-center gap-[4px] px-[12px] py-[6px] text-[14px] text-[--w60] rounded-[6px] transition hover:bg-[--w8] hover:text-[--w] no-underline"
               >
                 <LogOut size={16} /> 
                 <span>Log Out</span>
