@@ -1,6 +1,7 @@
 <script>
   import { getImageUrl } from '$lib/api';
   import { Calendar, Eye } from 'lucide-svelte';
+  import { getDateColorInfo } from '$lib/utils/dateColor';
 
   let { post } = $props();
 
@@ -13,6 +14,15 @@
 
   const formatDate = (d) =>
     new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // 🎨 Smart date color indication
+  const dateColor = $derived(getDateColorInfo(post.created_at));
+
+  const gradientTextStyle = $derived(
+    dateColor.gradient
+      ? `background: ${dateColor.gradient}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
+      : `color: ${dateColor.iconColor};`
+  );
 </script>
 
 <a href="/blog/{post.slug || post._id}" class="group flex flex-col h-full bg-[--w5] rounded-[12px] overflow-hidden transition-all duration-300 hover:bg-[--w8]">
@@ -49,9 +59,16 @@
     {/if}
 
     <div class="mt-auto flex items-center justify-between pt-[12px]">
-      <div class="flex items-center gap-2 text-[--green]">
-        <Calendar size={14} />
-        <span class="text-[14px] font-medium">{formatDate(post.created_at)}</span>
+      <!-- 🎨 Smart date indicator with gradient -->
+      <div class="flex items-center gap-2">
+        <!-- Icon gets the first gradient color -->
+        <span style="color: {dateColor.iconColor}; flex-shrink: 0; display: flex; align-items: center;">
+          <Calendar size={14} />
+        </span>
+        <!-- Date text gets the full gradient -->
+        <span class="text-[14px] font-medium" style={gradientTextStyle}>
+          {formatDate(post.created_at)}
+        </span>
       </div>
       <div class="flex items-center gap-[6px] text-[--w60]">
         <Eye size={14} />
