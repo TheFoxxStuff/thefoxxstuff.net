@@ -12,7 +12,7 @@ import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { API_BASE } from '$lib/api';
 
-const HEARTBEAT_INTERVAL = 30_000;  // держим TTL в Redis
+const HEARTBEAT_INTERVAL = 20_000;  // каждые 20 сек — запас до TTL в Redis
 const RECONNECT_BASE     = 2_000;   // базовая задержка реконнекта
 const MAX_RECONNECT      = 12;
 const DISAPPEAR_DELAY    = 4_000;   // мс — ждём перед тем как убрать юзера из UI
@@ -173,6 +173,7 @@ function createPresenceStore() {
     _ws.onopen = () => {
       _reconnectCount = 0;
       update(s => ({ ...s, connected: true }));
+      // Сразу регистрируем entity (важно после reconnect — entity не должен теряться)
       _startHeartbeat();
     };
 

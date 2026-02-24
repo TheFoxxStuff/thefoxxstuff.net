@@ -35,13 +35,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/presence", tags=["presence"])
 
 # ─── Конфигурация ─────────────────────────────────────────────────────────────
-PRESENCE_TTL        = 75   # TTL одной записи пользователя (сек)
+PRESENCE_TTL        = 90   # TTL одной записи пользователя (сек)
 HEARTBEAT_TIMEOUT   = 70   # Ждём сообщение от клиента не более 70 сек
 PROFILE_CACHE_TTL   = 300  # Кеш профиля 5 мин
 MAX_ONLINE_USERS    = 100  # Лимит в UI-ответе
 
-GRACE_NAVIGATE      = 5    # Сек — при SPA-навигации (code 1001)
-GRACE_CLOSE         = 2    # Сек — при закрытии вкладки (минимум для надёжности)
+GRACE_NAVIGATE      = 8    # Сек — при SPA-навигации (code 1001)
+GRACE_CLOSE         = 5    # Сек — при закрытии/реконнекте
 
 PUBSUB_CHANNEL = "presence_changes"
 
@@ -253,6 +253,9 @@ async def _do_del(redis, user_id: str, entity_type, entity_id, marker: str, grac
     await asyncio.sleep(grace)
     try:
         current = await redis.get(_grace_key(user_id))
+        # Redis может вернуть bytes — декодируем для сравнения
+        if isinstance(current, bytes):
+            current = current.decode()
         if current != marker:
             # Маркер изменился — юзер переподключился, отменяем
             logger.debug(f"Grace cancelled for {user_id} (reconnected)")
