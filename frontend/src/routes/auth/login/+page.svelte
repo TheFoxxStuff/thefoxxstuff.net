@@ -1,7 +1,8 @@
 <script>
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { api } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
+  import { presence } from '$lib/stores/presence.js';
   import { SEO } from '$lib/components';
   import { canonicalUrl } from '$lib/seo.js';
 
@@ -18,7 +19,11 @@
       auth.login(access_token, null);
       const [user, profile] = await Promise.all([api.auth.me(), api.profile.me().catch(() => null)]);
       auth.setUser({ ...user, avatar_thumb: profile?.avatar_thumb || null, avatar_original: profile?.avatar_original || null, display_name: profile?.display_name || user.display_name || "" });
-      goto(user.role === 'admin' ? '/admin' : '/');
+      // Переподключаем WS с токеном — до логина он висел анонимным
+      presence.reconnect();
+      // Сбрасываем кэш всех load() — layout и страницы перезагрузят данные с новым токеном
+      await invalidateAll();
+      await goto(user.role === 'admin' ? '/admin' : '/', { replaceState: true });
     } catch (err) { error = err.message; }
     finally { loading = false; }
   };

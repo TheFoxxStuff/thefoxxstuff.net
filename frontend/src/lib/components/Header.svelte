@@ -1,8 +1,9 @@
 <script>
   import { page } from '$app/stores';
   import { auth, isAdmin } from '$lib/stores/auth.js';
+  import { presence } from '$lib/stores/presence.js';
   import { onMount, tick } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { api, API_BASE } from '$lib/api';
   import { 
     Copy, 
@@ -232,10 +233,12 @@
     userMenuVisible = !userMenuVisible;
   }
 
-  function handleLogout() {
+  async function handleLogout() {
     userMenuVisible = false;
     auth.logout();
-    goto('/');
+    presence.reconnect();
+    await invalidateAll();
+    await goto('/', { replaceState: true });
   }
 
   // === URL аватара ===
