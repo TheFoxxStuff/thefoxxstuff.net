@@ -575,7 +575,7 @@
           <div 
             bind:this={userMenuElement}
             class="user-menu-dropdown backdrop-blur-xl border-[--w12] rounded-[8px] shadow-2xl overflow-hidden" 
-     style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), rgba(0, 0, 0, 0.6);"
+     style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.12)), rgba(0, 0, 0, 0.6);"
           >
             <!-- Профиль -->
             <a 
