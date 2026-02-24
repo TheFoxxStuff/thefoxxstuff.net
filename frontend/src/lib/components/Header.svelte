@@ -583,7 +583,7 @@
               onclick={() => userMenuVisible = false}
               class="block no-underline"
             >
-              <div class="mx-[6px] mt-[6px] rounded-[6px] transition bg-[--2] hover:bg-[--w5] px-[8px] py-[12px] flex flex-col items-center gap-[4px] cursor-pointer">
+              <div class="mx-[6px] mt-[6px] rounded-[6px] transition bg-[--w2] hover:bg-[--w5] px-[8px] py-[12px] flex flex-col items-center gap-[4px] cursor-pointer">
                 {#if $auth.user.avatar_thumb}
                   <img 
                     src={getAvatarUrl($auth.user.avatar_thumb)} 
