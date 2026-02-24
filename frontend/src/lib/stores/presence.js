@@ -296,7 +296,26 @@ function createPresenceStore() {
     update(s => ({ ...s, connected: false }));
   }
 
-  return { subscribe, start, startGlobal, stop };
+  /**
+   * Переподключение с новым токеном (вызывается после логина/логаута).
+   * Закрывает текущий WS и сразу открывает новый с актуальным токеном.
+   */
+  function reconnect() {
+    if (!browser) return;
+    _stopHeartbeat();
+    clearTimeout(_reconnectId);
+    _reconnectId = null;
+    _reconnectCount = 0;
+    if (_ws) {
+      _ws.onclose = null; // отключаем авто-реконнект из старого onclose
+      _ws.close();
+      _ws = null;
+    }
+    _globalStopped = false;
+    _connect();
+  }
+
+  return { subscribe, start, startGlobal, stop, reconnect };
 }
 
 export const presence = createPresenceStore();

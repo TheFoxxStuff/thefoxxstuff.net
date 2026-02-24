@@ -2,10 +2,12 @@
   import { SEO } from "$lib/components";
   import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, generateSlug } from '$lib/api';
+  import { invalidateAll } from '$app/navigation';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
 
   let { data: pageData } = $props();
-  let posts = $state(pageData.posts);
+  // $derived — посты всегда в синхронизации с SvelteKit load() после invalidateAll()
+  let posts = $derived(pageData.posts);
   let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
@@ -26,11 +28,8 @@
   let showSeo = $state(false);
   
   const loadPosts = async () => {
-    try {
-      posts = (await api.blog.list(1, 100)).items;
-    } catch (e) {
-      console.error(e);
-    }
+    // invalidateAll перезапускает +page.js load() — посты обновятся через $derived
+    await invalidateAll();
   };
   
   const resetForm = () => {
@@ -63,7 +62,7 @@
       if (editingId) await api.blog.update(editingId, form);
       else await api.blog.create(form);
       resetForm();
-      loadPosts();
+      await loadPosts();
     } catch (err) {
       error = err.message;
     }
@@ -105,7 +104,7 @@
     if (!confirm('Delete this post?')) return;
     try {
       await api.blog.delete(id);
-      loadPosts();
+      await loadPosts();
     } catch (err) {
       alert(err.message);
     }
