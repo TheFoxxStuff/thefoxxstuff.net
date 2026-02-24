@@ -70,7 +70,7 @@
           {formatDate(post.created_at)}
         </span>
       </div>
-      <div class="flex items-center gap-[6px] text-[--w60]">
+      <div class="flex items-center gap-[4px] text-[--w60]">
         <Eye size={16} />
         <span class="text-[14px]">{post.views} views</span>
       </div>
