@@ -85,7 +85,7 @@
     <section>
       <h3 class="font-display text-2xl tracking-wide mb-4">Contacts</h3>
       <p class="text-dark-400">
-        Email: <a href="mailto:{about.email}" class="text-accent-green hover:underline">{about.email}</a>
+        Email: <a href="/cdn-cgi/l/email-protection#6e150f0c011b1a400b030f070213" class="text-accent-green hover:underline">{about.email}</a>
       </p>
     </section>
     
@@ -112,7 +112,4 @@
       {/if}
       {#if about.social_links.telegram}
         <p>►TELEGRAM: <a href={about.social_links.telegram} target="_blank" rel="noopener" class="text-accent-green hover:underline">{about.social_links.telegram.replace('https://', '')}</a></p>
-      {/if}
-    </div>
-  </section>
-</div>
+      {

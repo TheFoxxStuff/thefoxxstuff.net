@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query, Request
 from fastapi.responses import FileResponse
 from bson import ObjectId
 from datetime import datetime
@@ -668,27 +668,92 @@ async def delete_audio(audio_id: str, admin: dict = Depends(get_current_admin)):
 
 
 @router.get("/audio/file/{path:path}")
-async def serve_audio_file(path: str):
-    """Serve audio file"""
+async def serve_audio_file(path: str, request: Request):
+    """Serve audio file with HTTP Range support for instant browser playback"""
+    from fastapi.responses import Response, StreamingResponse
+
     safe_path = Path(path).as_posix()
     if '..' in safe_path:
         raise HTTPException(400, "Invalid path")
-    
+
     file_path = UPLOAD_DIR / safe_path
     if not file_path.exists():
         raise HTTPException(404, "Audio file not found")
-    
-    # Determine media type
+
     ext = file_path.suffix.lower()
     media_types = {
-        '.mp3': 'audio/mpeg',
+        '.mp3':  'audio/mpeg',
         '.flac': 'audio/flac',
-        '.opus': 'audio/opus',
-        '.ogg': 'audio/ogg',
+        '.opus': 'audio/ogg; codecs=opus',
+        '.ogg':  'audio/ogg',
     }
     media_type = media_types.get(ext, 'application/octet-stream')
-    
-    return FileResponse(file_path, media_type=media_type)
+
+    file_size = file_path.stat().st_size
+    range_header = request.headers.get("range")
+
+    if range_header:
+        # Parse "bytes=start-end"
+        try:
+            range_val = range_header.replace("bytes=", "")
+            start_str, end_str = range_val.split("-")
+            start = int(start_str)
+            end = int(end_str) if end_str else file_size - 1
+        except Exception:
+            raise HTTPException(416, "Invalid Range header")
+
+        if start >= file_size or end >= file_size or start > end:
+            raise HTTPException(
+                status_code=416,
+                detail="Range Not Satisfiable",
+                headers={"Content-Range": f"bytes */{file_size}"}
+            )
+
+        chunk_size = end - start + 1
+
+        async def audio_stream():
+            async with aiofiles.open(file_path, "rb") as f:
+                await f.seek(start)
+                remaining = chunk_size
+                buf = 65536  # 64KB chunks
+                while remaining > 0:
+                    data = await f.read(min(buf, remaining))
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+
+        return StreamingResponse(
+            audio_stream(),
+            status_code=206,
+            media_type=media_type,
+            headers={
+                "Content-Range":  f"bytes {start}-{end}/{file_size}",
+                "Accept-Ranges":  "bytes",
+                "Content-Length": str(chunk_size),
+                "Cache-Control":  "public, max-age=86400",
+            }
+        )
+
+    # Полный файл (без Range)
+    async def full_stream():
+        async with aiofiles.open(file_path, "rb") as f:
+            while True:
+                data = await f.read(65536)
+                if not data:
+                    break
+                yield data
+
+    return StreamingResponse(
+        full_stream(),
+        status_code=200,
+        media_type=media_type,
+        headers={
+            "Accept-Ranges":  "bytes",
+            "Content-Length": str(file_size),
+            "Cache-Control":  "public, max-age=86400",
+        }
+    )
 
 
 @router.post("/audio/write-metadata")

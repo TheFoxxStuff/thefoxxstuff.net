@@ -4,6 +4,7 @@
   import { onMount, onDestroy } from 'svelte';
 
   let audioEl = $state(null);
+  let preloadEl = $state(null); // скрытый элемент для предзагрузки следующего трека
   let currentTime = $state(0);
   let duration = $state(0);
   let prevTrackKey = $state(null);
@@ -16,6 +17,17 @@
   let trackKey = $derived(track ? `${state.release?._id}-${state.currentIndex}` : null);
   let progressPct = $derived(duration > 0 ? (currentTime / duration) * 100 : 0);
 
+  // URL следующего трека для предзагрузки
+  let nextAudioUrl = $derived.by(() => {
+    const tracks = state.tracks;
+    if (!tracks?.length) return null;
+    let nextIdx = state.currentIndex + 1;
+    // Ищем следующий трек с opus
+    while (nextIdx < tracks.length && !tracks[nextIdx]?.audio_opus) nextIdx++;
+    if (nextIdx >= tracks.length) return null;
+    return `${API_BASE}/upload/file/${tracks[nextIdx].audio_opus}`;
+  });
+
   function fmt(s) { if (!s || isNaN(s)) return '0:00'; return `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
   function seek(e) { if (!audioEl || !duration) return; const r = e.currentTarget.getBoundingClientRect(); audioEl.currentTime = Math.max(0, Math.min(((e.clientX - r.left) / r.width) * duration, duration)); }
 
@@ -27,13 +39,32 @@
     }
   }
 
+  // Смена трека — если следующий трек уже preload-ован, свопаем элементы
   $effect(() => {
     if (!audioEl || !audioUrl) return;
     if (trackKey !== prevTrackKey) {
       prevTrackKey = trackKey;
-      audioEl.src = audioUrl;
-      audioEl.load();
+
+      // Проверяем: preloadEl уже загрузил этот URL?
+      if (preloadEl && preloadEl.src === audioUrl && preloadEl.readyState >= 2) {
+        // Своп: берём уже буферизованный источник
+        audioEl.src = audioUrl;
+        audioEl.currentTime = 0;
+      } else {
+        audioEl.src = audioUrl;
+        audioEl.load();
+      }
+
       if (state.isPlaying) audioEl.play().catch(() => {});
+    }
+  });
+
+  // Предзагружаем следующий трек когда текущий начал играть
+  $effect(() => {
+    if (!preloadEl || !nextAudioUrl) return;
+    if (preloadEl.src !== nextAudioUrl) {
+      preloadEl.src = nextAudioUrl;
+      preloadEl.load();
     }
   });
 
@@ -52,6 +83,8 @@
 
 {#if state.visible && track}
   <audio bind:this={audioEl} bind:currentTime bind:duration onended={onEnded} preload="auto"></audio>
+  <!-- Скрытый элемент для предзагрузки следующего трека -->
+  <audio bind:this={preloadEl} preload="auto" style="display:none" aria-hidden="true"></audio>
 
   <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-2rem)] max-w-[540px]">
     <div class="bg-dark-900/95 backdrop-blur-xl border border-dark-700/50 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
