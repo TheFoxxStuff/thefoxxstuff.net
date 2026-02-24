@@ -118,8 +118,8 @@
       
       <form onsubmit={handleSubmit} class="space-y-6">
         <div>
-          <label class="label">Title</label>
-          <input type="text" bind:value={form.title} required class="input" placeholder="Slide title" />
+          <label class="label" for="fl-title-1">Title</label>
+          <input id="fl-title-1" type="text" bind:value={form.title} required class="input" placeholder="Slide title" />
         </div>
         
         <ImageUpload 
@@ -129,8 +129,8 @@
         />
         
         <div>
-          <label class="label">Link (optional)</label>
-          <input type="text" bind:value={form.link} class="input" placeholder="/music/release-id" />
+          <label class="label" for="fl-link-optional-2">Link (optional)</label>
+          <input id="fl-link-optional-2" type="text" bind:value={form.link} class="input" placeholder="/music/release-id" />
         </div>
         
         <div class="flex gap-2">

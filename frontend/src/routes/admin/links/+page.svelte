@@ -28,10 +28,10 @@
       {#if error}<div class="mb-4 p-3 bg-accent-red/10 border border-accent-red/50 rounded-lg text-accent-red text-sm">{error}</div>{/if}
       <form onsubmit={handleSubmit} class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
-          <div><label class="label">Title</label><input type="text" bind:value={form.title} required class="input" /></div>
-          <div><label class="label">URL</label><input type="url" bind:value={form.url} required class="input" /></div>
-          <div><label class="label">Icon (bandcamp, soundcloud, twitter, vk, telegram)</label><input type="text" bind:value={form.icon} class="input" /></div>
-          <div><label class="label">Order</label><input type="number" bind:value={form.order} class="input" /></div>
+          <div><label class="label" for="fl-title-1">Title</label><input id="fl-title-1" type="text" bind:value={form.title} required class="input" /></div>
+          <div><label class="label" for="fl-url-2">URL</label><input id="fl-url-2" type="url" bind:value={form.url} required class="input" /></div>
+          <div><label class="label" for="fl-icon-bandcamp-soundcloud--3">Icon (bandcamp, soundcloud, twitter, vk, telegram)</label><input id="fl-icon-bandcamp-soundcloud--3" type="text" bind:value={form.icon} class="input" /></div>
+          <div><label class="label" for="fl-order-4">Order</label><input id="fl-order-4" type="number" bind:value={form.order} class="input" /></div>
         </div>
         <div class="flex gap-2"><button type="submit" class="btn btn-primary">{editingId ? 'Update' : 'Create'}</button><button type="button" onclick={resetForm} class="btn btn-secondary">Cancel</button></div>
       </form>

@@ -134,13 +134,13 @@
       <form onsubmit={handleSubmit} class="space-y-6">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="label">Title</label>
-            <input type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
+            <label class="label" for="fl-title-1">Title</label>
+            <input id="fl-title-1" type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
           </div>
           <div>
-            <label class="label">Slug (URL)</label>
+            <label class="label" for="fl-slug-url-2">Slug (URL)</label>
             <div class="flex gap-2">
-              <input type="text" bind:value={form.slug} class="input flex-1" placeholder="auto-generated-from-title" />
+              <input id="fl-slug-url-2" type="text" bind:value={form.slug} class="input flex-1" placeholder="auto-generated-from-title" />
               <button type="button" onclick={() => form.slug = generateSlug(form.title)} class="btn btn-secondary text-sm">Generate</button>
             </div>
           </div>
@@ -155,8 +155,8 @@
         />
         
         <div>
-          <label class="label">Excerpt</label>
-          <textarea bind:value={form.excerpt} rows="2" class="textarea" placeholder="Brief description for post preview..."></textarea>
+          <label class="label" for="fl-excerpt-3">Excerpt</label>
+          <textarea id="fl-excerpt-3" bind:value={form.excerpt} rows="2" class="textarea" placeholder="Brief description for post preview..."></textarea>
         </div>
         
         <div>
@@ -176,22 +176,22 @@
           {#if showSeo}
             <div class="mt-4 space-y-4 pl-7">
               <div>
-                <label class="label">Meta Title</label>
-                <input type="text" bind:value={form.meta_title} class="input" placeholder="Custom title for search engines" />
+                <label class="label" for="fl-meta-title-4">Meta Title</label>
+                <input id="fl-meta-title-4" type="text" bind:value={form.meta_title} class="input" placeholder="Custom title for search engines" />
                 <p class="text-xs text-[--w30] mt-1">Leave empty to use post title</p>
               </div>
               
               <div>
-                <label class="label">Meta Description</label>
-                <textarea bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines (150-160 characters recommended)"></textarea>
+                <label class="label" for="fl-meta-description-5">Meta Description</label>
+                <textarea id="fl-meta-description-5" bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines (150-160 characters recommended)"></textarea>
                 {#if form.meta_description}
                   <p class="text-xs text-[--w30] mt-1">{form.meta_description.length}/160 characters</p>
                 {/if}
               </div>
               
               <div>
-                <label class="label">Meta Keywords</label>
-                <input type="text" bind:value={form.meta_keywords} class="input" placeholder="keyword1, keyword2, keyword3" />
+                <label class="label" for="fl-meta-keywords-6">Meta Keywords</label>
+                <input id="fl-meta-keywords-6" type="text" bind:value={form.meta_keywords} class="input" placeholder="keyword1, keyword2, keyword3" />
               </div>
               
               <ImageUpload 

@@ -153,19 +153,19 @@
       <form onsubmit={handleSubmit} class="space-y-6">
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-2">
-            <label class="label">Title</label>
-            <input type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
+            <label class="label" for="fl-title-1">Title</label>
+            <input id="fl-title-1" type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
           </div>
           <div>
-            <label class="label">Year</label>
-            <input type="number" bind:value={form.year} required class="input" />
+            <label class="label" for="fl-year-2">Year</label>
+            <input id="fl-year-2" type="number" bind:value={form.year} required class="input" />
           </div>
         </div>
         
         <div>
-          <label class="label">Slug (URL)</label>
+          <label class="label" for="fl-slug-url-3">Slug (URL)</label>
           <div class="flex gap-2">
-            <input type="text" bind:value={form.slug} class="input flex-1" placeholder="auto-generated-from-title" />
+            <input id="fl-slug-url-3" type="text" bind:value={form.slug} class="input flex-1" placeholder="auto-generated-from-title" />
             <button type="button" onclick={() => form.slug = generateSlug(form.title)} class="btn btn-secondary text-sm">Generate</button>
           </div>
         </div>
@@ -180,12 +180,12 @@
         
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="label">Dimensions (auto-filled)</label>
-            <input type="text" bind:value={form.dimensions} class="input bg-[--w5]" readonly />
+            <label class="label" for="fl-dimensions-auto-filled-4">Dimensions (auto-filled)</label>
+            <input id="fl-dimensions-auto-filled-4" type="text" bind:value={form.dimensions} class="input bg-[--w5]" readonly />
           </div>
           <div>
-            <label class="label">File Size (auto-filled)</label>
-            <input type="text" bind:value={form.file_size} class="input bg-[--w5]" readonly />
+            <label class="label" for="fl-file-size-auto-filled-5">File Size (auto-filled)</label>
+            <input id="fl-file-size-auto-filled-5" type="text" bind:value={form.file_size} class="input bg-[--w5]" readonly />
           </div>
         </div>
         
@@ -206,21 +206,21 @@
           {#if showSeo}
             <div class="mt-4 space-y-4 pl-7">
               <div>
-                <label class="label">Meta Title</label>
-                <input type="text" bind:value={form.meta_title} class="input" placeholder="Custom title for search engines" />
+                <label class="label" for="fl-meta-title-6">Meta Title</label>
+                <input id="fl-meta-title-6" type="text" bind:value={form.meta_title} class="input" placeholder="Custom title for search engines" />
               </div>
               
               <div>
-                <label class="label">Meta Description</label>
-                <textarea bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines"></textarea>
+                <label class="label" for="fl-meta-description-7">Meta Description</label>
+                <textarea id="fl-meta-description-7" bind:value={form.meta_description} rows="2" class="textarea" placeholder="Description for search engines"></textarea>
                 {#if form.meta_description}
                   <p class="text-xs text-[--w30] mt-1">{form.meta_description.length}/160 characters</p>
                 {/if}
               </div>
               
               <div>
-                <label class="label">Meta Keywords</label>
-                <input type="text" bind:value={form.meta_keywords} class="input" placeholder="keyword1, keyword2, keyword3" />
+                <label class="label" for="fl-meta-keywords-8">Meta Keywords</label>
+                <input id="fl-meta-keywords-8" type="text" bind:value={form.meta_keywords} class="input" placeholder="keyword1, keyword2, keyword3" />
               </div>
               
               <ImageUpload 
