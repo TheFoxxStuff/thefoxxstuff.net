@@ -92,8 +92,8 @@ export function getDateColorInfo(dateStr) {
   const colorStart = toHex(colorAtDay(startDay));
   const colorEnd   = toHex(colorAtDay(endDay));
 
-  // Иконка — цвет в точной позиции поста (без окна)
-  const iconColor = toHex(colorAtDay(diffDays));
+  // Иконка — цвет левого края градиента (startDay)
+  const iconColor = colorStart;
 
   const label =
     diffDays < 2  ? 'fresh'  :
