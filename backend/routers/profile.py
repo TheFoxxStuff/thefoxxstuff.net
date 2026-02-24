@@ -166,6 +166,8 @@ async def upload_avatar(
         {"$set": {"avatar_original": avatar_original, "avatar_thumb": avatar_thumb}},
     )
 
+    # FIX: инвалидируем кэш presence
+    await invalidate_profile_cache(str(user["_id"]))
     return {
         "avatar_original": avatar_original,
         "avatar_thumb": avatar_thumb,
@@ -190,4 +192,6 @@ async def delete_avatar(user: dict = Depends(get_current_user)):
         {"_id": user["_id"]},
         {"$set": {"avatar_original": None, "avatar_thumb": None}},
     )
+    # FIX: инвалидируем кэш presence
+    await invalidate_profile_cache(str(user["_id"]))
     return {"deleted": True}

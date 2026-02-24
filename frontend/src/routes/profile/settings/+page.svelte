@@ -7,6 +7,7 @@
   import { canonicalUrl } from '$lib/seo.js';
   import { AvatarCropper } from '$lib/components';
   import { Camera, Save, Trash2, Check, LogOut, Shield } from 'lucide-svelte';
+  import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
 
@@ -39,6 +40,8 @@
     try {
       profile = await api.profile.update({ display_name: displayName, bio });
       auth.updateUser({ display_name: displayName });
+      // FIX: инвалидируем кэш профиля в presence для других юзеров
+      presence.reconnect();
       success = 'Saved!';
       setTimeout(() => success = '', 3000);
     } catch (e) { error = e.message; }
@@ -60,6 +63,8 @@
       const result = await api.profile.uploadAvatar(file, cx, cy, cs);
       profile = { ...profile, avatar_original: result.avatar_original, avatar_thumb: result.avatar_thumb };
       auth.updateUser({ avatar_thumb: result.avatar_thumb, avatar_original: result.avatar_original });
+      // FIX: инвалидируем кэш профиля в presence
+      presence.reconnect();
       cropFile = null;
       success = 'Avatar updated!';
       setTimeout(() => success = '', 3000);
@@ -77,6 +82,7 @@
       await api.profile.deleteAvatar();
       profile = { ...profile, avatar_original: null, avatar_thumb: null };
       auth.updateUser({ avatar_thumb: null, avatar_original: null });
+      presence.reconnect();
       success = 'Avatar removed';
       setTimeout(() => success = '', 3000);
     } catch (e) { error = e.message; }

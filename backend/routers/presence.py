@@ -80,6 +80,16 @@ def _serialize_for_response(data: dict) -> dict:
         "role":         data["role"],
     }
 
+# ─── Инвалидация кэша профиля (вызывается после обновления профиля) ──────────
+async def invalidate_profile_cache(user_id: str):
+    """Удаляет кэш профиля из Redis — следующий presence heartbeat подтянет свежие данные."""
+    redis = get_redis()
+    if redis:
+        try:
+            await redis.delete(_profile_key(user_id))
+        except Exception as e:
+            logger.debug(f"Failed to invalidate profile cache for {user_id}: {e}")
+
 # ─── Получение пользователя по токену ────────────────────────────────────────
 async def _get_user(token: str) -> Optional[dict]:
     if not token:

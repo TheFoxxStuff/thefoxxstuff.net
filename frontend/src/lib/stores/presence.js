@@ -15,7 +15,7 @@ import { API_BASE } from '$lib/api';
 const HEARTBEAT_INTERVAL = 20_000;  // каждые 20 сек — запас до TTL в Redis
 const RECONNECT_BASE     = 2_000;   // базовая задержка реконнекта
 const MAX_RECONNECT      = 12;
-const DISAPPEAR_DELAY    = 4_000;   // мс — ждём перед тем как убрать юзера из UI
+const DISAPPEAR_DELAY    = 9_000;   // мс — ждём перед тем как убрать юзера из UI (должно быть > GRACE_NAVIGATE на сервере = 8 сек)
 
 function wsUrl(token) {
   const base = API_BASE.replace(/^http/, 'ws');
@@ -94,16 +94,23 @@ function createPresenceStore() {
 
     if (onlineShrunk || viewingShrunk) {
       // Кто-то пропал — держим дебаунс, вдруг он переподключается
+      // FIX: всегда сбрасываем таймер перед установкой нового
       clearTimeout(_disappearTimer);
       _pendingUpdate = msg;
 
       // Сразу добавляем новых юзеров (без задержки), но не убираем старых
+      // FIX: Sets теперь реально используются для обновления данных пользователей
       const onlineIds  = new Set(newOnline.map(u => u.user_id));
       const viewingIds = new Set(newViewing.map(u => u.user_id));
 
       // Мёрджим: старые остаются пока не истечёт таймер, новые добавляются сразу
-      const mergedOnline  = [...prevOnline];
-      const mergedViewing = [...prevViewing];
+      // FIX: обновляем данные существующих пользователей (аватар мог смениться)
+      const mergedOnline  = prevOnline.map(u =>
+        onlineIds.has(u.user_id) ? (newOnline.find(n => n.user_id === u.user_id) || u) : u
+      );
+      const mergedViewing = prevViewing.map(u =>
+        viewingIds.has(u.user_id) ? (newViewing.find(n => n.user_id === u.user_id) || u) : u
+      );
 
       newOnline.forEach(u => {
         if (!mergedOnline.find(o => o.user_id === u.user_id)) mergedOnline.push(u);
@@ -219,6 +226,9 @@ function createPresenceStore() {
       if (document.hidden) {
         _stopHeartbeat();
       } else {
+        // FIX: сбрасываем счётчик реконнектов при возврате на вкладку
+        // Без этого после MAX_RECONNECT попыток соединение не восстанавливается
+        _reconnectCount = 0;
         if (!_ws || _ws.readyState !== WebSocket.OPEN) {
           _connect();
         } else {
@@ -285,7 +295,12 @@ function createPresenceStore() {
     _globalStarted = false;
     _stopHeartbeat();
     clearTimeout(_disappearTimer);
+    _disappearTimer = null;
+    _pendingUpdate  = null;
     if (_reconnectId) { clearTimeout(_reconnectId); _reconnectId = null; }
+    // FIX: сбрасываем entity при остановке — не должны пережить stop()
+    _entityType = null;
+    _entityId   = null;
     if (_ws) {
       if (_ws.readyState === WebSocket.OPEN) {
         _ws.close(1000, 'stopped');
@@ -294,7 +309,7 @@ function createPresenceStore() {
       }
       _ws = null;
     }
-    update(s => ({ ...s, connected: false }));
+    update(s => ({ ...s, connected: false, online: [], onlineCount: 0, viewing: [], viewingCount: 0, ready: false }));
   }
 
   /**
@@ -312,6 +327,11 @@ function createPresenceStore() {
       _ws.close();
       _ws = null;
     }
+    // FIX: сбрасываем entity при reconnect (logout/login меняет юзера)
+    // entity тоже сбрасываем — после логина/логаута страница обычно меняется
+    _entityType = null;
+    _entityId   = null;
+    update(s => ({ ...s, viewing: [], viewingCount: 0 }));
     _globalStopped = false;
     _connect();
   }
