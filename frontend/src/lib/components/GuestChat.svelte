@@ -217,7 +217,7 @@
                   />
                 </a>
               {:else}
-                <a href="/profile/{group.username}" class="block w-9 h-9 rounded-full bg-dark-800 flex items-center justify-center text-dark-500 text-xs font-bold uppercase">
+                <a href="/profile/{group.username}" class="block w-9 h-9 rounded-full bg-[--w8] flex items-center justify-center text-[--w50] text-xs font-bold uppercase">
                   {group.username.charAt(0)}
                 </a>
               {/if}
@@ -248,7 +248,7 @@
       {#if !isAtBottom && messages.length > 0}
         <button
           onclick={scrollToBottom}
-          class="sticky bottom-2 left-1/2 -translate-x-1/2 bg-dark-800 border border-[--w12] text-xs text-[--w60] px-3 py-1 rounded-full hover:text-[--w] transition z-10"
+          class="sticky bottom-2 left-1/2 -translate-x-1/2 bg-[--w8] border border-[--w12] text-xs text-[--w60] px-3 py-1 rounded-full hover:text-[--w] transition z-10"
         >
           ↓ New messages
         </button>

@@ -164,11 +164,11 @@
   </div>
 
   <!-- Tabs -->
-  <div class="flex gap-1 mb-6 bg-dark-900 p-1 rounded-lg w-fit">
-    <button onclick={() => activeTab = 'images'} class="px-5 py-2 rounded-md text-sm font-medium transition {activeTab === 'images' ? 'bg-dark-700 text-white' : 'text-dark-400 hover:text-white'}">
+  <div class="flex gap-1 mb-6 p-1 rounded-lg w-fit bg-[--w5]">
+    <button onclick={() => activeTab = 'images'} class="px-5 py-2 rounded-md text-sm font-medium transition {activeTab === 'images' ? 'bg-[--w12] text-[--w]' : 'text-[--w60] hover:text-[--w]'}">
       🖼 Images ({images.total})
     </button>
-    <button onclick={() => activeTab = 'audio'} class="px-5 py-2 rounded-md text-sm font-medium transition {activeTab === 'audio' ? 'bg-dark-700 text-white' : 'text-dark-400 hover:text-white'}">
+    <button onclick={() => activeTab = 'audio'} class="px-5 py-2 rounded-md text-sm font-medium transition {activeTab === 'audio' ? 'bg-[--w12] text-[--w]' : 'text-[--w60] hover:text-[--w]'}">
       🎵 Audio ({audioFiles.length})
     </button>
   </div>
@@ -205,14 +205,14 @@
 
     {#if loadingImages}
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {#each Array(12) as _}<div class="aspect-square bg-dark-800 rounded-lg animate-pulse"></div>{/each}
+        {#each Array(12) as _}<div class="aspect-square rounded-lg animate-pulse bg-[--w8]"></div>{/each}
       </div>
     {:else}
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {#each images.items as img}
           <button
             onclick={() => selectedImage = selectedImage?._id === img._id ? null : img}
-            class="group aspect-square bg-dark-800 rounded-lg overflow-hidden relative border-2 transition
+            class="group aspect-square rounded-lg overflow-hidden relative border-2 bg-[--w8] transition
               {selectedImage?._id === img._id ? 'border-accent-green' : 'border-transparent hover:border-dark-600'}"
           >
             {#if thumbUrl(img)}
@@ -238,7 +238,7 @@
       {#if images.pages > 1}
         <div class="flex items-center justify-center gap-2 mt-6">
           {#each Array(images.pages) as _, i}
-            <button onclick={() => changePage(i+1)} class="px-3 py-1 text-sm rounded-lg {imgPage === i+1 ? 'bg-accent-green text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-white'}">{i+1}</button>
+            <button onclick={() => changePage(i+1)} class="px-3 py-1 text-sm rounded-lg {imgPage === i+1 ? 'bg-accent-green text-dark-950' : 'bg-[--w8] text-[--w60] hover:text-[--w]'}">{i+1}</button>
           {/each}
         </div>
       {/if}
@@ -248,7 +248,7 @@
     {#if selectedImage}
       <div class="card p-4 mt-4">
         <div class="flex gap-4">
-          <div class="w-32 h-32 bg-dark-800 rounded-lg overflow-hidden flex-shrink-0">
+          <div class="w-32 h-32 rounded-lg bg-[--w8] overflow-hidden flex-shrink-0">
             {#if thumbUrl(selectedImage)}<img src={thumbUrl(selectedImage)} alt="" class="w-full h-full object-cover" />{/if}
           </div>
           <div class="flex-1 text-sm space-y-1">
@@ -281,7 +281,7 @@
     {#if loadingAudio}
       <div class="space-y-2">
         {#each Array(6) as _}
-          <div class="h-16 bg-dark-800 rounded-lg animate-pulse"></div>
+          <div class="h-16 rounded-lg animate-pulse bg-[--w8]"></div>
         {/each}
       </div>
     {:else if audioFiles.length === 0}

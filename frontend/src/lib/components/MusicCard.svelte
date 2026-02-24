@@ -12,7 +12,7 @@
 </script>
 
 <a href="/music/{release.slug || release._id}" class="block group rounded-[8px] px-[18px] py-[18px] bg-[--w5] hover:bg-[--w8] duration-100">
-  <div class="aspect-square bg-dark-800 rounded-[8px] overflow-hidden mb-[14px] relative">
+  <div class="aspect-square rounded-[8px] overflow-hidden bg-[--w8] mb-[14px] relative">
     {#if coverUrl}
       <img loading={eager ? 'eager' : 'lazy'} src={coverUrl} alt={release.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
     {:else}

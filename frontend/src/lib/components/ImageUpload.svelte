@@ -89,7 +89,7 @@
     {:else if previewUrl}
       <div class="relative">
         <img src={previewUrl} alt="Preview" class="max-h-48 rounded-lg mx-auto" />
-        <button type="button" onclick={clearImage} class="absolute top-2 right-2 p-1 bg-dark-900/80 rounded-full hover:bg-accent-red/80 transition-colors">
+        <button type="button" onclick={clearImage} class="absolute top-2 right-2 p-1 rounded-full hover:bg-accent-red/80 bg-[--w12] transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>

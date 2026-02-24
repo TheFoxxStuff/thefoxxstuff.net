@@ -7,6 +7,7 @@
   import { onMount } from 'svelte';
   import { auth } from '$lib/stores/auth.js';
   import { presence } from '$lib/stores/presence.js';
+  import { theme } from '$lib/stores/theme.js';
   import { api } from '$lib/api';
   let { children } = $props();
 
@@ -34,6 +35,11 @@
 
     // Presence запускается один раз на весь сеанс
     presence.startGlobal();
+
+    // Подписываемся на тему — store уже применил класс при инициализации,
+    // subscribe держит реактивность на случай системных изменений
+    const unsubTheme = theme.subscribe(() => {});
+    return unsubTheme;
   });
 </script>
 

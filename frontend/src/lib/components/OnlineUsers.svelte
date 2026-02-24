@@ -27,7 +27,7 @@
         <a
           href="/profile/{user.username}"
           title="{user.display_name || user.username}"
-          class="relative block rounded-full ring-2 ring-[#080808] hover:z-10 transition-transform hover:scale-110"
+          class="relative block rounded-full ring-2 ring-[--ring] hover:z-10 transition-transform hover:scale-110"
           style="margin-left: {i === 0 ? 0 : -8}px; z-index: {visible.length - i};"
           in:fly={{ x: -8, duration: 200 }}
           out:fade={{ duration: 150 }}
@@ -47,7 +47,7 @@
       {/each}
       {#if rest > 0}
         <div
-          class="w-7 h-7 rounded-full bg-[--w8] ring-2 ring-[#080808] flex items-center justify-center text-[10px] text-[--w60] font-medium"
+          class="w-7 h-7 rounded-full bg-[--w8] ring-2 ring-[--ring] flex items-center justify-center text-[10px] text-[--w60] font-medium"
           style="margin-left: -8px;"
           in:fade={{ duration: 150 }}
         >

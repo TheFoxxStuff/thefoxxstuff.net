@@ -78,14 +78,14 @@
       {#each images as img, i}
         <div class="relative group aspect-square">
           <img src={getImageUrl(img, 'thumb')} alt="" class="w-full h-full object-cover rounded-lg" />
-          <div class="absolute inset-0 bg-dark-950/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 rounded-lg">
-            <button type="button" onclick={() => moveImage(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-dark-700 rounded disabled:opacity-30" title="Move left">
+          <div class="absolute inset-0 bg-[--bg] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 rounded-lg">
+            <button type="button" onclick={() => moveImage(i, i - 1)} disabled={i === 0} class="p-1 rounded disabled:opacity-30 hover:bg-[--w8]" title="Move left">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
             </button>
             <button type="button" onclick={() => removeImage(i)} class="p-1 hover:bg-accent-red/80 rounded" title="Remove">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            <button type="button" onclick={() => moveImage(i, i + 1)} disabled={i === value.length - 1} class="p-1 hover:bg-dark-700 rounded disabled:opacity-30" title="Move right">
+            <button type="button" onclick={() => moveImage(i, i + 1)} disabled={i === value.length - 1} class="p-1 rounded disabled:opacity-30 hover:bg-[--w8]" title="Move right">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>

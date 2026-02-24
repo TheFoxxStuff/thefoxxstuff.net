@@ -13,7 +13,7 @@
 </script>
 
 <a href="/arts/{artwork.slug || artwork._id}" class="block group">
-  <div class="aspect-square bg-dark-800 rounded-xl overflow-hidden">
+  <div class="aspect-square rounded-xl overflow-hidden bg-[--w8]">
     {#if imageUrl}
       <img
         loading="lazy"

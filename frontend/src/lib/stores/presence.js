@@ -85,26 +85,36 @@ function createPresenceStore() {
     const newOnline  = msg.online  ?? [];
     const newViewing = msg.viewing ?? [];
 
-    const current    = get(store);
-    const prevOnline  = current.online  ?? [];
-    const prevViewing = current.viewing ?? [];
+    const current     = get(store);
+    // Сравниваем с реальным серверным состоянием из _pendingUpdate (если есть),
+    // а не с мёрдженным UI-массивом — иначе debounce-мёрдж раздувает prevOnline
+    // и следующий вошедший юзер ложно попадает в ветку "shrunk" → задержка 9 сек
+    const baseOnline  = _pendingUpdate ? (_pendingUpdate.online  ?? []) : (current.online  ?? []);
+    const baseViewing = _pendingUpdate ? (_pendingUpdate.viewing ?? []) : (current.viewing ?? []);
 
-    const onlineShrunk  = newOnline.length  < prevOnline.length;
-    const viewingShrunk = newViewing.length < prevViewing.length;
+    // Новые юзеры которых ещё нет ни в pending ни в текущем состоянии
+    const baseOnlineIds  = new Set(baseOnline.map(u => u.user_id));
+    const baseViewingIds = new Set(baseViewing.map(u => u.user_id));
+    const hasNewOnline   = newOnline.some(u  => !baseOnlineIds.has(u.user_id));
+    const hasNewViewing  = newViewing.some(u => !baseViewingIds.has(u.user_id));
+
+    // Сравниваем с серверным базисом — не с мёрдженным UI
+    const onlineShrunk  = newOnline.length  < baseOnline.length;
+    const viewingShrunk = newViewing.length < baseViewing.length;
 
     if (onlineShrunk || viewingShrunk) {
       // Кто-то пропал — держим дебаунс, вдруг он переподключается
-      // FIX: всегда сбрасываем таймер перед установкой нового
       clearTimeout(_disappearTimer);
       _pendingUpdate = msg;
 
-      // Сразу добавляем новых юзеров (без задержки), но не убираем старых
-      // FIX: Sets теперь реально используются для обновления данных пользователей
       const onlineIds  = new Set(newOnline.map(u => u.user_id));
       const viewingIds = new Set(newViewing.map(u => u.user_id));
 
-      // Мёрджим: старые остаются пока не истечёт таймер, новые добавляются сразу
-      // FIX: обновляем данные существующих пользователей (аватар мог смениться)
+      // Мёрджим UI: старые остаются пока таймер не выйдет, новые добавляются сразу
+      // Обновляем данные существующих юзеров (аватар/имя могли смениться)
+      const prevOnline  = current.online  ?? [];
+      const prevViewing = current.viewing ?? [];
+
       const mergedOnline  = prevOnline.map(u =>
         onlineIds.has(u.user_id) ? (newOnline.find(n => n.user_id === u.user_id) || u) : u
       );
@@ -136,11 +146,31 @@ function createPresenceStore() {
         }
       }, DISAPPEAR_DELAY);
 
-    } else {
-      // Кто-то пришёл или ничего не изменилось — применяем мгновенно
-      clearTimeout(_disappearTimer);
-      _pendingUpdate = null;
+    } else if (hasNewOnline || hasNewViewing) {
+      // Кто-то новый пришёл — показываем МГНОВЕННО, не ждём таймер
+      // Важно: НЕ отменяем существующий _disappearTimer — уходящий юзер
+      // всё ещё должен исчезнуть. Просто обновляем _pendingUpdate с новым юзером.
+      if (_pendingUpdate) {
+        // Обновляем pending state: добавляем нового юзера чтобы он не пропал
+        // когда таймер сработает и применит _pendingUpdate
+        _pendingUpdate = {
+          ...msg,
+          // Pending уже содержит актуальный серверный state — просто обновляем
+        };
+      }
       _commitUpdate(msg);
+
+    } else {
+      // Ничего не изменилось (heartbeat/move без смены состава)
+      if (!_pendingUpdate) {
+        // Нет pending — применяем мгновенно
+        _commitUpdate(msg);
+      }
+      // Если есть pending — не трогаем UI, pending перезапишется когда таймер выйдет
+      // Но обновляем _pendingUpdate чтобы данные были свежими
+      if (_pendingUpdate) {
+        _pendingUpdate = msg;
+      }
     }
   }
 

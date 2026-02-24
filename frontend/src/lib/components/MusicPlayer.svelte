@@ -87,15 +87,15 @@
   <audio bind:this={preloadEl} preload="auto" style="display:none" aria-hidden="true"></audio>
 
   <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-2rem)] max-w-[540px]">
-    <div class="bg-dark-900/95 backdrop-blur-xl border border-dark-700/50 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
+    <div class="backdrop-blur-xl border border-[--w12] bg-[var(--bg)] rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
       <!-- Progress -->
-      <div class="h-1 bg-dark-800 cursor-pointer group/prog relative" onclick={seek} onkeydown={(e) => e.key === "Enter" && seek(e)} role="slider" tabindex="0" aria-label="Seek" aria-valuenow={currentTime} aria-valuemax={duration}>
+      <div class="h-1 bg-[--w12] cursor-pointer group/prog relative" onclick={seek} onkeydown={(e) => e.key === "Enter" && seek(e)} role="slider" tabindex="0" aria-label="Seek" aria-valuenow={currentTime} aria-valuemax={duration}>
         <div class="h-full bg-accent-green transition-[width] duration-100" style="width:{progressPct}%"></div>
       </div>
 
       <div class="flex items-center gap-3 px-3 py-2.5">
         <!-- Cover -->
-        <a href="/music/{state.release?.slug || state.release?._id}" class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-dark-800 block">
+        <a href="/music/{state.release?.slug || state.release?._id}" class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-[--w8] block">
           {#if coverUrl}<img src={coverUrl} alt="" class="w-full h-full object-cover" />
           {:else}<div class="w-full h-full flex items-center justify-center text-dark-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13" /></svg></div>{/if}
         </a>
@@ -140,7 +140,7 @@
               {/if}
             </button>
             {#if showVolume}
-              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-dark-800 border border-dark-700 rounded-lg p-2 shadow-xl">
+              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[--select] border border-[--w12] rounded-lg p-2 shadow-xl">
                 <input type="range" min="0" max="1" step="0.01" value={state.volume} oninput={(e) => player.setVolume(parseFloat(e.target.value))}
                   class="w-20 h-1 accent-green-400 cursor-pointer" style="writing-mode: horizontal-tb;" />
               </div>

@@ -38,7 +38,7 @@
         <a
           href="/profile/{user.username}"
           title="{user.display_name || user.username}"
-          class="relative block rounded-full ring-2 ring-[#080808] hover:z-20 hover:scale-110 transition-transform duration-150"
+          class="relative block rounded-full ring-2 ring-[--ring] hover:z-20 hover:scale-110 transition-transform duration-150"
           style="margin-left: {i === 0 ? 0 : -7}px; z-index: {MAX_AVATARS - i};"
           in:fly={{ x: -10, duration: 200, delay: i * 30 }}
           out:fade={{ duration: 150 }}
@@ -63,7 +63,7 @@
 
       {#if rest > 0}
         <div
-          class="w-7 h-7 rounded-full bg-[--w8] ring-2 ring-[#080808] flex items-center justify-center text-[9px] text-[--w50] font-medium"
+          class="w-7 h-7 rounded-full bg-[--w8] ring-2 ring-[--ring] flex items-center justify-center text-[9px] text-[--w50] font-medium"
           style="margin-left: -7px; z-index: 0;"
           in:fade={{ duration: 150 }}
         >

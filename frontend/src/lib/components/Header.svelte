@@ -15,8 +15,11 @@
     Search, 
     X, 
     ChevronDown, 
-    User 
+    User,
+    Sun,
+    Moon
   } from 'lucide-svelte';
+  import { theme, toggleTheme } from '$lib/stores/theme.js';
 
   // === Константы ===
   const NAV_ITEMS = [
@@ -347,7 +350,7 @@
       position: absolute;
       inset: 0;
       border-radius: 0.5rem;
-      background: rgba(255,255,255,0.04);
+      background: var(--w5);
       opacity: 0;
       transition: opacity 150ms;
       z-index: -1;
@@ -531,6 +534,19 @@
             </span>
           </button>
 
+          <!-- Тема -->
+          <button
+            onclick={toggleTheme}
+            title={$theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+            class="flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-[--w60] hover:text-[--w] hover:bg-[--w8] transition shrink-0"
+          >
+            {#if $theme === 'dark'}
+              <Sun size={16} />
+            {:else}
+              <Moon size={16} />
+            {/if}
+          </button>
+
           <!-- Аутентификация -->
           <div class="flex items-center shrink-0 ml-[4px]">
             {#if authChecking}
@@ -578,7 +594,7 @@
           <div 
             bind:this={userMenuElement}
             class="user-menu-dropdown backdrop-blur-[20px] border-[--w12] rounded-[8px] shadow-2xl overflow-hidden" 
-     style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.12)), rgba(0, 0, 0, 0.9);"
+     style="background: var(--select); border: 1px solid var(--w12);"
           >
             <!-- Профиль -->
             <a 

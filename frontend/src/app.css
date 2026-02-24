@@ -5,7 +5,7 @@
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-50; }
   .btn-primary { @apply bg-accent-green text-dark-950 hover:bg-accent-green/90; }
-  .btn-secondary { @apply bg-dark-800 text-white border border-dark-700 hover:bg-dark-700; }
+  .btn-secondary { background: var(--w8); color: var(--w); border: 1px solid var(--w12); } .btn-secondary:hover { background: var(--w12); }
   .btn-breadcrumb { @apply inline-flex items-center justify-center gap-[6px] px-[12px] py-[6px] text-[14px] font-medium transition-all rounded-[8px] disabled:opacity-5 hover:bg-[--w5] }
   .btn-danger { @apply bg-accent-red text-white hover:bg-accent-red/90; }
   .card { background: var(--w5); border: 1px solid var(--w8); border-radius: 0.75rem; overflow: hidden; }
@@ -13,19 +13,28 @@
   .input { @apply w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent-green/50; background: var(--w8); border: 1px solid var(--w12); color: var(--w); }
   .textarea { @apply w-full px-4 py-3 rounded-lg focus:outline-none resize-none; background: var(--w8); border: 1px solid var(--w12); color: var(--w); }
   .label { @apply block text-sm font-medium mb-1; color: var(--w60); }
-  .nav-link { @apply px-4 py-2 text-sm font-medium text-dark-400 hover:text-white transition-colors rounded-lg; }
-  .nav-link-active { @apply bg-dark-800 text-white; }
-  .badge { @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-dark-700 bg-dark-800/50; }
-  .tag { @apply px-3 py-1 text-sm rounded-lg bg-dark-800 border border-dark-700 text-dark-400 hover:text-white hover:border-dark-500 transition-colors cursor-pointer; }
-  .tag-active { @apply bg-dark-700 text-white border-dark-600; }
-  .admin-link { @apply flex items-center gap-3 px-4 py-3 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors; }
-  .admin-link-active { @apply bg-dark-800 text-white; }
+  .nav-link { @apply px-4 py-2 text-sm font-medium transition-colors rounded-lg; color: var(--w60); } .nav-link:hover { color: var(--w); }
+  .nav-link-active { background: var(--w8); color: var(--w); }
+  .badge { @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full; border: 1px solid var(--w12); background: var(--w8); }
+  .tag { @apply px-3 py-1 text-sm rounded-lg transition-colors cursor-pointer; background: var(--w8); border: 1px solid var(--w12); color: var(--w60); } .tag:hover { color: var(--w); border-color: var(--w18); }
+  .tag-active { background: var(--w12); color: var(--w); border-color: var(--w18); }
+  .admin-link { @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-colors; color: var(--w60); } .admin-link:hover { color: var(--w); background: var(--w8); }
+  .admin-link-active { background: var(--w8); color: var(--w); }
   .filter { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-50 bg-[--w5] text-[--w60] hover:text-[--w] hover:bg-[--w8]; }
   .search { @apply  w-full focus:outline-none focus:border-[--w];}
 }
 
 @layer utilities {
   .text-gradient { @apply bg-gradient-to-r from-accent-green to-accent-cyan bg-clip-text text-transparent; }
+}
+
+/* ── Smooth theme transitions ───────────────────────────────── */
+/* Применяем только к элементам которые реально меняют цвет при смене темы */
+body,
+header, nav, main, footer, aside, section, article,
+.card, .input, .textarea, .btn, .badge, .tag,
+a, button, input, textarea, select {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 @font-face {
@@ -45,29 +54,69 @@
 }
 
 :root {
-  --bg: rgb(17, 17, 17);
-  --w: #FFFFFF;
-  --w60: hsl(0, 0%, 100%, 60%);
-  --w18: hsl(0, 0%, 100%, 18%);
-  --w12: hsl(0, 0%, 100%, 12%);
-  --w8: hsl(0, 0%, 100%, 8%);
-  --w5: hsl(0, 0%, 100%, 5%);
-  --header: rgba(6, 6, 6, 0.8);
-  --purple: #6D07EE;
-  --green: #73EE07;
-  --blue: #47ADFF;
-  --b: #202020;
+  color-scheme: dark;
+
+  /* ── Dark theme (default) ─────────────────────────────── */
+  --bg:     rgb(17, 17, 17);
+  --w:      #FFFFFF;
+  --w80:    rgba(255, 255, 255, 0.80);
+  --w60:    rgba(255, 255, 255, 0.60);
+  --w50:    rgba(255, 255, 255, 0.50);
+  --w40:    rgba(255, 255, 255, 0.40);
+  --w30:    rgba(255, 255, 255, 0.30);
+  --w18:    rgba(255, 255, 255, 0.18);
+  --w12:    rgba(255, 255, 255, 0.12);
+  --w8:     rgba(255, 255, 255, 0.08);
+  --w5:     rgba(255, 255, 255, 0.05);
+  --header: rgba(6, 6, 6, 0.80);
   --select: rgba(6, 6, 6, 0.86);
-  --none: rgba(0, 0, 0, 0);
+  --none:   rgba(0, 0, 0, 0);
+  --purple: #6D07EE;
+  --green:  #73EE07;
+  --blue:   #47ADFF;
+  --b:      #111111;
+  /* avatar ring — matches page bg */
+  --ring:   #111111;
+  /* scrollbar */
+  --sb-track: #111;
+  --sb-thumb: #7e7e7e;
+  --sb-border: #111;
+}
+
+/* ── Light theme ─────────────────────────────────────────── */
+html.light {
+  color-scheme: light;
+
+  --bg:     #f0efeb;
+  --w:      #111111;
+  --w80:    rgba(0, 0, 0, 0.80);
+  --w60:    rgba(0, 0, 0, 0.55);
+  --w50:    rgba(0, 0, 0, 0.45);
+  --w40:    rgba(0, 0, 0, 0.38);
+  --w30:    rgba(0, 0, 0, 0.30);
+  --w18:    rgba(0, 0, 0, 0.16);
+  --w12:    rgba(0, 0, 0, 0.10);
+  --w8:     rgba(0, 0, 0, 0.07);
+  --w5:     rgba(0, 0, 0, 0.04);
+  --header: rgba(240, 239, 235, 0.85);
+  --select: rgba(240, 239, 235, 0.96);
+  --none:   rgba(0, 0, 0, 0);
+  --purple: #5b05c7;
+  --green:  #4dbd00;
+  --blue:   #2563eb;
+  --b:      #f0efeb;
+  --ring:   #f0efeb;
+  --sb-track: #dddbd5;
+  --sb-thumb: #aaa9a3;
+  --sb-border: #dddbd5;
 }
 
 html {
   scrollbar-gutter: stable;
 }
 ::selection {
-  background: rgb(255, 255, 255, 0.10);
+  background-color: rgba(136, 255, 0, 0.12);
   color: #88ff00;
-  background-color: #88ff001f;
   text-shadow: none;
 }
 
@@ -76,17 +125,18 @@ html {
 }
 
 *::-webkit-scrollbar-track {
-  background: #111;
+  background: var(--sb-track);
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #7e7e7e;
+  background-color: var(--sb-thumb);
   border-radius: 20px;
-  border: 3px solid #111;
+  border: 3px solid var(--sb-border);
 }
 
 body {
   font-family: 'Golos-Regular';
-  color:#73EE07;
-  background-color: #47ADFF;
+  background-color: var(--bg);
+  color: var(--w);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }

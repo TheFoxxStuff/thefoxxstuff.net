@@ -12,7 +12,7 @@
 {#if release}
 <section class="card p-6">
   <div class="flex flex-col md:flex-row gap-6">
-    <div class="w-full md:w-80 aspect-square bg-dark-800 rounded-xl overflow-hidden flex-shrink-0">
+    <div class="w-full md:w-80 aspect-square rounded-xl overflow-hidden flex-shrink-0 bg-[--w8]">
       {#if coverUrl}<img loading="lazy" src={coverUrl} alt={release.title} class="w-full h-full object-cover" />
       {:else}<div class="w-full h-full flex items-center justify-center text-dark-600"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg></div>{/if}
     </div>
