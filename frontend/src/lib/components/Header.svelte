@@ -18,7 +18,7 @@
     User,
     Sun,
     Moon,
-    CircleUserRound,
+    CircleUserRound
   } from 'lucide-svelte';
   import { theme, toggleTheme } from '$lib/stores/theme.js';
 
@@ -587,7 +587,7 @@
                 Login
               </a> -->
               <a href="/auth/login"
-            class="select-none text-sm leading-5 rounded-[8px] border border-[--w12] px-2 py-1.5 text-[--w60] transition hover:border-[--w18] hover:text-[--w]"
+            class="flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-[--w60] hover:text-[--w] hover:bg-[--w8] transition shrink-0"
           >
             <CircleUserRound size={16} />
           </a>
