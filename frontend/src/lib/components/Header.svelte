@@ -17,7 +17,8 @@
     ChevronDown, 
     User,
     Sun,
-    Moon
+    Moon,
+    CircleUserRound,
   } from 'lucide-svelte';
   import { theme, toggleTheme } from '$lib/stores/theme.js';
 
@@ -579,12 +580,17 @@
                 />
               </button>
             {:else}
-              <a 
+              <!-- <a 
                 href="/auth/login"
                 class="select-none text-sm leading-5 rounded-[8px] border border-[--w12] px-2 py-1.5 text-[--w60] transition hover:border-[--w18] hover:text-[--w]"
               >
                 Login
-              </a>
+              </a> -->
+              <a href="/auth/login"
+            class="select-none text-sm leading-5 rounded-[8px] border border-[--w12] px-2 py-1.5 text-[--w60] transition hover:border-[--w18] hover:text-[--w]"
+          >
+            <CircleUserRound size={16} />
+          </a>
             {/if}
           </div>
         </nav>
