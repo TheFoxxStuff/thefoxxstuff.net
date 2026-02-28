@@ -536,7 +536,7 @@
           </button>
 
           <!-- Тема -->
-          <button
+          <!-- <button
             onclick={toggleTheme}
             title={$theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
             class="flex items-center justify-center w-[32px] h-[32px] rounded-[8px] text-[--w60] hover:text-[--w] hover:bg-[--w8] transition shrink-0"
@@ -546,7 +546,7 @@
             {:else}
               <Moon size={16} />
             {/if}
-          </button>
+          </button> -->
 
           <!-- Аутентификация -->
           <div class="flex items-center shrink-0 ml-[4px]">
