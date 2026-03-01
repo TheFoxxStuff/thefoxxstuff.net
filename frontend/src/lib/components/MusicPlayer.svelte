@@ -320,11 +320,13 @@
             >
               <div
                 class="absolute bottom-0 left-0
-                       bg-[rgba(12,12,12,0.96)] border border-white/[0.08] rounded-[10px]
-                       shadow-[0_8px_24px_rgba(0,0,0,0.6)] backdrop-blur-[32px]
+                       rounded-[10px] backdrop-blur-[32px]
                        flex flex-col items-center justify-end overflow-hidden
-                       transition-all duration-300 ease-out"
-                style="width: 32px; height: {showVolume ? '150px' : '32px'};"
+                       transition-all duration-300 ease-out z-50"
+                style="width: 32px; height: {showVolume ? '150px' : '32px'};
+                       background: {showVolume ? 'rgba(12,12,12,0.96)' : 'transparent'};
+                       border: {showVolume ? '1px solid rgba(255,255,255,0.08)' : 'none'};
+                       box-shadow: {showVolume ? '0 8px 24px rgba(0,0,0,0.6)' : 'none'};"
               >
                 <!-- Slider area -->
                 <div
