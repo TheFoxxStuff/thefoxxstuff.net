@@ -94,12 +94,14 @@
     const el = e.currentTarget.closest('[data-player]');
     const rect = el.getBoundingClientRect();
 
-    // Если позиция еще не установлена, сначала зафиксируем текущую позицию
+    // Устанавливаем dragging и позицию одновременно
+    dragging = true;
+
+    // Если позиция еще не установлена, зафиксируем текущую позицию
     if (pos.x === null) {
       pos = { x: rect.left, y: rect.top };
     }
 
-    dragging = true;
     dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     e.preventDefault();
   }
@@ -118,14 +120,14 @@
 
   let playerStyle = $derived(
     pos.x !== null
-      ? `left:0;top:0;transform:translate(${pos.x}px,${pos.y}px) scale(${dragging ? 1.05 : 1});`
-      : `left:50%;bottom:1.5rem;transform:translateX(-50%) scale(${dragging ? 1.05 : 1});`
+      ? `left:0;top:0;transform:translate(${pos.x}px,${pos.y}px) scale(${dragging ? 1.05 : 1});transition:scale 0.15s;`
+      : `left:50%;bottom:1.5rem;transform:translateX(-50%) scale(${dragging ? 1.05 : 1});transition:scale 0.15s;`
   );
 
   let playerClasses = $derived(
     pos.x !== null
-      ? 'fixed z-[9999] w-[776px] will-change-transform transition-transform duration-150'
-      : 'fixed z-[9999] w-[776px] transition-transform duration-150'
+      ? 'fixed z-[9999] w-[776px] will-change-transform'
+      : 'fixed z-[9999] w-[776px]'
   );
 
   onMount(() => {
