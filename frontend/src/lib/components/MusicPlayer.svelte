@@ -317,28 +317,27 @@
               onmouseenter={() => showVolume = true}
               onmouseleave={() => showVolume = false}
             >
-              {#if showVolume}
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5
-                            bg-[rgba(12,12,12,0.96)] border border-white/[0.08] rounded-[10px]
-                            p-2 pt-2.5 flex flex-col items-center gap-1 z-50 w-9
-                            shadow-[0_8px_24px_rgba(0,0,0,0.6)]
-                            animate-in fade-in zoom-in-75 duration-150 origin-bottom"
-                >
-                  <span class="text-[11px] font-semibold text-white/50">{Math.round(state.volume * 100)}</span>
-                  <div class="relative w-1 h-[90px] mb-1 cursor-pointer group/vol">
-                    <div class="absolute w-full h-full bg-white/[0.06] rounded-full"></div>
-                    <div class="absolute bottom-0 w-full bg-gradient-to-t from-[#1e6fff] to-[#0056d6] rounded-full transition-all" style="height:{state.volume * 100}%"></div>
-                    <div class="absolute w-[11px] h-[11px] bg-white rounded-full left-1/2 -translate-x-1/2 shadow-[0_0_8px_rgba(0,0,0,0.8)] pointer-events-none transition-all"
-                         style="bottom:calc({state.volume*100}% - 5.5px)"></div>
-                    <input
-                      type="range" min="0" max="1" step="0.01" value={state.volume}
-                      oninput={(e) => player.setVolume(parseFloat(e.target.value))}
-                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                      style="writing-mode:vertical-lr;direction:rtl;-webkit-appearance:slider-vertical;appearance:slider-vertical;"
-                    />
-                  </div>
+              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5
+                          bg-[rgba(12,12,12,0.96)] border border-white/[0.08] rounded-[10px]
+                          p-2 pt-2.5 flex flex-col items-center gap-1 z-50 w-9
+                          shadow-[0_8px_24px_rgba(0,0,0,0.6)]
+                          origin-bottom pointer-events-none"
+                   style="transform: scale({showVolume ? 1 : 0.8}) translateY({showVolume ? 0 : 10}px); opacity: {showVolume ? 1 : 0}; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;"
+              >
+                <span class="text-[11px] font-semibold text-white/50">{Math.round(state.volume * 100)}</span>
+                <div class="relative w-1 h-[90px] mb-1 cursor-pointer group/vol pointer-events-auto">
+                  <div class="absolute w-full h-full bg-white/[0.06] rounded-full"></div>
+                  <div class="absolute bottom-0 w-full bg-gradient-to-t from-[#1e6fff] to-[#0056d6] rounded-full transition-all" style="height:{state.volume * 100}%"></div>
+                  <div class="absolute w-[11px] h-[11px] bg-white rounded-full left-1/2 -translate-x-1/2 shadow-[0_0_8px_rgba(0,0,0,0.8)] pointer-events-none transition-all"
+                       style="bottom:calc({state.volume*100}% - 5.5px)"></div>
+                  <input
+                    type="range" min="0" max="1" step="0.01" value={state.volume}
+                    oninput={(e) => player.setVolume(parseFloat(e.target.value))}
+                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                    style="writing-mode:vertical-lr;direction:rtl;-webkit-appearance:slider-vertical;appearance:slider-vertical;"
+                  />
                 </div>
-              {/if}
+              </div>
               <button
                 onclick={toggleMute}
                 class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-white/45 hover:text-white transition-all"
