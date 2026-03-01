@@ -293,7 +293,7 @@
                    px-2 py-[3px] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.6)]
                    transition-opacity duration-150
                    tracking-wide font-mono whitespace-nowrap"
-            style="opacity: {progressHovering && hoverPct > 85 ? 0 : (progressHovering ? 1 : 0)}"
+            style="opacity: {progressHovering && hoverPct > 95 ? 0 : (progressHovering ? 1 : 0)}"
           >
             {fmt(duration)}
           </div>
