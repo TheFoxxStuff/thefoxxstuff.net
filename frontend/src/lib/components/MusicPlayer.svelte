@@ -116,6 +116,10 @@
       : `left:50%;bottom:1.5rem;transform:translateX(-50%);`
   );
 
+  let playerClasses = $derived(
+    `fixed z-[9999] w-[776px] transition-all duration-200 ${dragging ? 'scale-[1.02] cursor-grabbing' : ''}`
+  );
+
   onMount(() => {
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('mousemove', onMouseMove);
@@ -137,16 +141,16 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     data-player
-    class="fixed z-[9999] w-[776px]"
+    class={playerClasses}
     style={playerStyle}
   >
-    <div class="h-[76px] flex items-center gap-3 px-[6px] py-[6px] rounded-[10px] border border-white/[0.06] bg-[rgba(10,10,10,0.92)] backdrop-blur-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+    <div class="h-[76px] flex items-center gap-3 px-[6px] py-[6px] rounded-[10px] border border-white/[0.06] bg-[rgba(10,10,10,0.92)] backdrop-blur-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.5)] {dragging ? 'shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(30,111,255,0.15)]' : ''} transition-shadow duration-200">
 
       <!-- Drag + Close -->
       <div class="flex flex-col justify-between h-full py-[3px] min-w-[30px] items-center">
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
-          class="w-[30px] h-[30px] flex items-center justify-center cursor-grab active:cursor-grabbing text-white/20 hover:text-white/50 transition-colors"
+          class="w-[30px] h-[30px] flex items-center justify-center cursor-grab active:cursor-grabbing text-white/20 hover:text-white/50 transition-all duration-200 {dragging ? 'text-[#1e6fff] scale-110' : ''}"
           onmousedown={onDragStart}
           title="Перетащить"
         >
