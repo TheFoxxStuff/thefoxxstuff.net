@@ -445,7 +445,7 @@
   </style>
 </svelte:head>
 
-<div class="mx-auto mt-[33px] w-full max-w-[828px] relative z-[9998]">
+<div class="mx-auto mt-[33px] w-full max-w-[828px] relative z-[9998] hidden md:block">
   <header class="w-full">
     <div class="mx-auto flex max-w-7xl items-center justify-between">
       <!-- Логотип -->

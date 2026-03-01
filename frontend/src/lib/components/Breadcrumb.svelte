@@ -3,7 +3,7 @@
   let { items = [] } = $props();
 </script>
 
-<nav class="flex items-center gap-[4px] text-sm text-[--w60]">
+<nav class="hidden md:flex items-center gap-[4px] text-sm text-[--w60]">
 <a class="btn-breadcrumb hover:text-[--w]" href="/"><Home size={16} />Home</a>
 
   {#each items as item, i}
