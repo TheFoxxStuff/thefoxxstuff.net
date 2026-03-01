@@ -17,6 +17,7 @@
   let hoverPct = $state(0);       // 0-100, позиция курсора на полоске
   let hoverTime = $state(0);      // время в секундах в точке курсора
   let progressHovering = $state(false);
+  let titleSelected = $state(false);
 
   // Dragging
   let pos = $state({ x: null, y: null });
@@ -146,6 +147,11 @@
     player.togglePlay();
   }
 
+  function handleSelectionChange() {
+    const selection = window.getSelection();
+    titleSelected = selection && selection.toString().length > 0;
+  }
+
   // Load volume from localStorage on mount
   onMount(() => {
     const savedVolume = localStorage.getItem('musicPlayerVolume');
@@ -185,12 +191,14 @@
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('selectionchange', handleSelectionChange);
   });
   onDestroy(() => {
     if (typeof window !== 'undefined') {
       window.removeEventListener('keydown', handleKeydown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('selectionchange', handleSelectionChange);
     }
   });
 </script>
@@ -350,9 +358,9 @@
 
           <!-- Time + Volume + Repeat -->
           <div class="flex items-center gap-1 min-w-[190px] justify-end">
-            <span class="text-[12px] text-white/50 font-mono tabular-nums">{fmt(currentTime)}</span>
-            <span class="text-white/15 text-xs">·</span>
-            <span class="text-[12px] text-white/25 font-mono tabular-nums">{fmt(duration)}</span>
+            <span class="text-[12px] text-white/50 font-mono tabular-nums transition-opacity duration-200 {titleSelected ? 'opacity-0' : 'opacity-100'}">{fmt(currentTime)}</span>
+            <span class="text-white/15 text-xs transition-opacity duration-200 {titleSelected ? 'opacity-0' : 'opacity-100'}">·</span>
+            <span class="text-[12px] text-white/25 font-mono tabular-nums transition-opacity duration-200 {titleSelected ? 'opacity-0' : 'opacity-100'}">{fmt(duration)}</span>
 
             <!-- Volume -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
