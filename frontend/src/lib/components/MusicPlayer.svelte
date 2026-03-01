@@ -358,9 +358,9 @@
 
           <!-- Time + Volume + Repeat -->
           <div class="flex items-center gap-1 min-w-[190px] justify-end">
-            <span class="text-[12px] text-white/50 font-mono tabular-nums transition-opacity duration-200 {titleSelected ? 'opacity-0' : 'opacity-100'}">{fmt(currentTime)}</span>
-            <span class="text-white/15 text-xs transition-opacity duration-200 {titleSelected ? 'opacity-0' : 'opacity-100'}">·</span>
-            <span class="text-[12px] text-white/25 font-mono tabular-nums transition-opacity duration-200 {titleSelected ? 'opacity-0' : 'opacity-100'}">{fmt(duration)}</span>
+            <span class="text-[12px] text-white/50 font-mono tabular-nums transition-opacity duration-200 {titleSelected || progressHovering ? 'opacity-0' : 'opacity-100'}">{fmt(currentTime)}</span>
+            <span class="text-white/15 text-xs transition-opacity duration-200 {titleSelected || progressHovering ? 'opacity-0' : 'opacity-100'}">·</span>
+            <span class="text-[12px] text-white/25 font-mono tabular-nums transition-opacity duration-200 {titleSelected || progressHovering ? 'opacity-0' : 'opacity-100'}">{fmt(duration)}</span>
 
             <!-- Volume -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
