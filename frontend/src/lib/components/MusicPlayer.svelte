@@ -90,6 +90,11 @@
   function handleKeydown(e) {
     if (!state.visible || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if (e.code === 'Space') { e.preventDefault(); player.togglePlay(); }
+    // Volume control with arrow keys
+    if (e.code === 'ArrowUp') { e.preventDefault(); player.setVolume(Math.min(1, state.volume + 0.05)); }
+    if (e.code === 'ArrowDown') { e.preventDefault(); player.setVolume(Math.max(0, state.volume - 0.05)); }
+    // Mute toggle
+    if (e.code === 'KeyM') { e.preventDefault(); toggleMute(); }
   }
 
   function onDragStart(e) {
@@ -122,6 +127,12 @@
       previousVolume = state.volume;
       player.setVolume(0);
     }
+  }
+
+  function handleVolumeWheel(e) {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    player.setVolume(Math.max(0, Math.min(1, state.volume + delta)));
   }
 
   let repeatIcon = $derived(
@@ -317,6 +328,7 @@
               class="relative w-8 h-8"
               onmouseenter={() => showVolume = true}
               onmouseleave={() => showVolume = false}
+              onwheel={handleVolumeWheel}
             >
               <div
                 class="absolute bottom-0 left-0
