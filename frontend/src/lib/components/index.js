@@ -1,4 +1,5 @@
 export { default as Header } from './Header.svelte';
+export { default as MobileHeader } from './MobileHeader.svelte';
 export { default as Footer } from './Footer.svelte';
 export { default as SEO } from './SEO.svelte';
 export { default as OnlineUsers } from './OnlineUsers.svelte';

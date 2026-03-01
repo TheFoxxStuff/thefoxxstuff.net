@@ -1,6 +1,6 @@
 <script>
   import '../app.css';
-  import { Header, Footer } from '$lib/components';
+  import { Header, MobileHeader, Footer } from '$lib/components';
   import Background from '$lib/components/Background.svelte';
   import GlowingBackground from '../lib/components/GlowingBackground.svelte';
   import MusicPlayer from '$lib/components/MusicPlayer.svelte';
@@ -47,6 +47,7 @@
   <GlowingBackground />
   <Background />
   <Header />
+  <MobileHeader />
   <main class="flex-1 relative z-10">
     {@render children()}
   </main>
