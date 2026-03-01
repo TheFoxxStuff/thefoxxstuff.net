@@ -112,14 +112,14 @@
 
   let playerStyle = $derived(
     pos.x !== null
-      ? `left:0;top:0;transform:translate(${pos.x}px,${pos.y}px);`
-      : `left:50%;bottom:1.5rem;transform:translateX(-50%);`
+      ? `left:0;top:0;transform:translate(${pos.x}px,${pos.y}px) scale(${dragging ? 1.05 : 1});`
+      : `left:50%;bottom:1.5rem;transform:translateX(-50%) scale(${dragging ? 1.05 : 1});`
   );
 
   let playerClasses = $derived(
     pos.x !== null
-      ? 'fixed z-[9999] w-[776px] will-change-transform'
-      : 'fixed z-[9999] w-[776px]'
+      ? 'fixed z-[9999] w-[776px] will-change-transform transition-transform duration-150'
+      : 'fixed z-[9999] w-[776px] transition-transform duration-150'
   );
 
   onMount(() => {
