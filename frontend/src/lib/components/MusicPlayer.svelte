@@ -91,9 +91,15 @@
   }
 
   function onDragStart(e) {
-    dragging = true;
     const el = e.currentTarget.closest('[data-player]');
     const rect = el.getBoundingClientRect();
+
+    // Если позиция еще не установлена, сначала зафиксируем текущую позицию
+    if (pos.x === null) {
+      pos = { x: rect.left, y: rect.top };
+    }
+
+    dragging = true;
     dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     e.preventDefault();
   }
