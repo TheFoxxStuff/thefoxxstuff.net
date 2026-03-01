@@ -5,8 +5,8 @@
 
   const about = {
     name: 'TheFoxxStuff',
-    realName: 'Айтал Попов (Aital Popov)',
-    birthDate: '25.06.2002',
+    realName: 'Aytal.P',
+    birthDate: '25.06',
     location: 'Republic of Sakha (Yakutia)',
     locationUrl: 'https://en.wikipedia.org/wiki/Sakha_Republic',
     city: 'Yakutsk',
