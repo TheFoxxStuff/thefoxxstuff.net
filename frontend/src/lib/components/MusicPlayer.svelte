@@ -326,7 +326,7 @@
                        overflow-hidden transition-all duration-200 ease-out w-8 z-50"
                 style="height: {showVolume ? '140px' : '32px'};"
               >
-                <!-- Slider area (only visible when expanded) -->
+                <!-- Slider area (only visible wshen expanded) -->
                 <div
                   class="flex flex-col items-center gap-1 pt-2.5 pb-1 transition-opacity duration-150"
                   style="opacity: {showVolume ? 1 : 0}; pointer-events: {showVolume ? 'auto' : 'none'};"
