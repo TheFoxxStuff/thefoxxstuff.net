@@ -11,6 +11,7 @@
   let prevTrackKey = $state(null);
   let showVolume = $state(false);
   let previousVolume = $state(1);
+  let rippleActive = $state(false);
 
   // Progress hover
   let hoverPct = $state(0);       // 0-100, позиция курсора на полоске
@@ -89,7 +90,7 @@
 
   function handleKeydown(e) {
     if (!state.visible || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.code === 'Space') { e.preventDefault(); player.togglePlay(); }
+    if (e.code === 'Space') { e.preventDefault(); triggerRipple(); player.togglePlay(); }
     // Volume control with arrow keys
     if (e.code === 'ArrowUp') { e.preventDefault(); player.setVolume(Math.min(1, state.volume + 0.05)); }
     if (e.code === 'ArrowDown') { e.preventDefault(); player.setVolume(Math.max(0, state.volume - 0.05)); }
@@ -134,6 +135,34 @@
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
     player.setVolume(Math.max(0, Math.min(1, state.volume + delta)));
   }
+
+  function triggerRipple() {
+    rippleActive = true;
+    setTimeout(() => rippleActive = false, 600);
+  }
+
+  function handlePlayPause() {
+    triggerRipple();
+    player.togglePlay();
+  }
+
+  // Load volume from localStorage on mount
+  onMount(() => {
+    const savedVolume = localStorage.getItem('musicPlayerVolume');
+    if (savedVolume !== null) {
+      const vol = parseFloat(savedVolume);
+      if (!isNaN(vol) && vol >= 0 && vol <= 1) {
+        player.setVolume(vol);
+      }
+    }
+  });
+
+  // Save volume to localStorage when it changes
+  $effect(() => {
+    if (state.volume !== undefined) {
+      localStorage.setItem('musicPlayerVolume', state.volume.toString());
+    }
+  });
 
   let repeatIcon = $derived(
     state.repeat === 'none' ? 'text-white/30' :
@@ -299,13 +328,16 @@
               <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
             </button>
 
-            <button onclick={() => player.togglePlay()}
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+            <button onclick={handlePlayPause}
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all relative overflow-hidden"
               aria-label={state.isPlaying ? 'Пауза' : 'Воспроизвести'}>
+              {#if rippleActive}
+                <span class="absolute inset-0 rounded-full bg-white/30 animate-ping"></span>
+              {/if}
               {#if state.isPlaying}
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <svg class="w-5 h-5 fill-current relative z-10" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
               {:else}
-                <svg class="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg class="w-5 h-5 fill-current ml-0.5 relative z-10" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {/if}
             </button>
 
