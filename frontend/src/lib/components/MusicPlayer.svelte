@@ -202,7 +202,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     data-player
-    class={playerClasses}
+    class="{playerClasses} select-none"
     style={playerStyle}
   >
     <div class="h-[76px] flex items-center gap-3 px-[6px] py-[6px] rounded-[10px] border border-white/[0.06] bg-[rgba(10,10,10,0.92)] backdrop-blur-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
@@ -315,7 +315,7 @@
               </div>
             {/if}
             <div class="min-w-0">
-              <p class="text-[14px] font-bold text-white leading-tight truncate group-hover/info:text-[#1e6fff] transition-colors">{track.title}</p>
+              <p class="text-[14px] font-bold text-white leading-tight truncate group-hover/info:text-[#1e6fff] transition-colors select-text">{track.title}</p>
               <p class="text-[10px] text-white/40 leading-tight truncate uppercase tracking-[0.05em]">{state.release?.title}</p>
             </div>
           </a>
