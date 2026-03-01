@@ -291,8 +291,9 @@
             class="absolute right-0 bottom-[calc(100%+8px)] pointer-events-none
                    bg-[rgba(15,15,15,0.95)] border border-white/10 text-white/50 text-[11px] font-semibold
                    px-2 py-[3px] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.6)]
-                   opacity-0 group-hover/prog:opacity-100 transition-opacity duration-150
+                   transition-opacity duration-150
                    tracking-wide font-mono whitespace-nowrap"
+            style="opacity: {progressHovering && hoverPct > 85 ? 0 : (progressHovering ? 1 : 0)}"
           >
             {fmt(duration)}
           </div>
