@@ -314,12 +314,13 @@
             <!-- Volume -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
-              class="relative flex items-end"
+              class="relative w-8 h-8"
               onmouseenter={() => showVolume = true}
               onmouseleave={() => showVolume = false}
             >
               <div
-                class="bg-[rgba(12,12,12,0.96)] border border-white/[0.08] rounded-[10px]
+                class="absolute bottom-0 left-0
+                       bg-[rgba(12,12,12,0.96)] border border-white/[0.08] rounded-[10px]
                        shadow-[0_8px_24px_rgba(0,0,0,0.6)] backdrop-blur-[32px]
                        flex flex-col items-center justify-end overflow-hidden
                        transition-all duration-300 ease-out"
