@@ -8,6 +8,7 @@ import aiofiles
 from database import get_db
 from config import settings
 from auth import get_current_user, get_optional_user
+from routers.presence import invalidate_profile_cache
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
