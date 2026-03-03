@@ -99,10 +99,12 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    # WebSocket и статика — без лимитов
+    # WebSocket, статика и CORS preflight — без лимитов
     if request.url.path.startswith("/api/upload/file/"):
         return await call_next(request)
     if request.url.path.startswith("/api/presence/ws"):
+        return await call_next(request)
+    if request.method == "OPTIONS":  # CORS preflight не считаем
         return await call_next(request)
 
     client_ip = (
@@ -110,7 +112,8 @@ async def rate_limit_middleware(request: Request, call_next):
         or (request.client.host if request.client else "0.0.0.0")
     )
 
-    if await is_rate_limited(client_ip, limit=300, window=60):
+    # Увеличен лимит: 1000 запросов в минуту (было 300)
+    if await is_rate_limited(client_ip, limit=1000, window=60):
         logger.warning("Rate limited: %s %s", client_ip, request.url.path)
         origin = request.headers.get("origin", "")
         headers = {}
