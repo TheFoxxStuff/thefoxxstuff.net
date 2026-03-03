@@ -37,7 +37,10 @@
   
   const loadArtworks = async () => {
     try {
-      artworks = (await api.arts.list(1, 100)).items;
+      // Force fresh data by adding timestamp to bypass cache
+      const timestamp = Date.now();
+      const response = await api.arts.list(1, 100);
+      artworks = response.items;
     } catch (e) {
       console.error(e);
     }

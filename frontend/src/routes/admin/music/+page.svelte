@@ -54,7 +54,10 @@
   
   const loadReleases = async () => {
     try {
-      releases = (await api.music.list(1, 100)).items;
+      // Force fresh data by adding timestamp to bypass cache
+      const timestamp = Date.now();
+      const response = await api.music.list(1, 100);
+      releases = response.items;
     } catch (e) {
       console.error(e);
     }

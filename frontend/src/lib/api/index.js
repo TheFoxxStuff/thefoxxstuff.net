@@ -149,7 +149,7 @@ export const api = {
     deleteUser: (userId)         => request(`/auth/users/${userId}`, { method: 'DELETE' }),
   },
   music: {
-    list:      (page = 1, limit = 10) => request(`/music?page=${page}&limit=${limit}`, {}, { cacheable: true }),
+    list:      (page = 1, limit = 10) => request(`/music?page=${page}&limit=${limit}`, {}, { cacheable: limit <= 50 }),
     featured:  ()                     => request('/music/featured', {}, { cacheable: true }),
     get:       (id)                   => request(`/music/${id}`, {}, { cacheable: true }),
     getBySlug: (slug)                 => request(`/music/by-slug/${slug}`, {}, { cacheable: true }),
@@ -173,7 +173,8 @@ export const api = {
     list: (page = 1, limit = 12, year = null, sort = 'newest') => {
       let url = `/arts?page=${page}&limit=${limit}&sort=${sort}`;
       if (year) url += `&year=${year}`;
-      return request(url, {}, { cacheable: true });
+      // Don't cache admin requests (limit > 50 indicates admin panel)
+      return request(url, {}, { cacheable: limit <= 50 });
     },
     grouped:   (limit = 7) => request(`/arts/grouped?limit_per_year=${limit}`, {}, { cacheable: true }),
     years:     ()          => request('/arts/years',     {}, { cacheable: true }),
