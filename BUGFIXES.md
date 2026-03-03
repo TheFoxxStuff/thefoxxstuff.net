@@ -10,9 +10,9 @@
 
 ### 2. ✅ Конвертация thumbnails в AVIF
 - **Проблема**: Использовался WebP формат
-- **Решение**: Переключено на AVIF (лучшее сжатие при том же качестве)
-- **Файлы**: `backend/routers/upload.py`, `backend/config.py`, `backend/requirements.txt`
-- **Примечание**: Требуется `pillow-avif-plugin`
+- **Решение**: Переключено на AVIF (лучшее сжатие при том же качестве) с fallback на WebP
+- **Файлы**: `backend/routers/upload.py`, `backend/config.py`, `backend/Dockerfile`
+- **Примечание**: Требуется `libavif15` в системе. Если AVIF недоступен, автоматически используется WebP
 
 ### 3. ✅ Regex injection в поиске (ReDoS уязвимость)
 - **Проблема**: Пользовательский ввод напрямую использовался в regex без экранирования

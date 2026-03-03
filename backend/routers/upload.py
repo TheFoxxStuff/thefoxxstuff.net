@@ -53,7 +53,10 @@ def generate_filename(base_name: str, ext: str) -> str:
     return f"{slug}.{ext}"
 
 def create_thumbnail(input_path: Path, output_path: Path, size: tuple, format: str = 'AVIF') -> tuple:
-    """Create resized version maintaining aspect ratio in AVIF format"""
+    """
+    Create resized version maintaining aspect ratio.
+    Returns (dimensions, actual_output_path) - path may differ if fallback occurs.
+    """
     with Image.open(input_path) as img:
         # Convert to RGB if necessary (for PNG with transparency)
         if img.mode in ('RGBA', 'LA', 'P'):
@@ -68,13 +71,21 @@ def create_thumbnail(input_path: Path, output_path: Path, size: tuple, format: s
         # Resize maintaining aspect ratio
         img.thumbnail(size, Image.Resampling.LANCZOS)
 
+        actual_path = output_path
         # Save as AVIF for medium and thumb (better compression than WebP)
+        # Fallback to WebP if AVIF is not available
         if format == 'AVIF':
-            img.save(output_path, 'AVIF', quality=85, speed=6)
+            try:
+                img.save(output_path, 'AVIF', quality=85, speed=6)
+            except (KeyError, OSError, ValueError) as e:
+                # AVIF not available, fallback to WebP
+                logger.warning(f"AVIF encoding failed, falling back to WebP: {e}")
+                actual_path = output_path.with_suffix('.webp')
+                img.save(actual_path, 'WEBP', quality=85, method=6)
         else:
             img.save(output_path, format, quality=85, optimize=True)
 
-        return img.size
+        return img.size, actual_path
 
 async def process_image(
     file: UploadFile,
@@ -141,10 +152,14 @@ async def process_image(
             raise
         raise HTTPException(400, f"Invalid or corrupted image file: {str(e)}")
 
-    # Create thumbnails in AVIF format
+    # Create thumbnails in AVIF format (with WebP fallback)
     try:
-        thumb_size = create_thumbnail(original_path, thumb_path, settings.thumb_size, 'AVIF')
-        medium_size = create_thumbnail(original_path, medium_path, settings.medium_size, 'AVIF')
+        thumb_size, actual_thumb_path = create_thumbnail(original_path, thumb_path, settings.thumb_size, 'AVIF')
+        medium_size, actual_medium_path = create_thumbnail(original_path, medium_path, settings.medium_size, 'AVIF')
+
+        # Use actual filenames (may be .webp if AVIF failed)
+        thumb_filename = actual_thumb_path.name
+        medium_filename = actual_medium_path.name
     except Exception as e:
         # Clean up on error
         original_path.unlink()
@@ -153,12 +168,6 @@ async def process_image(
         if medium_path.exists():
             medium_path.unlink()
         raise HTTPException(500, f"Failed to create thumbnails: {str(e)}")
-
-    # Build relative paths for storage
-    if category == "music" and is_gallery:
-        rel_base = f"music/gallery"
-    else:
-        rel_base = category
 
     return {
         "filename": original_filename,

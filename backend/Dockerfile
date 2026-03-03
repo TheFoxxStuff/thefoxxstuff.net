@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg-dev \
     zlib1g-dev \
     libpng-dev \
+    libavif-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -16,12 +17,13 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 FROM python:3.12-slim AS runtime
 WORKDIR /app
 
-# Install system deps including ffmpeg (required for audio conversion)
+# Install system deps including ffmpeg (required for audio conversion) and libavif (for AVIF image support)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo \
     libpng16-16 \
     libgomp1 \
     ffmpeg \
+    libavif15 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /usr/local
