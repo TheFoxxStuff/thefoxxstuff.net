@@ -3,24 +3,37 @@ from database import get_db
 from auth import get_current_admin
 from datetime import datetime, timedelta
 from bson import ObjectId
+import re
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
 @router.get("")
 async def get_stats(admin: dict = Depends(get_current_admin)):
     db = get_db()
-    
+
     music_count = await db.music.count_documents({})
     blog_count = await db.blog.count_documents({})
     arts_count = await db.arts.count_documents({})
     links_count = await db.links.count_documents({})
     users_count = await db.users.count_documents({})
     images_count = await db.images.count_documents({})
-    
-    music_views = sum([doc.get("views", 0) async for doc in db.music.find({}, {"views": 1})])
-    blog_views = sum([doc.get("views", 0) async for doc in db.blog.find({}, {"views": 1})])
-    arts_views = sum([doc.get("views", 0) async for doc in db.arts.find({}, {"views": 1})])
-    
+
+    # Use aggregation for efficient view counting instead of loading all documents
+    music_views_result = await db.music.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$views"}}}
+    ]).to_list(1)
+    music_views = music_views_result[0]["total"] if music_views_result else 0
+
+    blog_views_result = await db.blog.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$views"}}}
+    ]).to_list(1)
+    blog_views = blog_views_result[0]["total"] if blog_views_result else 0
+
+    arts_views_result = await db.arts.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$views"}}}
+    ]).to_list(1)
+    arts_views = arts_views_result[0]["total"] if arts_views_result else 0
+
     return {
         "music": {"count": music_count, "views": music_views},
         "blog": {"count": blog_count, "views": blog_views},
@@ -211,27 +224,77 @@ async def get_recent_views(
 
 
 @router.get("/search")
-async def global_search(q: str = Query("", min_length=1, max_length=100)):
-    """Global search across music, blog, and arts"""
+async def global_search(
+    q: str = Query("", min_length=1, max_length=100),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Global search across music, blog, and arts with pagination"""
     db = get_db()
     if not q.strip():
-        return {"music": [], "blog": [], "arts": []}
+        return {"music": [], "blog": [], "arts": [], "total": {"music": 0, "blog": 0, "arts": 0}}
 
-    regex = {"$regex": q.strip(), "$options": "i"}
+    # Escape regex special characters to prevent ReDoS attacks
+    escaped_query = re.escape(q.strip())
+    regex = {"$regex": escaped_query, "$options": "i"}
 
+    skip = (page - 1) * limit
+
+    # Count total matches for each category
+    music_total = await db.music.count_documents({"$or": [{"title": regex}, {"genre": regex}, {"description": regex}]})
+    blog_total = await db.blog.count_documents({"$or": [{"title": regex}, {"content": regex}, {"excerpt": regex}]})
+    arts_total = await db.arts.count_documents({"$or": [{"title": regex}, {"description": regex}]})
+
+    # Fetch paginated results
     music = []
-    async for doc in db.music.find({"$or": [{"title": regex}, {"genre": regex}, {"description": regex}]}).sort("views", -1).limit(10):
+    async for doc in db.music.find({"$or": [{"title": regex}, {"genre": regex}, {"description": regex}]}).sort("views", -1).skip(skip).limit(limit):
         doc["_id"] = str(doc["_id"])
-        music.append({"_id": doc["_id"], "title": doc.get("title",""), "slug": doc.get("slug",""), "genre": doc.get("genre",""), "views": doc.get("views",0), "type": "music"})
+        music.append({
+            "_id": doc["_id"],
+            "title": doc.get("title",""),
+            "slug": doc.get("slug",""),
+            "genre": doc.get("genre",""),
+            "views": doc.get("views",0),
+            "type": "music"
+        })
 
     blog = []
-    async for doc in db.blog.find({"$or": [{"title": regex}, {"content": regex}, {"excerpt": regex}]}).sort("views", -1).limit(10):
+    async for doc in db.blog.find({"$or": [{"title": regex}, {"content": regex}, {"excerpt": regex}]}).sort("views", -1).skip(skip).limit(limit):
         doc["_id"] = str(doc["_id"])
-        blog.append({"_id": doc["_id"], "title": doc.get("title",""), "slug": doc.get("slug",""), "excerpt": doc.get("excerpt","")[:120], "views": doc.get("views",0), "type": "blog"})
+        excerpt = doc.get("excerpt", "")
+        # Proper text truncation with ellipsis
+        if len(excerpt) > 120:
+            excerpt = excerpt[:117] + "..."
+        blog.append({
+            "_id": doc["_id"],
+            "title": doc.get("title",""),
+            "slug": doc.get("slug",""),
+            "excerpt": excerpt,
+            "views": doc.get("views",0),
+            "type": "blog"
+        })
 
     arts = []
-    async for doc in db.arts.find({"$or": [{"title": regex}, {"description": regex}]}).sort("views", -1).limit(10):
+    async for doc in db.arts.find({"$or": [{"title": regex}, {"description": regex}]}).sort("views", -1).skip(skip).limit(limit):
         doc["_id"] = str(doc["_id"])
-        arts.append({"_id": doc["_id"], "title": doc.get("title",""), "slug": doc.get("slug",""), "year": doc.get("year",""), "views": doc.get("views",0), "type": "arts"})
+        arts.append({
+            "_id": doc["_id"],
+            "title": doc.get("title",""),
+            "slug": doc.get("slug",""),
+            "year": doc.get("year",""),
+            "views": doc.get("views",0),
+            "type": "arts"
+        })
 
-    return {"music": music, "blog": blog, "arts": arts}
+    return {
+        "music": music,
+        "blog": blog,
+        "arts": arts,
+        "total": {
+            "music": music_total,
+            "blog": blog_total,
+            "arts": arts_total
+        },
+        "page": page,
+        "limit": limit
+    }

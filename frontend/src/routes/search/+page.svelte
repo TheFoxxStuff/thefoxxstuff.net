@@ -8,13 +8,18 @@
   let { data: pageData } = $props();
 
   let query = $derived(pageData.query);
-  let results = $derived(pageData.results);
+  let results = $state(pageData.results);
   let loading = $state(false);
+  let currentPage = $state(1);
+  let limit = $state(10);
 
-  async function doSearch(q) {
+  async function doSearch(q, page = 1) {
     if (!q || !q.trim()) { results = null; return; }
     loading = true;
-    try { results = await api.stats.search(q); }
+    try {
+      results = await api.stats.search(q, page, limit);
+      currentPage = page;
+    }
     catch (e) { console.error(e); }
     finally { loading = false; }
   }
@@ -23,11 +28,22 @@
     e.preventDefault();
     if (query.trim()) {
       goto(`/search?q=${encodeURIComponent(query.trim())}`, { replaceState: true });
-      doSearch(query.trim());
+      doSearch(query.trim(), 1);
+    }
+  }
+
+  function loadMore(category) {
+    if (query.trim()) {
+      doSearch(query.trim(), currentPage + 1);
     }
   }
 
   let total = $derived(results ? (results.music?.length || 0) + (results.blog?.length || 0) + (results.arts?.length || 0) : 0);
+  let hasMore = $derived(results?.total && (
+    (results.total.music > results.music?.length) ||
+    (results.total.blog > results.blog?.length) ||
+    (results.total.arts > results.arts?.length)
+  ));
 </script>
 
 <SEO
@@ -53,11 +69,23 @@
       {#each Array(4) as _}<div class="card p-4 animate-pulse"><div class="h-5 bg-dark-800 rounded w-1/3"></div></div>{/each}
     </div>
   {:else if results}
-    <p class="text-dark-400 text-sm mb-6">{total} result{total !== 1 ? 's' : ''} for "{query}"</p>
+    <p class="text-dark-400 text-sm mb-6">
+      {total} result{total !== 1 ? 's' : ''} for "{query}"
+      {#if results.total}
+        <span class="text-dark-500">
+          (Music: {results.total.music}, Blog: {results.total.blog}, Arts: {results.total.arts})
+        </span>
+      {/if}
+    </p>
 
     {#if results.music?.length > 0}
       <section class="mb-8">
-        <h2 class="font-display text-xl mb-3 text-accent-green">Music</h2>
+        <h2 class="font-display text-xl mb-3 text-accent-green">
+          Music
+          {#if results.total?.music > results.music.length}
+            <span class="text-sm text-dark-500">({results.music.length} of {results.total.music})</span>
+          {/if}
+        </h2>
         <div class="space-y-2">
           {#each results.music as item}
             <a href="/music/{item.slug || item._id}" class="card p-4 flex items-center justify-between hover:bg-dark-800/50 transition">
@@ -71,7 +99,12 @@
 
     {#if results.blog?.length > 0}
       <section class="mb-8">
-        <h2 class="font-display text-xl mb-3 text-accent-cyan">Blog</h2>
+        <h2 class="font-display text-xl mb-3 text-accent-cyan">
+          Blog
+          {#if results.total?.blog > results.blog.length}
+            <span class="text-sm text-dark-500">({results.blog.length} of {results.total.blog})</span>
+          {/if}
+        </h2>
         <div class="space-y-2">
           {#each results.blog as item}
             <a href="/blog/{item.slug || item._id}" class="card p-4 flex items-center justify-between hover:bg-dark-800/50 transition">
@@ -85,7 +118,12 @@
 
     {#if results.arts?.length > 0}
       <section class="mb-8">
-        <h2 class="font-display text-xl mb-3 text-purple-400">Arts</h2>
+        <h2 class="font-display text-xl mb-3 text-purple-400">
+          Arts
+          {#if results.total?.arts > results.arts.length}
+            <span class="text-sm text-dark-500">({results.arts.length} of {results.total.arts})</span>
+          {/if}
+        </h2>
         <div class="space-y-2">
           {#each results.arts as item}
             <a href="/arts/{item.slug || item._id}" class="card p-4 flex items-center justify-between hover:bg-dark-800/50 transition">
@@ -97,7 +135,13 @@
       </section>
     {/if}
 
-    {#if total === 0}
+    {#if hasMore}
+      <div class="text-center">
+        <button onclick={() => loadMore()} class="btn btn-secondary" disabled={loading}>
+          {loading ? 'Loading...' : 'Load More Results'}
+        </button>
+      </div>
+    {/if}
       <div class="text-center text-dark-500 py-12">No results found for "{query}"</div>
     {/if}
   {/if}

@@ -1,5 +1,4 @@
 import logging
-import re
 from math import ceil
 from datetime import datetime
 
@@ -11,6 +10,7 @@ from models import MusicReleaseCreate, PaginatedResponse
 from auth import get_current_admin
 from cache import cache_delete_pattern, cache_get_or_set
 from config import settings
+from utils import generate_slug
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/music", tags=["music"])
@@ -32,14 +32,6 @@ def serialize(doc):
     return doc
 
 
-def generate_slug(title: str) -> str:
-    slug = title.lower().strip()
-    slug = re.sub(r'[^\w\s-]', '', slug)
-    slug = re.sub(r'[\s_]+', '-', slug)
-    slug = re.sub(r'-+', '-', slug)
-    return slug.strip('-')
-
-
 async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
     base_slug = slug
     counter = 1
@@ -55,17 +47,41 @@ async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
 
 async def enrich_with_images(db, release):
     """Обогащает один релиз данными изображений включая og_image и gallery."""
-    # Обложка и OG-изображение
+    # Collect all image IDs we need to fetch
+    image_ids = []
+
+    # Cover and OG images
+    for field in ["cover_image", "og_image"]:
+        val = release.get(field)
+        if val and ObjectId.is_valid(val):
+            image_ids.append(ObjectId(val))
+
+    # Gallery images
+    if release.get("gallery"):
+        for g in release["gallery"]:
+            if isinstance(g, dict):
+                img_id = g.get("image_id")
+            else:
+                img_id = g
+            if img_id and ObjectId.is_valid(img_id):
+                image_ids.append(ObjectId(img_id))
+
+    # Fetch all images in one query
+    images_map = {}
+    if image_ids:
+        async for img in db.images.find({"_id": {"$in": image_ids}}):
+            images_map[str(img["_id"])] = serialize(dict(img))
+
+    # Assign cover and OG images
     for field, info_field in [
         ("cover_image", "cover_image_info"),
         ("og_image", "og_image_info"),
     ]:
         val = release.get(field)
-        if val and ObjectId.is_valid(val):
-            image = await db.images.find_one({"_id": ObjectId(val)})
-            if image:
-                release[info_field] = serialize(dict(image))
+        if val and val in images_map:
+            release[info_field] = images_map[val]
 
+    # Assign gallery images
     if release.get("gallery"):
         gallery_images = []
         for g in release["gallery"]:
@@ -73,35 +89,72 @@ async def enrich_with_images(db, release):
                 img_id, name = g.get("image_id"), g.get("name", "")
             else:
                 img_id, name = g, ""
-            if img_id and ObjectId.is_valid(img_id):
-                image = await db.images.find_one({"_id": ObjectId(img_id)})
-                if image:
-                    img_info = serialize(dict(image))
-                    img_info["gallery_name"] = name
-                    gallery_images.append(img_info)
+            if img_id and img_id in images_map:
+                img_info = images_map[img_id]
+                img_info["gallery_name"] = name
+                gallery_images.append(img_info)
         release["gallery_images"] = gallery_images
+
     return release
 
 
 async def enrich_releases_batch(db, releases: list) -> list:
     """
-    N+1 fix: загружает все обложки одним $in запросом.
-    Gallery по-прежнему требует отдельных запросов (сложная структура).
+    N+1 fix: загружает все изображения (обложки, OG, gallery) одним $in запросом.
     """
-    cover_ids = [
-        ObjectId(r["cover_image"]) for r in releases
-        if r.get("cover_image") and ObjectId.is_valid(r["cover_image"])
-    ]
+    # Collect all image IDs from all releases
+    image_ids = set()
+
+    for r in releases:
+        # Cover images
+        if r.get("cover_image") and ObjectId.is_valid(r["cover_image"]):
+            image_ids.add(ObjectId(r["cover_image"]))
+
+        # OG images
+        if r.get("og_image") and ObjectId.is_valid(r["og_image"]):
+            image_ids.add(ObjectId(r["og_image"]))
+
+        # Gallery images
+        if r.get("gallery"):
+            for g in r["gallery"]:
+                if isinstance(g, dict):
+                    img_id = g.get("image_id")
+                else:
+                    img_id = g
+                if img_id and ObjectId.is_valid(img_id):
+                    image_ids.add(ObjectId(img_id))
+
+    # Fetch all images in one query
     images_map = {}
-    if cover_ids:
-        async for img in db.images.find({"_id": {"$in": cover_ids}}):
+    if image_ids:
+        async for img in db.images.find({"_id": {"$in": list(image_ids)}}):
             images_map[str(img["_id"])] = serialize(dict(img))
 
+    # Enrich each release
     for release in releases:
+        # Cover image
         cid = release.get("cover_image")
         if cid and cid in images_map:
             release["cover_image_info"] = images_map[cid]
-        # gallery остаётся через обычный enrich (редко вызывается в списках)
+
+        # OG image
+        ogid = release.get("og_image")
+        if ogid and ogid in images_map:
+            release["og_image_info"] = images_map[ogid]
+
+        # Gallery images
+        if release.get("gallery"):
+            gallery_images = []
+            for g in release["gallery"]:
+                if isinstance(g, dict):
+                    img_id, name = g.get("image_id"), g.get("name", "")
+                else:
+                    img_id, name = g, ""
+                if img_id and img_id in images_map:
+                    img_info = dict(images_map[img_id])
+                    img_info["gallery_name"] = name
+                    gallery_images.append(img_info)
+            release["gallery_images"] = gallery_images
 
     return releases
 
@@ -244,8 +297,37 @@ async def delete_release(release_id: str, admin: dict = Depends(get_current_admi
     db = get_db()
     if not ObjectId.is_valid(release_id):
         raise HTTPException(status_code=400, detail="Invalid ID")
-    result = await db.music.delete_one({"_id": ObjectId(release_id)})
-    if result.deleted_count == 0:
+
+    # Get release to find associated images
+    release = await db.music.find_one({"_id": ObjectId(release_id)})
+    if not release:
         raise HTTPException(status_code=404, detail="Not found")
+
+    # Collect image IDs to potentially cleanup
+    image_ids = []
+    if release.get("cover_image"):
+        image_ids.append(release["cover_image"])
+    if release.get("og_image"):
+        image_ids.append(release["og_image"])
+    if release.get("gallery"):
+        for g in release["gallery"]:
+            if isinstance(g, dict):
+                img_id = g.get("image_id")
+            else:
+                img_id = g
+            if img_id:
+                image_ids.append(img_id)
+
+    # Delete the release
+    result = await db.music.delete_one({"_id": ObjectId(release_id)})
+
+    # Mark images as potentially orphaned (don't delete immediately - they might be used elsewhere)
+    # This is safer than immediate deletion
+    if image_ids:
+        await db.images.update_many(
+            {"_id": {"$in": [ObjectId(id) for id in image_ids if ObjectId.is_valid(id)]}},
+            {"$set": {"parent_deleted": True, "parent_deleted_at": datetime.utcnow()}}
+        )
+
     await _invalidate()
-    return {"deleted": True}
+    return {"deleted": True, "orphaned_images": len(image_ids)}

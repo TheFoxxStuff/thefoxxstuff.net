@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     max_file_size: int = 50 * 1024 * 1024  # 50MB
     thumb_size: tuple = (400, 400)
     medium_size: tuple = (1200, 1200)
-    allowed_extensions: set = {"jpg", "jpeg", "png", "gif", "webp"}
+    allowed_extensions: set = {"jpg", "jpeg", "png", "gif", "webp", "avif"}
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"

@@ -1,5 +1,4 @@
 import logging
-import re
 from math import ceil
 from datetime import datetime
 
@@ -11,6 +10,7 @@ from models import ArtWorkCreate, PaginatedResponse
 from auth import get_current_admin
 from cache import cache_get_or_set, cache_delete_pattern
 from config import settings
+from utils import generate_slug
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/arts", tags=["arts"])
@@ -20,14 +20,6 @@ def serialize(doc):
     if doc:
         doc["_id"] = str(doc["_id"])
     return doc
-
-
-def generate_slug(title: str) -> str:
-    slug = title.lower().strip()
-    slug = re.sub(r'[^\w\s-]', '', slug)
-    slug = re.sub(r'[\s_]+', '-', slug)
-    slug = re.sub(r'-+', '-', slug)
-    return slug.strip('-')
 
 
 async def ensure_unique_slug(db, slug: str, exclude_id: str = None) -> str:
@@ -219,8 +211,28 @@ async def delete_artwork(artwork_id: str, admin: dict = Depends(get_current_admi
     db = get_db()
     if not ObjectId.is_valid(artwork_id):
         raise HTTPException(status_code=400, detail="Invalid ID")
-    result = await db.arts.delete_one({"_id": ObjectId(artwork_id)})
-    if result.deleted_count == 0:
+
+    # Get artwork to find associated images
+    artwork = await db.arts.find_one({"_id": ObjectId(artwork_id)})
+    if not artwork:
         raise HTTPException(status_code=404, detail="Not found")
+
+    # Collect image IDs to potentially cleanup
+    image_ids = []
+    if artwork.get("image"):
+        image_ids.append(artwork["image"])
+    if artwork.get("og_image"):
+        image_ids.append(artwork["og_image"])
+
+    # Delete the artwork
+    result = await db.arts.delete_one({"_id": ObjectId(artwork_id)})
+
+    # Mark images as potentially orphaned
+    if image_ids:
+        await db.images.update_many(
+            {"_id": {"$in": [ObjectId(id) for id in image_ids if ObjectId.is_valid(id)]}},
+            {"$set": {"parent_deleted": True, "parent_deleted_at": datetime.utcnow()}}
+        )
+
     await _invalidate()
-    return {"deleted": True}
+    return {"deleted": True, "orphaned_images": len(image_ids)}

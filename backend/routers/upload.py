@@ -7,13 +7,13 @@ from pathlib import Path
 from PIL import Image
 import os
 import uuid
-import re
 import asyncio
 import subprocess
 import aiofiles
 from database import get_db
 from config import settings
 from auth import get_current_admin
+from utils import slugify_filename
 
 logger = logging.getLogger(__name__)
 
@@ -42,30 +42,18 @@ def ensure_directories():
 
 ensure_directories()
 
-def slugify(text: str) -> str:
-    """Convert text to URL-friendly slug"""
-    # Convert to lowercase and replace spaces with underscores
-    text = text.lower().strip()
-    # Remove non-alphanumeric characters except underscores and hyphens
-    text = re.sub(r'[^\w\s-]', '', text)
-    # Replace whitespace with underscores
-    text = re.sub(r'[\s]+', '_', text)
-    # Remove duplicate underscores
-    text = re.sub(r'_+', '_', text)
-    return text
-
 def get_extension(filename: str) -> str:
     return filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
 
 def generate_filename(base_name: str, ext: str) -> str:
     """Generate filename from base name"""
-    slug = slugify(base_name)
+    slug = slugify_filename(base_name)
     if not slug:
         slug = uuid.uuid4().hex[:8]
     return f"{slug}.{ext}"
 
-def create_thumbnail(input_path: Path, output_path: Path, size: tuple, format: str = 'WEBP') -> tuple:
-    """Create resized version maintaining aspect ratio in WebP format"""
+def create_thumbnail(input_path: Path, output_path: Path, size: tuple, format: str = 'AVIF') -> tuple:
+    """Create resized version maintaining aspect ratio in AVIF format"""
     with Image.open(input_path) as img:
         # Convert to RGB if necessary (for PNG with transparency)
         if img.mode in ('RGBA', 'LA', 'P'):
@@ -76,20 +64,20 @@ def create_thumbnail(input_path: Path, output_path: Path, size: tuple, format: s
             img = background
         elif img.mode != 'RGB':
             img = img.convert('RGB')
-        
+
         # Resize maintaining aspect ratio
         img.thumbnail(size, Image.Resampling.LANCZOS)
-        
-        # Save as WebP for medium and thumb
-        if format == 'WEBP':
-            img.save(output_path, 'WEBP', quality=85, method=6)
+
+        # Save as AVIF for medium and thumb (better compression than WebP)
+        if format == 'AVIF':
+            img.save(output_path, 'AVIF', quality=85, speed=6)
         else:
             img.save(output_path, format, quality=85, optimize=True)
-        
+
         return img.size
 
 async def process_image(
-    file: UploadFile, 
+    file: UploadFile,
     category: str = "markdown",
     custom_name: str = None,
     parent_id: str = None,
@@ -99,51 +87,79 @@ async def process_image(
     ext = get_extension(file.filename)
     if ext not in settings.allowed_extensions:
         raise HTTPException(400, f"File type not allowed. Allowed: {', '.join(settings.allowed_extensions)}")
-    
+
+    # Read file content first
+    content = await file.read()
+
+    # Validate file size before processing
+    if len(content) > settings.max_file_size:
+        raise HTTPException(400, f"File too large. Max size: {settings.max_file_size // (1024*1024)}MB")
+
     # Generate base filename from custom name or original filename
     base_name = custom_name or file.filename.rsplit('.', 1)[0]
-    base_slug = slugify(base_name)
-    
+    base_slug = slugify_filename(base_name)
+
     # Add unique suffix to prevent collisions
     unique_suffix = uuid.uuid4().hex[:6]
     filename_base = f"{base_slug}_{unique_suffix}"
-    
+
     # Determine paths based on category and gallery flag
     if category == "music" and is_gallery:
         base_dir = UPLOAD_DIR / "music" / "gallery"
     else:
         base_dir = UPLOAD_DIR / category
-    
+
     original_filename = f"{filename_base}_original.{ext}"
-    thumb_filename = f"{filename_base}_thumb.webp"
-    medium_filename = f"{filename_base}_medium.webp"
-    
+    thumb_filename = f"{filename_base}_thumb.avif"
+    medium_filename = f"{filename_base}_medium.avif"
+
     original_path = base_dir / "original" / original_filename
     thumb_path = base_dir / "thumb" / thumb_filename
     medium_path = base_dir / "medium" / medium_filename
-    
-    # Read and save original
-    content = await file.read()
-    if len(content) > settings.max_file_size:
-        raise HTTPException(400, f"File too large. Max size: {settings.max_file_size // (1024*1024)}MB")
-    
+
+    # Save original
     async with aiofiles.open(original_path, 'wb') as f:
         await f.write(content)
-    
-    # Get original dimensions
-    with Image.open(original_path) as img:
-        width, height = img.size
-    
-    # Create thumbnails in WebP format
-    thumb_size = create_thumbnail(original_path, thumb_path, settings.thumb_size, 'WEBP')
-    medium_size = create_thumbnail(original_path, medium_path, settings.medium_size, 'WEBP')
-    
+
+    # Validate image and get dimensions
+    try:
+        with Image.open(original_path) as img:
+            width, height = img.size
+
+            # Validate dimensions (max 10000x10000 to prevent memory issues)
+            if width > 10000 or height > 10000:
+                original_path.unlink()  # Delete the file
+                raise HTTPException(400, f"Image dimensions too large. Max: 10000x10000, got: {width}x{height}")
+
+            # Validate image is not corrupted
+            img.verify()
+    except Exception as e:
+        # Clean up on error
+        if original_path.exists():
+            original_path.unlink()
+        if isinstance(e, HTTPException):
+            raise
+        raise HTTPException(400, f"Invalid or corrupted image file: {str(e)}")
+
+    # Create thumbnails in AVIF format
+    try:
+        thumb_size = create_thumbnail(original_path, thumb_path, settings.thumb_size, 'AVIF')
+        medium_size = create_thumbnail(original_path, medium_path, settings.medium_size, 'AVIF')
+    except Exception as e:
+        # Clean up on error
+        original_path.unlink()
+        if thumb_path.exists():
+            thumb_path.unlink()
+        if medium_path.exists():
+            medium_path.unlink()
+        raise HTTPException(500, f"Failed to create thumbnails: {str(e)}")
+
     # Build relative paths for storage
     if category == "music" and is_gallery:
         rel_base = f"music/gallery"
     else:
         rel_base = category
-    
+
     return {
         "filename": original_filename,
         "original": f"{rel_base}/original/{original_filename}",
@@ -236,30 +252,48 @@ async def get_image_info(image_id: str):
 async def serve_image(path: str):
     """Serve image file with organized paths"""
     # Sanitize path to prevent directory traversal
-    safe_path = Path(path).as_posix()
-    if '..' in safe_path:
+    # Use resolve() to get absolute path and check it's within UPLOAD_DIR
+    try:
+        safe_path = Path(path)
+
+        # Check for suspicious patterns
+        if '..' in path or path.startswith('/') or path.startswith('\\'):
+            raise HTTPException(400, "Invalid path")
+
+        # Resolve to absolute path
+        file_path = (UPLOAD_DIR / safe_path).resolve()
+
+        # Ensure the resolved path is within UPLOAD_DIR (prevent traversal)
+        if not str(file_path).startswith(str(UPLOAD_DIR.resolve())):
+            raise HTTPException(403, "Access denied")
+
+        if not file_path.exists():
+            # Try legacy path structure for backward compatibility
+            parts = path.split('/')
+            if len(parts) == 2:  # old format: variant/filename
+                variant, filename = parts
+                # Check each category
+                for cat in CATEGORIES:
+                    legacy_path = (UPLOAD_DIR / cat / variant / filename).resolve()
+                    if str(legacy_path).startswith(str(UPLOAD_DIR.resolve())) and legacy_path.exists():
+                        file_path = legacy_path
+                        break
+                # Also check root level (very old format)
+                if not file_path.exists():
+                    root_path = (UPLOAD_DIR / variant / filename).resolve()
+                    if str(root_path).startswith(str(UPLOAD_DIR.resolve())) and root_path.exists():
+                        file_path = root_path
+
+        if not file_path.exists():
+            raise HTTPException(404, "File not found")
+
+        # Final security check
+        if not str(file_path).startswith(str(UPLOAD_DIR.resolve())):
+            raise HTTPException(403, "Access denied")
+
+        return FileResponse(file_path)
+    except ValueError:
         raise HTTPException(400, "Invalid path")
-    
-    file_path = UPLOAD_DIR / safe_path
-    if not file_path.exists():
-        # Try legacy path structure for backward compatibility
-        parts = safe_path.split('/')
-        if len(parts) == 2:  # old format: variant/filename
-            variant, filename = parts
-            # Check each category
-            for cat in CATEGORIES:
-                legacy_path = UPLOAD_DIR / cat / variant / filename
-                if legacy_path.exists():
-                    file_path = legacy_path
-                    break
-            # Also check root level (very old format)
-            if not file_path.exists():
-                file_path = UPLOAD_DIR / variant / filename
-    
-    if not file_path.exists():
-        raise HTTPException(404, "File not found")
-    
-    return FileResponse(file_path)
 
 @router.delete("/{image_id}")
 async def delete_image(image_id: str, admin: dict = Depends(get_current_admin)):
