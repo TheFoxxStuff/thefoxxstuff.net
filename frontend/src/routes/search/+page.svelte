@@ -142,7 +142,11 @@
         </button>
       </div>
     {/if}
+
+    {#if total === 0}
       <div class="text-center text-dark-500 py-12">No results found for "{query}"</div>
     {/if}
+  {:else}
+    <div class="text-center text-dark-500 py-12">Enter a search query to find music, blog posts, and artworks.</div>
   {/if}
 </div>
