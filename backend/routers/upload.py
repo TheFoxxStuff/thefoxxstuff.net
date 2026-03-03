@@ -169,6 +169,12 @@ async def process_image(
             medium_path.unlink()
         raise HTTPException(500, f"Failed to create thumbnails: {str(e)}")
 
+    # Build relative paths for storage
+    if category == "music" and is_gallery:
+        rel_base = f"music/gallery"
+    else:
+        rel_base = category
+
     return {
         "filename": original_filename,
         "original": f"{rel_base}/original/{original_filename}",
