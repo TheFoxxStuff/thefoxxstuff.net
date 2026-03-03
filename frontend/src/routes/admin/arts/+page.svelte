@@ -26,6 +26,14 @@
   let ogImageInfo = $state(null);
   let error = $state('');
   let showSeo = $state(false);
+  let slugManuallyEdited = $state(false);
+
+  // Auto-generate slug from title reactively
+  $effect(() => {
+    if (!editingId && form.title && !slugManuallyEdited) {
+      form.slug = generateSlug(form.title);
+    }
+  });
   
   const loadArtworks = async () => {
     try {
@@ -54,6 +62,7 @@
     editingId = null;
     showForm = false;
     showSeo = false;
+    slugManuallyEdited = false;
   };
   
   const handleSubmit = async (e) => {
@@ -81,6 +90,7 @@
   
   const editArtwork = async (a) => {
     editingId = a._id;
+    slugManuallyEdited = true; // Don't auto-generate when editing
     form = {
       title: a.title,
       slug: a.slug || '',
@@ -115,17 +125,11 @@
       alert(err.message);
     }
   };
-  
+
   function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  }
-  
-  function handleTitleChange() {
-    if (!editingId && form.title && !form.slug) {
-      form.slug = generateSlug(form.title);
-    }
   }
   
   // Auto-update dimensions when image is uploaded
@@ -154,7 +158,7 @@
         <div class="grid grid-cols-3 gap-4">
           <div class="col-span-2">
             <label class="label" for="fl-title-1">Title</label>
-            <input id="fl-title-1" type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
+            <input id="fl-title-1" type="text" bind:value={form.title} required class="input" />
           </div>
           <div>
             <label class="label" for="fl-year-2">Year</label>

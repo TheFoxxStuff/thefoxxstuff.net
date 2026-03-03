@@ -26,6 +26,14 @@
   let ogImageInfo = $state(null);
   let error = $state('');
   let showSeo = $state(false);
+  let slugManuallyEdited = $state(false);
+
+  // Auto-generate slug from title reactively
+  $effect(() => {
+    if (!editingId && form.title && !slugManuallyEdited) {
+      form.slug = generateSlug(form.title);
+    }
+  });
   
   const loadPosts = async () => {
     // invalidateAll перезапускает +page.js load() — посты обновятся через $derived
@@ -33,11 +41,11 @@
   };
   
   const resetForm = () => {
-    form = { 
-      title: '', 
+    form = {
+      title: '',
       slug: '',
-      content: '', 
-      excerpt: '', 
+      content: '',
+      excerpt: '',
       cover_image: '',
       meta_title: '',
       meta_description: '',
@@ -49,6 +57,7 @@
     editingId = null;
     showForm = false;
     showSeo = false;
+    slugManuallyEdited = false;
   };
   
   const handleSubmit = async (e) => {
@@ -70,6 +79,7 @@
   
   const editPost = async (p) => {
     editingId = p._id;
+    slugManuallyEdited = true; // Don't auto-generate when editing
     form = {
       title: p.title,
       slug: p.slug || '',
@@ -109,13 +119,6 @@
       alert(err.message);
     }
   };
-  
-  // Auto-generate slug from title
-  function handleTitleChange() {
-    if (!editingId && form.title && !form.slug) {
-      form.slug = generateSlug(form.title);
-    }
-  }
 </script>
 
 <SEO titleFull="Blog Admin - TheFoxxStuff" noindex={true} url={canonicalUrl("/admin")} />
@@ -135,13 +138,20 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="label" for="fl-title-1">Title</label>
-            <input id="fl-title-1" type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
+            <input id="fl-title-1" type="text" bind:value={form.title} required class="input" />
           </div>
           <div>
             <label class="label" for="fl-slug-url-2">Slug (URL)</label>
             <div class="flex gap-2">
-              <input id="fl-slug-url-2" type="text" bind:value={form.slug} class="input flex-1" placeholder="auto-generated-from-title" />
-              <button type="button" onclick={() => form.slug = generateSlug(form.title)} class="btn btn-secondary text-sm">Generate</button>
+              <input
+                id="fl-slug-url-2"
+                type="text"
+                bind:value={form.slug}
+                oninput={() => slugManuallyEdited = true}
+                class="input flex-1"
+                placeholder="auto-generated-from-title"
+              />
+              <button type="button" onclick={() => { form.slug = generateSlug(form.title); slugManuallyEdited = true; }} class="btn btn-secondary text-sm">Generate</button>
             </div>
           </div>
         </div>

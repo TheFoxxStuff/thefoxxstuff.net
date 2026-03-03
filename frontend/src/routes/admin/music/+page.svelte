@@ -36,13 +36,21 @@
   let ogImageInfo = $state(null);
   let error = $state('');
   let showSeo = $state(false);
-  
+  let slugManuallyEdited = $state(false);
+
   // Gallery upload
   let galleryFileInput = $state(null);
   let uploadingGallery = $state(false);
-  
+
   // Audio upload tracking
   let uploadingAudioIndex = $state(-1);
+
+  // Auto-generate slug from title reactively
+  $effect(() => {
+    if (!editingId && form.title && !slugManuallyEdited) {
+      form.slug = generateSlug(form.title);
+    }
+  });
   
   const loadReleases = async () => {
     try {
@@ -81,6 +89,7 @@
     editingId = null;
     showForm = false;
     showSeo = false;
+    slugManuallyEdited = false;
   };
 
   let metadataWriting = $state(false);
@@ -166,6 +175,7 @@
   
   const editRelease = async (r) => {
     editingId = r._id;
+    slugManuallyEdited = true; // Don't auto-generate when editing
     form = {
       ...r,
       slug: r.slug || '',
@@ -339,12 +349,6 @@
   function updateGalleryName(index, name) {
     form.gallery[index].name = name;
     galleryImages[index].gallery_name = name;
-  }
-  
-  function handleTitleChange() {
-    if (!editingId && form.title && !form.slug) {
-      form.slug = generateSlug(form.title);
-    }
   }
 </script>
 
