@@ -82,7 +82,7 @@
       if (editingId) await api.arts.update(editingId, data);
       else await api.arts.create(data);
       resetForm();
-      loadArtworks();
+      await loadArtworks();
     } catch (err) {
       error = err.message;
     }

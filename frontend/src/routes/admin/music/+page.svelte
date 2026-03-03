@@ -167,7 +167,7 @@
       if (editingId) await api.music.update(editingId, data);
       else await api.music.create(data);
       resetForm();
-      loadReleases();
+      await loadReleases();
     } catch (err) {
       error = err.message;
     }

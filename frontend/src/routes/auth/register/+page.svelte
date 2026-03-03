@@ -40,7 +40,7 @@
     <form onsubmit={handleSubmit} class="space-y-4">
       <div><label for="username" class="label">Username</label><input type="text" id="username" bind:value={username} required class="input" /></div>
       <div><label for="email" class="label">Email</label><input type="email" id="email" bind:value={email} required class="input" /></div>
-      <div><label for="password" class="label">Password</label><input type="password" id="password" bind:value={password} required minlength="6" class="input" /></div>
+      <div><label for="password" class="label">Password</label><input type="password" id="password" bind:value={password} required minlength="8" class="input" /></div>
       <button type="submit" disabled={loading} class="btn btn-primary w-full">{loading ? 'Loading...' : 'Register'}</button>
     </form>
     <p class="mt-6 text-center text-sm text-dark-400">Already have an account? <a href="/auth/login" class="text-accent-green hover:underline">Login</a></p>

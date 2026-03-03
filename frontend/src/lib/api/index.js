@@ -75,6 +75,11 @@ async function request(endpoint, options = {}, { cacheable = false, ttl = CACHE_
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: `Request failed (${response.status})` }));
+        // Handle Pydantic validation errors (422)
+        if (response.status === 422 && error.detail && Array.isArray(error.detail)) {
+          const messages = error.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join(', ');
+          throw new Error(messages);
+        }
         throw new Error(error.detail || `Error: ${response.status}`);
       }
 
