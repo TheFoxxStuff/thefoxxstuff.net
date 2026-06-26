@@ -5,7 +5,8 @@
       "Bash(python:*)",
       "Bash(npm run:*)",
       "Bash(gh run:*)",
-      "Bash(npx svelte-check:*)"
+      "Bash(npx svelte-check:*)",
+      "Bash(sed:*)"
     ]
   }
 }
