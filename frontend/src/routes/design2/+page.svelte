@@ -90,7 +90,7 @@
   }
 
   // Interactive state
-  let copiedCode = null;
+  let copiedCode = $state(null);
   function copyToClipboard(text, id) {
     if (browser && navigator.clipboard) {
       navigator.clipboard.writeText(text);
@@ -100,10 +100,10 @@
   }
 
   // Live input demo
-  let demoInput = '';
-  let demoTextarea = '';
-  let demoChecked = false;
-  let demoSelected = 'split';
+  let demoInput = $state('');
+  let demoTextarea = $state('');
+  let demoChecked = $state(false);
+  let demoSelected = $state('split');
 
   if (browser) {
     $effect(() => {
@@ -167,13 +167,14 @@
     <div class="p-3">
       <div class="flex flex-wrap gap-1.5">
         {#each sections as section}
+          {@const Comp = section.icon}
           <a
             href="#{section.id}"
             class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors no-underline hover:text-[--w] hover:bg-[--w12]"
             style="color: var(--w40); background: var(--w5);"
           >
             {#if section.icon}
-              <svelte:component this={section.icon} size={12} />
+              <Comp size={12} />
             {/if}
             {section.label}
           </a>
@@ -287,7 +288,7 @@
         { var: '--purple', dark: '#6D07EE', light: '#5b05c7', label: 'Purple', desc: 'Secondary accent, gradients' },
         { var: '--blue', dark: '#47ADFF', light: '#2563eb', label: 'Blue', desc: 'Active states, player, pagination' },
       ] as color}
-        <div class="rounded-xl overflow-hidden card-hover cursor-pointer group" onclick={() => copyToClipboard(color.dark, 'brand-'+color.var)}>
+        <div class="rounded-xl overflow-hidden card-hover cursor-pointer group" role="button" tabindex="0" onclick={() => copyToClipboard(color.dark, 'brand-'+color.var)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyToClipboard(color.dark, 'brand-'+color.var); } }}>
           <div class="h-28 relative transition-all group-hover:opacity-90" style="background: var({color.var});">
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               {#if copiedCode === 'brand-'+color.var}
@@ -320,7 +321,7 @@
         { name: 'accent-cyan', hex: '#22d3ee', usage: 'Gradient text, informational accents' },
         { name: 'accent-red', hex: '#ef4444', usage: 'Destructive actions, errors, danger states' },
       ] as color}
-        <div class="rounded-xl overflow-hidden card" onclick={() => copyToClipboard(color.hex, 'accent-'+color.name)}>
+        <div class="rounded-xl overflow-hidden card" role="button" tabindex="0" onclick={() => copyToClipboard(color.hex, 'accent-'+color.name)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyToClipboard(color.hex, 'accent-'+color.name); } }}>
           <div class="h-20 relative" style="background: {color.hex};">
             <div class="absolute inset-0 flex items-center justify-center">
               <span class="text-[11px] font-bold" style="color: {color.hex === '#4ade80' ? '#0a0a0a' : 'white'};">{color.hex}</span>
@@ -739,19 +740,19 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <div class="card p-6 space-y-5">
         <div>
-          <label class="label">Text Input</label>
+          <div class="label">Text Input</div>
           <input bind:value={demoInput} type="text" class="input" placeholder="Enter text..." />
         </div>
         <div>
-          <label class="label">Email</label>
+          <div class="label">Email</div>
           <input type="email" class="input" placeholder="you@example.com" />
         </div>
         <div>
-          <label class="label">Textarea</label>
+          <div class="label">Textarea</div>
           <textarea bind:value={demoTextarea} class="textarea" rows="3" placeholder="Multi-line text..."></textarea>
         </div>
         <div>
-          <label class="label">Disabled</label>
+          <div class="label">Disabled</div>
           <input type="text" class="input" value="Cannot edit" disabled />
         </div>
         <div class="flex items-center gap-2 pt-2">
@@ -1162,15 +1163,15 @@
         </div>
         <div class="h-px bg-[--w8] my-1 mx-2"></div>
         <div class="px-2 pb-2 flex flex-col gap-0.5">
-          <a href="#" class="flex items-center gap-[4px] px-3 py-1.5 text-[14px] text-[--w60] rounded-md transition hover:bg-[--w8] hover:text-[--w] no-underline" onclick={(e) => e.preventDefault()}>
+          <a href="/" class="flex items-center gap-[4px] px-3 py-1.5 text-[14px] text-[--w60] rounded-md transition hover:bg-[--w8] hover:text-[--w] no-underline" onclick={(e) => e.preventDefault()}>
             <Settings size={16} /> Profile settings
           </a>
           <div class="h-px bg-[--w8] my-0.5"></div>
-          <a href="#" class="flex items-center gap-[4px] px-3 py-1.5 text-[14px] text-[--w60] rounded-md transition hover:bg-[--w8] hover:text-[--w] no-underline" onclick={(e) => e.preventDefault()}>
+          <a href="/" class="flex items-center gap-[4px] px-3 py-1.5 text-[14px] text-[--w60] rounded-md transition hover:bg-[--w8] hover:text-[--w] no-underline" onclick={(e) => e.preventDefault()}>
             <Shield size={16} /> Admin panel
           </a>
           <div class="h-px bg-[--w8] my-0.5"></div>
-          <a href="#" class="flex items-center gap-[4px] px-3 py-1.5 text-[14px] text-accent-red rounded-md transition hover:bg-[--w8] no-underline" onclick={(e) => e.preventDefault()}>
+          <a href="/" class="flex items-center gap-[4px] px-3 py-1.5 text-[14px] text-accent-red rounded-md transition hover:bg-[--w8] no-underline" onclick={(e) => e.preventDefault()}>
             <LogOut size={16} /> Logout
           </a>
         </div>
@@ -1208,10 +1209,11 @@
             { icon: LinkIcon, label: 'Links', active: false },
             { icon: Info, label: 'About', active: true },
           ] as item}
-            <a href="#" class="flex flex-col items-center gap-1 py-2 rounded-lg transition-colors no-underline"
+            {@const Comp = item.icon}
+            <a href="/" class="flex flex-col items-center gap-1 py-2 rounded-lg transition-colors no-underline"
                style="color: {item.active ? 'var(--green)' : 'var(--w60)'};"
                onclick={(e) => e.preventDefault()}>
-              <svelte:component this={item.icon} size={20} />
+              <Comp size={20} />
               <span class="text-[11px]">{item.label}</span>
             </a>
           {/each}
@@ -1512,16 +1514,16 @@ This is **bold** and *italic* text.</textarea>
       <h3 class="font-display text-lg mb-4">New Item</h3>
       <div class="space-y-5">
         <div>
-          <label class="label">Title</label>
+          <div class="label">Title</div>
           <input type="text" class="input" placeholder="Enter title..." />
         </div>
         <div>
-          <label class="label">Slug</label>
+          <div class="label">Slug</div>
           <input type="text" class="input" placeholder="auto-generated-slug" />
           <span class="text-[11px] mt-1 block" style="color: var(--w30);">Auto-generated from title</span>
         </div>
         <div>
-          <label class="label">Description</label>
+          <div class="label">Description</div>
           <textarea class="textarea" rows="3" placeholder="Enter description..."></textarea>
         </div>
         <div class="flex gap-2">
@@ -1700,12 +1702,12 @@ This is **bold** and *italic* text.</textarea>
     <div class="card p-6">
       <div class="space-y-5">
         <div>
-          <label class="label">Title</label>
+          <div class="label">Title</div>
           <input type="text" class="input" placeholder="Post title" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="label">Category</label>
+            <div class="label">Category</div>
             <select class="input" style="cursor: pointer;">
               <option>Music</option>
               <option>Arts</option>
@@ -1713,12 +1715,12 @@ This is **bold** and *italic* text.</textarea>
             </select>
           </div>
           <div>
-            <label class="label">Date</label>
+            <div class="label">Date</div>
             <input type="date" class="input" />
           </div>
         </div>
         <div>
-          <label class="label">Cover Image</label>
+          <div class="label">Cover Image</div>
           <div class="upload-zone cursor-pointer p-8 flex flex-col items-center justify-center text-center" style="border: 2px dashed #434343; border-radius: 0.5rem; transition: all 0.2s;">
             <Image size={32} style="color: var(--w30);" />
             <div class="text-sm mt-2" style="color: var(--w40);">Click or drag to upload</div>
@@ -1747,9 +1749,10 @@ This is **bold** and *italic* text.</textarea>
       </p>
       <div class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3">
         {#each commonIcons as iconItem}
+          {@const Comp = iconItem.icon}
           <div class="flex flex-col items-center gap-2 group cursor-pointer">
             <div class="w-11 h-11 rounded-xl flex items-center justify-center transition-colors group-hover:bg-[--w8]" style="background: var(--w5);">
-              <svelte:component this={iconItem.icon} size={20} strokeWidth={1.5} style="color: var(--w40);" class="group-hover:text-[--w] transition-colors" />
+              <Comp size={20} strokeWidth={1.5} style="color: var(--w40);" class="group-hover:text-[--w] transition-colors" />
             </div>
             <span class="text-[9px] font-mono text-center leading-tight" style="color: var(--w30);">{iconItem.name}</span>
           </div>
@@ -1818,9 +1821,10 @@ This is **bold** and *italic* text.</textarea>
           body: 'Smart date colors (green for fresh, cyan for recent). HSL-based avatar colors from usernames. Gradient text. Pulse live indicators. The glow on THEF[O]XXSTUFF. These make the interface feel alive.',
         },
       ] as principle}
+        {@const Comp = principle.icon}
         <div class="card p-6 flex gap-4 items-start" style="background: linear-gradient(135deg, var(--w8), var(--w5));">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgba(115,238,7,0.06);">
-            <svelte:component this={principle.icon} size={18} style="color: {principle.color};" />
+            <Comp size={18} style="color: {principle.color};" />
           </div>
           <div>
             <h4 class="text-sm font-semibold text-[--w] mb-1">{principle.title}</h4>
@@ -1894,10 +1898,6 @@ This is **bold** and *italic* text.</textarea>
 </div>
 
 <style>
-  html {
-    scroll-behavior: smooth;
-  }
-
   /* Upload zone styling */
   .upload-zone {
     border: 2px dashed #434343;

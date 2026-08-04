@@ -467,22 +467,22 @@
 
     <div class="card p-6 space-y-6 mb-8">
       <div>
-        <label class="label">Email Address</label>
+        <div class="label">Email Address</div>
         <input type="email" class="input" placeholder="you@example.com" />
       </div>
       <div>
-        <label class="label">Focus State</label>
+        <div class="label">Focus State</div>
         <input type="text" class="input" placeholder="Click to see green ring" />
         <p class="text-xs mt-1" style="color: var(--w40);">
           focus: ring-1, ring-accent-green/50
         </p>
       </div>
       <div>
-        <label class="label">Message</label>
+        <div class="label">Message</div>
         <textarea class="textarea" rows="3" placeholder="Write something..."></textarea>
       </div>
       <div>
-        <label class="label">Disabled</label>
+        <div class="label">Disabled</div>
         <input type="text" class="input" value="Cannot edit this" disabled />
       </div>
     </div>
@@ -930,12 +930,13 @@
     <div class="card p-6">
       <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
         {#each commonIcons as iconItem}
+          {@const Comp = iconItem.icon}
           <div class="flex flex-col items-center gap-2 cursor-pointer group">
             <div
               class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors group-hover:bg-[--w8]"
               style="background: var(--w5);"
             >
-              <svelte:component this={iconItem.icon} size={22} strokeWidth={1.5} style="color: var(--w60);" class="group-hover:text-[--w]" />
+              <Comp size={22} strokeWidth={1.5} style="color: var(--w60);" class="group-hover:text-[--w]" />
             </div>
             <span class="text-[10px] font-mono text-center leading-tight" style="color: var(--w30);">{iconItem.name}</span>
           </div>
@@ -956,11 +957,6 @@
 </div>
 
 <style>
-  /* Smooth scroll for anchor links */
-  html {
-    scroll-behavior: smooth;
-  }
-
   /* Hide scrollbar for admin nav */
   .scrollbar-hide {
     -ms-overflow-style: none;

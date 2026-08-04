@@ -2,13 +2,15 @@
   import { SEO } from "$lib/components";
   import { canonicalUrl } from "$lib/seo.js";
   import { api } from '$lib/api';
+  import { onMount } from 'svelte';
   let { data: pageData } = $props();
-  let links = $state(pageData.links);
+  let links = $state([]);
   let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
   let form = $state({ title: '', url: '', icon: '', order: 0 });
   let error = $state('');
+  onMount(() => { links = pageData.links ?? null; });
   const loadLinks = async () => { try { links = await api.links.list(); } catch (e) { console.error(e); } };
   const resetForm = () => { form = { title: '', url: '', icon: '', order: 0 }; editingId = null; showForm = false; };
   const handleSubmit = async (e) => {

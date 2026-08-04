@@ -1,4 +1,4 @@
-<script>
+﻿<script>
   import { page } from '$app/stores';
   import { api, API_BASE } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
@@ -8,9 +8,9 @@
 
   let { data: pageData } = $props();
 
-  let profile = $state(pageData.profile);
+  let profile = $derived(pageData.profile);
   let loading = $state(false);
-  let error = $state(profile ? '' : 'Profile not found');
+  let error = $derived(profile ? '' : 'Profile not found');
   let isOwnProfile = $derived($auth.user?.username === profile?.username);
 
   function avUrl(p) { return p ? `${API_BASE}/upload/file/${p}` : null; }
@@ -28,6 +28,7 @@
   let profileBio  = $derived(profile?.bio || `${profileName} on TheFoxxStuff`);
   let profileImg  = $derived(profile?.avatar_thumb ? avUrl(profile.avatar_thumb) : SITE.defaultImage);
   let profileUrl  = $derived(profile ? canonicalUrl(`/profile/${profile.username}`) : canonicalUrl('/'));
+  let bannerUrl   = $derived(profile?.banner_image ? `${API_BASE}/upload/file/${profile.banner_image}` : null);
 </script>
 
 <SEO
@@ -52,6 +53,13 @@
     {@const hue = nameHue(profile.username)}
     {@const thumb = avUrl(profile.avatar_thumb)}
     {@const original = avUrl(profile.avatar_original)}
+
+    <!-- Banner -->
+    {#if bannerUrl}
+      <div class="banner-wrap">
+        <img src={bannerUrl} alt="" class="banner-img" />
+      </div>
+    {/if}
 
     <div class="profile-card">
 
@@ -138,6 +146,22 @@
     gap: 6px;
   }
   @media(min-width: 829px) { .page-wrap { padding-left: 0; padding-right: 0; } }
+
+  /* ── Banner ── */
+  .banner-wrap {
+    width: 100%;
+    height: 200px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--w5);
+  }
+  @media(min-width: 768px) { .banner-wrap { height: 260px; } }
+  .banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
   /* ── Profile card ── */
   .profile-card {

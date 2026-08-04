@@ -604,9 +604,6 @@
     border-color: var(--w12);
     color: var(--w);
     transform: translateY(-1px);
-    & svg {
-      flex-shrink: 0;
-    }
   }
 
   /* ===== Top Content ===== */

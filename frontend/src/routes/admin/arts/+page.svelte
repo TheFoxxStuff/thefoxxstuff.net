@@ -3,9 +3,10 @@
   import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
+  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
-  let artworks = $state(pageData.artworks);
+  let artworks = $state([]);
   let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
@@ -27,6 +28,8 @@
   let error = $state('');
   let showSeo = $state(false);
   let slugManuallyEdited = $state(false);
+
+  onMount(() => { artworks = pageData.artworks ?? []; });
 
   // Auto-generate slug from title reactively
   $effect(() => {
@@ -197,7 +200,7 @@
         </div>
         
         <div>
-          <label class="label">Description (Markdown)</label>
+          <div class="label">Description (Markdown)</div>
           <MarkdownEditor bind:value={form.description} rows={6} placeholder="Describe your artwork..." />
         </div>
         

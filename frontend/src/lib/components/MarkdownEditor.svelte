@@ -4,10 +4,10 @@
 
   let { value = $bindable(''), placeholder = 'Write your content in Markdown...', rows = 16 } = $props();
 
-  let fileInput;
+  let fileInput = $state();
   let uploading = $state(false);
   let mode = $state('write'); // 'write' | 'preview' | 'split'
-  let textarea;
+  let textarea = $state();
   let dragOver = $state(false);
 
   async function handleImageUpload(file) {

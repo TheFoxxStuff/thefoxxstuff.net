@@ -4,14 +4,17 @@
   import { Search } from 'lucide-svelte';
   import { SEO } from '$lib/components';
   import { canonicalUrl } from '$lib/seo.js';
+  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
 
   let query = $derived(pageData.query);
-  let results = $state(pageData.results);
+  let results = $state(null);
   let loading = $state(false);
   let currentPage = $state(1);
   let limit = $state(10);
+
+  onMount(() => { results = pageData.results ?? null; });
 
   async function doSearch(q, page = 1) {
     if (!q || !q.trim()) { results = null; return; }

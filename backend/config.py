@@ -1,13 +1,15 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 import os
-import secrets
 from pathlib import Path
 
 class Settings(BaseSettings):
     mongodb_url: str = "mongodb://localhost:27017"
     database_name: str = "thefoxxstuff"
-    secret_key: str = secrets.token_urlsafe(48)
+    # FIX: стабильный ключ по умолчанию — иначе при каждом рестарте процесса
+    # генерируется новый, все токены инвалидируются и юзеров выкидывает из админки.
+    # В проде задаётся через env SECRET_KEY (см. docker-compose.yml).
+    secret_key: str = "thefoxxstuff-dev-secret-change-me"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     frontend_url: str = "http://localhost:5173"

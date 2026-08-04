@@ -3,9 +3,10 @@
   import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, generateSlug } from '$lib/api';
   import { ImageUpload, MarkdownEditor } from '$lib/components';
+  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
-  let releases = $state(pageData.releases);
+  let releases = $state([]);
   let loading = $state(false);
   let showForm = $state(false);
   let editingId = $state(null);
@@ -37,6 +38,8 @@
   let error = $state('');
   let showSeo = $state(false);
   let slugManuallyEdited = $state(false);
+
+  onMount(() => { releases = pageData.releases ?? []; });
 
   // Gallery upload
   let galleryFileInput = $state(null);
@@ -438,7 +441,7 @@
         <!-- Track List with Audio Upload -->
         <div>
           <div class="flex justify-between items-center mb-3">
-            <label class="label mb-0">Track List</label>
+            <div class="label mb-0">Track List</div>
             <button type="button" onclick={addTrack} class="btn btn-secondary text-sm">+ Add Track</button>
           </div>
           {#if form.tracks.length > 0}
@@ -451,13 +454,13 @@
                     <input type="text" bind:value={track.title} placeholder="Track title" class="input flex-1" />
                     <input type="text" bind:value={track.duration} placeholder="00:00" class="input w-20 text-center" />
                     <div class="flex gap-1">
-                      <button type="button" onclick={() => moveTrack(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
+                      <button type="button" onclick={() => moveTrack(i, i - 1)} aria-label="Move track up" disabled={i === 0} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
                       </button>
-                      <button type="button" onclick={() => moveTrack(i, i + 1)} disabled={i === form.tracks.length - 1} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
+                      <button type="button" onclick={() => moveTrack(i, i + 1)} aria-label="Move track down" disabled={i === form.tracks.length - 1} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                       </button>
-                      <button type="button" onclick={() => removeTrack(i)} class="p-1 hover:bg-accent-red/50 rounded">
+                      <button type="button" onclick={() => removeTrack(i)} aria-label="Remove track" class="p-1 hover:bg-accent-red/50 rounded">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                     </div>
@@ -525,7 +528,7 @@
         <!-- Gallery with naming -->
         <div>
           <div class="flex justify-between items-center mb-3">
-            <label class="label mb-0">Gallery</label>
+            <div class="label mb-0">Gallery</div>
             <label class="btn btn-secondary text-sm cursor-pointer">
               {uploadingGallery ? 'Uploading...' : '+ Add Images'}
               <input 
@@ -557,6 +560,7 @@
                   <button 
                     type="button" 
                     onclick={() => removeGalleryImage(i)}
+                    aria-label="Remove gallery image"
                     class="absolute top-1 right-1 p-1 bg-accent-red/80 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

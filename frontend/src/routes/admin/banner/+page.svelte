@@ -3,9 +3,10 @@
   import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl } from '$lib/api';
   import { ImageUpload } from '$lib/components';
+  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
-  let banner = $state(pageData.banner);
+  let banner = $state({ slides: [] });
   let loading = $state(false);
   let showForm = $state(false);
   let editingIndex = $state(-1);
@@ -13,6 +14,8 @@
   let imageInfo = $state(null);
   let error = $state('');
   let saving = $state(false);
+
+  onMount(() => { banner = pageData.banner ?? { slides: [] }; });
   
   const loadBanner = async () => {
     try {
@@ -155,10 +158,10 @@
       {#each banner.slides as slide, i}
         <div class="card p-4 flex items-center gap-4">
           <div class="flex flex-col gap-1">
-            <button onclick={() => moveSlide(i, i - 1)} disabled={i === 0} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
+            <button onclick={() => moveSlide(i, i - 1)} aria-label="Move slide up" disabled={i === 0} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
             </button>
-            <button onclick={() => moveSlide(i, i + 1)} disabled={i === banner.slides.length - 1} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
+            <button onclick={() => moveSlide(i, i + 1)} aria-label="Move slide down" disabled={i === banner.slides.length - 1} class="p-1 hover:bg-[--w12] rounded disabled:opacity-30">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
           </div>

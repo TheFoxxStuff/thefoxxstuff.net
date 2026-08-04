@@ -1,4 +1,4 @@
-<script>
+﻿<script>
   import { onMount } from 'svelte';
   import { api, API_BASE } from '$lib/api';
   import { auth, isAdmin } from '$lib/stores/auth.js';
@@ -6,24 +6,31 @@
   import { SEO } from '$lib/components';
   import { canonicalUrl } from '$lib/seo.js';
   import { AvatarCropper } from '$lib/components';
-  import { Camera, Save, Trash2, Check, LogOut, Shield } from 'lucide-svelte';
+  import { Camera, Save, Trash2, Check, LogOut, Shield, Image } from 'lucide-svelte';
   import { presence } from '$lib/stores/presence.js';
 
   let { data: pageData } = $props();
 
-  let profile     = $state(pageData.profile);
+  let profile     = $state(null);
   let loading     = $state(false);
   let saving      = $state(false);
   let error       = $state('');
   let success     = $state('');
-  let displayName = $state(profile?.display_name || '');
-  let bio         = $state(profile?.bio || '');
+  let displayName = $state('');
+  let bio         = $state('');
 
   // Кроппер
   let cropFile    = $state(null);  // File object — открывает кроппер
   let bioWords    = $derived(bio.trim() ? bio.trim().split(/\s+/).length : 0);
 
+  // Banner
+  let bannerFile  = $state(null);
+  let bannerPreview = $state(null);
+  let bannerUploading = $state(false);
+  let bannerSaving = $state(false);
+
   function avUrl(p) { return p ? `${API_BASE}/upload/file/${p}` : null; }
+  function bannerUrl(p) { return p ? `${API_BASE}/upload/file/${p}` : null; }
 
   function nameHue(name) {
     let h = 0;
@@ -33,6 +40,10 @@
 
   onMount(() => {
     if (!$auth.user) goto('/auth/login');
+    // Данные загружены на клиенте (ssr=false) до mount — снимаем снимок
+    profile = pageData.profile ?? null;
+    displayName = profile?.display_name || '';
+    bio = profile?.bio || '';
   });
 
   async function saveProfile() {
@@ -88,6 +99,55 @@
     } catch (e) { error = e.message; }
   }
 
+  // Banner functions
+  function pickBannerFile(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 10 * 1024 * 1024) { error = 'Banner file too large (max 10 MB)'; return; }
+    error = '';
+    bannerFile = f;
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (ev) => { bannerPreview = ev.target.result; };
+    reader.readAsDataURL(f);
+    e.target.value = '';
+  }
+
+  async function uploadBanner() {
+    if (!bannerFile) return;
+    bannerUploading = true;
+    error = '';
+    try {
+      const result = await api.profile.uploadBanner(bannerFile);
+      profile = { ...profile, banner_image: result.banner_image };
+      bannerFile = null;
+      bannerPreview = null;
+      presence.reconnect();
+      success = 'Banner updated!';
+      setTimeout(() => success = '', 3000);
+    } catch (e) {
+      error = e.message;
+    } finally {
+      bannerUploading = false;
+    }
+  }
+
+  function cancelBannerUpload() {
+    bannerFile = null;
+    bannerPreview = null;
+  }
+
+  async function deleteBanner() {
+    if (!confirm('Remove banner?')) return;
+    try {
+      await api.profile.deleteBanner();
+      profile = { ...profile, banner_image: null };
+      presence.reconnect();
+      success = 'Banner removed';
+      setTimeout(() => success = '', 3000);
+    } catch (e) { error = e.message; }
+  }
+
   function doLogout() { auth.logout(); goto('/'); }
 </script>
 
@@ -115,6 +175,48 @@
   {#if profile}
     {@const hue = nameHue(profile.username)}
     {@const thumb = avUrl(profile.avatar_thumb)}
+    {@const banner = bannerPreview || (profile.banner_image ? bannerUrl(profile.banner_image) : null)}
+
+    <!-- Banner card -->
+    <div class="card">
+      <div class="card-label">Banner</div>
+      
+      {#if banner}
+        <div class="banner-preview">
+          <img src={banner} alt="Banner preview" class="banner-preview-img" />
+        </div>
+      {:else}
+        <div class="banner-placeholder">
+          <span class="banner-placeholder-icon"><Image size={32} /></span>
+          <span>No banner image</span>
+        </div>
+      {/if}
+
+      <div class="banner-actions">
+        <label class="banner-upload-btn">
+          <input type="file" accept="image/*" onchange={pickBannerFile} class="hidden" />
+          <Camera size={14} />
+          <span>{banner ? 'Change banner' : 'Upload banner'}</span>
+        </label>
+        {#if banner || profile.banner_image}
+          <button onclick={deleteBanner} class="banner-delete-btn" title="Remove banner">
+            <Trash2 size={14} />
+            <span>Remove</span>
+          </button>
+        {/if}
+      </div>
+
+      {#if bannerFile}
+        <div class="banner-upload-actions">
+          <button onclick={uploadBanner} disabled={bannerUploading} class="btn btn-primary">
+            {bannerUploading ? 'Uploading...' : 'Save Banner'}
+          </button>
+          <button onclick={cancelBannerUpload} class="btn btn-secondary">Cancel</button>
+        </div>
+      {/if}
+      
+      <div class="field-hint muted">Recommended size: 1920×600. Max 10 MB.</div>
+    </div>
 
     <!-- ── Avatar card ── -->
     <div class="card">
@@ -129,67 +231,49 @@
                 {(profile.display_name || profile.username || '?').slice(0,2).toUpperCase()}
               </div>
             {/if}
+            <input type="file" accept="image/*" onchange={pickFile} class="hidden" />
             <div class="av-overlay"><Camera size={20}/></div>
-            <input type="file" accept="image/*" class="hidden" onchange={pickFile}/>
           </label>
         </div>
         <div class="av-info">
-          <p class="av-hint">Square image recommended. PNG or JPG, max 10 MB.</p>
+          <div class="av-hint">Click avatar to upload new photo</div>
           <div class="av-btns">
-            <label class="av-btn">
-              <Camera size={13}/> Change photo
-              <input type="file" accept="image/*" class="hidden" onchange={pickFile}/>
+            <label class="av-btn" for="avatar-input">
+              <Camera size={14}/> Change
             </label>
             {#if profile.avatar_thumb}
-              <button class="av-btn av-danger" onclick={deleteAvatar}>
-                <Trash2 size={13}/> Remove
+              <button onclick={deleteAvatar} class="av-btn av-danger">
+                <Trash2 size={14}/> Remove
               </button>
             {/if}
           </div>
         </div>
       </div>
+      <input id="avatar-input" type="file" accept="image/*" onchange={pickFile} class="hidden" />
     </div>
 
-    <!-- ── Info card ── -->
+    <!-- ── Profile info card ── -->
     <div class="card">
-      <div class="card-label">Display info</div>
-
+      <div class="card-label">Profile Info</div>
+      
       <div class="field">
-        <label class="field-label" for="displayName">Display Name</label>
-        <input type="text" class="field-input" placeholder="Your display name"
-          maxlength="50" id="displayName" bind:value={displayName} />
-        <span class="field-hint">{displayName.length}/50</span>
+        <label class="field-label" for="fl-display-name">Display Name</label>
+        <input id="fl-display-name" type="text" bind:value={displayName} class="field-input" placeholder="Your display name" maxlength="50" />
       </div>
 
       <div class="field">
-        <label class="field-label" for="username">Username</label>
-        <input type="text" class="field-input" id="username" value={profile.username} disabled/>
-        <span class="field-hint muted">Cannot be changed</span>
+        <label class="field-label" for="fl-bio">Bio</label>
+        <textarea id="fl-bio" bind:value={bio} class="field-textarea" rows="4" placeholder="Tell us about yourself..." maxlength="1500"></textarea>
+        <span class="field-hint {bioWords > 190 ? 'over' : 'muted'}">{bioWords}/190 words</span>
       </div>
 
-      <div class="field">
-        <label class="field-label" for="bio">Bio</label>
-        <textarea class="field-textarea" rows="4"
-          id="bio" placeholder="Tell something about yourself…"
-          bind:value={bio}></textarea>
-        <span class="field-hint" class:over={bioWords > 190}>{bioWords}/190 words</span>
-      </div>
-
-      {#if error}
-        <div class="alert error">{error}</div>
-      {/if}
-      {#if success}
-        <div class="alert ok">{success}</div>
-      {/if}
+      {#if error}<div class="alert error">{error}</div>{/if}
+      {#if success}<div class="alert ok"><Check size={14}/> {success}</div>{/if}
 
       <div class="card-footer">
-        <button class="save-btn" onclick={saveProfile} disabled={saving || bioWords > 190}>
-          <Save size={15}/>
-          {saving ? 'Saving…' : 'Save changes'}
+        <button onclick={saveProfile} disabled={saving} class="save-btn">
+          <Save size={16}/> {saving ? 'Saving...' : 'Save Changes'}
         </button>
-        {#if success}
-          <span class="save-ok"><Check size={13}/> Saved</span>
-        {/if}
       </div>
     </div>
 
@@ -197,12 +281,14 @@
     <div class="card card-account">
       <div class="card-label danger-lbl">Account</div>
       <div class="account-row">
-        {#if isAdmin($auth.user)}
-          <a href="/admin" class="acc-link"><Shield size={14}/> Admin Panel</a>
-        {/if}
-        <button class="acc-link acc-logout" onclick={doLogout}>
-          <LogOut size={14}/> Log Out
+        <button onclick={doLogout} class="acc-link acc-logout">
+          <LogOut size={14}/> Log out
         </button>
+        {#if isAdmin($auth.user)}
+          <a href="/admin" class="acc-link">
+            <Shield size={14}/> Admin Panel
+          </a>
+        {/if}
       </div>
     </div>
 
@@ -239,6 +325,78 @@
   }
   .card-account { border-color:rgba(239,68,68,.1); }
   .danger-lbl   { color:rgba(239,68,68,.5); }
+
+  /* Banner */
+  .banner-preview {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--w8);
+  }
+  .banner-preview-img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+  .banner-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px;
+    color: var(--w30);
+    font-size: 13px;
+    background: var(--w8);
+    border-radius: 10px;
+    border: 1px dashed var(--w12);
+  }
+  .banner-placeholder-icon { opacity: 0.5; }
+  .banner-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .banner-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--w12);
+    background: var(--w8);
+    color: var(--w60);
+    transition: background .12s, color .12s;
+  }
+  .banner-upload-btn:hover {
+    background: var(--w12);
+    color: var(--w);
+  }
+  .banner-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid rgba(239,68,68,.2);
+    background: rgba(239,68,68,.07);
+    color: #ef4444;
+    transition: background .12s;
+  }
+  .banner-delete-btn:hover {
+    background: rgba(239,68,68,.12);
+  }
+  .banner-upload-actions {
+    display: flex;
+    gap: 8px;
+  }
 
   /* Avatar */
   .av-row { display:flex; align-items:center; gap:20px; }
@@ -284,12 +442,12 @@
   .field-label { font-size:12px; font-weight:600; color:var(--w60); }
   .field-input, .field-textarea {
     width:100%; box-sizing:border-box;
-    background:var(--w8); border:1px solid var(--w12); color:var(--w);
+    background:var(--w8); color:var(--w);
     border-radius:9px; padding:10px 13px;
     font-size:14px; font-family:inherit; outline:none;
-    transition:border-color .12s;
+    transition:box-shadow .12s;
   }
-  .field-input:focus, .field-textarea:focus { border-color:rgba(74,222,128,.4); }
+  .field-input:focus, .field-textarea:focus { box-shadow:0 0 0 1px rgba(255,255,255,.45); }
   .field-input:disabled { opacity:.4; cursor:not-allowed; }
   .field-textarea { resize:none; line-height:1.55; }
   .field-hint { font-size:11px; color:var(--w30); align-self:flex-end; }
@@ -311,7 +469,6 @@
   }
   .save-btn:hover { background:#6ee7a0; }
   .save-btn:disabled { opacity:.45; cursor:not-allowed; }
-  .save-ok { display:inline-flex; align-items:center; gap:5px; font-size:13px; color:#4ade80; }
 
   /* Account */
   .account-row { display:flex; gap:8px; flex-wrap:wrap; }
@@ -324,4 +481,34 @@
   }
   .acc-link:hover  { background:var(--w12); color:var(--w); }
   .acc-logout:hover { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.2); color:#ef4444; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: #4ade80;
+    color: #0a0a0a;
+    border-color: #4ade80;
+  }
+  .btn-primary:hover { background: #6ee7a0; }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--w8);
+    color: var(--w60);
+    border-color: var(--w12);
+  }
+  .btn-secondary:hover { background: var(--w12); color: var(--w); }
+
+  .hidden { display: none; }
 </style>

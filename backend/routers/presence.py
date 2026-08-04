@@ -314,7 +314,10 @@ async def presence_ws(
 
     redis = get_redis()
     if not redis:
-        await websocket.close(code=1011, reason="Redis unavailable")
+        # FIX: закрываем нормально (code 1000), а не 1011 — иначе клиент
+        # реконнектится бесконечно, создавая шум из open/close в логах.
+        # При возврате Redis клиент переподключится (навигация/видимость вкладки).
+        await websocket.close(code=1000, reason="Redis unavailable")
         return
 
     user    = await _get_user(token)

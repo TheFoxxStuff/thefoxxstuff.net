@@ -4,9 +4,12 @@
   import { api, API_BASE } from '$lib/api';
   import { auth } from '$lib/stores/auth.js';
   import { Shield, Trash2, User } from 'lucide-svelte';
+  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
-  let users = $state(pageData.users);
+  let users = $state([]);
+
+  onMount(() => { users = pageData.users ?? []; });
 
   const loadUsers = async () => { users = await api.auth.users().catch(() => users); };
   const updateRole = async (userId, role) => {

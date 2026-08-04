@@ -9,7 +9,7 @@
     max = 20
   } = $props();
   
-  let fileInput;
+  let fileInput = $state();
   let uploading = $state(false);
   let dragOver = $state(false);
   let error = $state('');
@@ -58,6 +58,13 @@
     value = value.filter((_, i) => i !== index);
     images = images.filter((_, i) => i !== index);
   }
+
+  function handleZoneKeydown(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput?.click();
+    }
+  }
   
   function moveImage(fromIndex, toIndex) {
     if (toIndex < 0 || toIndex >= value.length) return;
@@ -71,7 +78,7 @@
 </script>
 
 <div class="multi-image-upload">
-  <label class="label">{label} ({value.length}/{max})</label>
+  <div class="label">{label} ({value.length}/{max})</div>
   
   {#if images.length > 0}
     <div class="grid grid-cols-4 gap-3 mb-3">
@@ -100,6 +107,9 @@
       ondrop={handleDrop}
       ondragover={(e) => { e.preventDefault(); dragOver = true; }}
       ondragleave={() => dragOver = false}
+      role="button"
+      tabindex="0"
+      onkeydown={handleZoneKeydown}
     >
       {#if uploading}
         <div class="flex items-center justify-center gap-2 py-6">

@@ -2,13 +2,18 @@
   import { SEO } from "$lib/components";
   import { canonicalUrl } from "$lib/seo.js";
   import { api } from '$lib/api';
+  import { onMount } from 'svelte';
   let { data: pageData } = $props();
-  const about = pageData.about;
-  let form = $state(about ? { ...about, social_links: about.social_links || {} } : { name: '', location: '', genres: [], bio: '', avatar: '', email: '', liner_notes: '', social_links: {} });
-  let genresInput = $state((about?.genres || []).join(', '));
+  let form = $state({ name: '', location: '', genres: [], bio: '', avatar: '', email: '', liner_notes: '', social_links: {} });
+  let genresInput = $state('');
   let saving = $state(false);
   let error = $state('');
   let success = $state('');
+  onMount(() => {
+    const about = pageData.about;
+    form = about ? { ...about, social_links: about.social_links || {} } : { name: '', location: '', genres: [], bio: '', avatar: '', email: '', liner_notes: '', social_links: {} };
+    genresInput = (about?.genres || []).join(', ');
+  });
   const handleSubmit = async (e) => {
     e.preventDefault(); error = ''; success = ''; saving = true;
     try { const payload = { ...form, genres: genresInput.split(',').map(g => g.trim()).filter(Boolean) }; await api.about.update(payload); success = 'Saved!'; }

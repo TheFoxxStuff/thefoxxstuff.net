@@ -51,6 +51,13 @@
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('image/')) handleUpload(file);
   }
+
+  function handleZoneKeydown(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput?.click();
+    }
+  }
   
   function handleDragOver(e) {
     e.preventDefault();
@@ -70,13 +77,16 @@
 </script>
 
 <div class="image-upload">
-  <label class="label">{label}</label>
+  <div class="label">{label}</div>
   
   <div 
     class="upload-zone {dragOver ? 'drag-over' : ''}"
     ondrop={handleDrop}
     ondragover={handleDragOver}
     ondragleave={handleDragLeave}
+    role="button"
+    tabindex="0"
+    onkeydown={handleZoneKeydown}
   >
     {#if uploading}
       <div class="flex flex-col items-center gap-2 py-8">
@@ -89,7 +99,7 @@
     {:else if previewUrl}
       <div class="relative">
         <img src={previewUrl} alt="Preview" class="max-h-48 rounded-lg mx-auto" />
-        <button type="button" onclick={clearImage} class="absolute top-2 right-2 p-1 rounded-full hover:bg-accent-red/80 bg-[--w12] transition-colors">
+        <button type="button" onclick={clearImage} aria-label="Remove image" class="absolute top-2 right-2 p-1 rounded-full hover:bg-accent-red/80 bg-[--w12] transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>

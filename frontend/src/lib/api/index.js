@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+﻿import { browser } from '$app/environment';
 import { auth } from '$lib/stores/auth.js';
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
@@ -255,6 +255,8 @@ export const api = {
     uploadAvatar: (file, cropX=0, cropY=0, cropSize=0) =>
                     uploadFile('/profile/me/avatar', file, { crop_x: cropX, crop_y: cropY, crop_size: cropSize }),
     deleteAvatar: () => request('/profile/me/avatar', { method: 'DELETE' }),
+    uploadBanner: (file) => uploadFile('/profile/me/banner', file),
+    deleteBanner: () => request('/profile/me/banner', { method: 'DELETE' }),
   },
   chat: {
     messages: (limit=50) => request(`/chat/messages?limit=${limit}`),

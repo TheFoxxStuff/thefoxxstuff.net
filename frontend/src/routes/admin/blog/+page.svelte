@@ -170,7 +170,7 @@
         </div>
         
         <div>
-          <label class="label">Content (Markdown)</label>
+          <div class="label">Content (Markdown)</div>
           <MarkdownEditor bind:value={form.content} rows={15} placeholder="Write your blog post in Markdown..." />
         </div>
         

@@ -1,0 +1,29 @@
+- generic [ref=f61e3]:
+  - banner [ref=f61e5]:
+    - generic [ref=f61e6]:
+      - link [ref=f61e7] [cursor=pointer]:
+        - /url: /
+        - img "logo" [ref=f61e8]
+      - navigation [ref=f61e10]:
+        - generic [ref=f61e12]:
+          - link "Music" [ref=f61e13] [cursor=pointer]:
+            - /url: /music
+          - link "Blog" [ref=f61e14] [cursor=pointer]:
+            - /url: /blog
+          - link "Arts" [ref=f61e15] [cursor=pointer]:
+            - /url: /arts
+          - link "Links" [ref=f61e16] [cursor=pointer]:
+            - /url: /links
+          - link "About" [ref=f61e17] [cursor=pointer]:
+            - /url: /about
+        - generic [ref=f61e20]:
+          - textbox "Search..." [ref=f61e21]
+          - button [ref=f61e22] [cursor=pointer]
+        - button "Search" [ref=f61e26] [cursor=pointer]
+  - main [ref=f61e33]
+  - contentinfo [ref=f61e35]:
+    - generic [ref=f61e36]: © TheFoxxStuffы Stuff 2026
+    - generic [ref=f61e37]:
+      - link "@thefoxxstuff" [ref=f61e38] [cursor=pointer]:
+        - /url: https://t.me/thefoxxstuff
+      - button "Toggle theme" [ref=f61e46] [cursor=pointer]

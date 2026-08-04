@@ -2,12 +2,13 @@
   import { SEO } from "$lib/components";
   import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, API_BASE } from '$lib/api';
+  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
   let activeTab = $state('images'); // 'images' | 'audio'
 
   // ── Images ──────────────────────────────────────────
-  let images = $state(pageData.images);
+  let images = $state([]);
   let loadingImages = $state(false);
   let imgPage = $state(1);
   let category = $state('');
@@ -15,6 +16,7 @@
   let cleanupResult = $state(null);
   let cleaning = $state(false);
   let selectedImage = $state(null);
+  onMount(() => { images = pageData.images ?? []; });
 
   // ── Audio ────────────────────────────────────────────
   let audioFiles = $state([]);

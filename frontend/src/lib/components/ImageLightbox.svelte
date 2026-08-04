@@ -52,6 +52,7 @@
   <div
     class="lb-backdrop"
     onclick={handleBgClick}
+    onkeydown={handleKeydown}
     role="dialog"
     aria-modal="true"
     aria-label="Image preview"

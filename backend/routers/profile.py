@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query, Body
+﻿from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query, Body, Response
 from bson import ObjectId
 from datetime import datetime
 from pathlib import Path
@@ -16,12 +16,17 @@ UPLOAD_DIR = Path(settings.upload_dir)
 AVATAR_DIR = UPLOAD_DIR / "avatars"
 AVATAR_ORIGINAL = AVATAR_DIR / "original"
 AVATAR_THUMB = AVATAR_DIR / "thumb"
+BANNER_DIR = UPLOAD_DIR / "banners"
+BANNER_ORIGINAL = BANNER_DIR / "original"
+BANNER_THUMB = BANNER_DIR / "thumb"
 
-for d in [AVATAR_ORIGINAL, AVATAR_THUMB]:
+for d in [AVATAR_ORIGINAL, AVATAR_THUMB, BANNER_ORIGINAL, BANNER_THUMB]:
     d.mkdir(parents=True, exist_ok=True)
 
 AVATAR_THUMB_SIZE = (128, 128)
 AVATAR_MAX_SIZE = 5 * 1024 * 1024  # 5MB
+BANNER_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+BANNER_THUMB_SIZE = (1920, 600)
 BIO_MAX_LENGTH = 190
 NAME_MAX_LENGTH = 50
 
@@ -34,6 +39,7 @@ def serialize_profile(user: dict) -> dict:
         "bio": user.get("bio", ""),
         "avatar_original": user.get("avatar_original"),
         "avatar_thumb": user.get("avatar_thumb"),
+        "banner_image": user.get("banner_image"),
         "role": user.get("role", "user"),
         "created_at": user.get("created_at"),
     }
@@ -192,6 +198,98 @@ async def delete_avatar(user: dict = Depends(get_current_user)):
     await db.users.update_one(
         {"_id": user["_id"]},
         {"$set": {"avatar_original": None, "avatar_thumb": None}},
+    )
+    # FIX: инвалидируем кэш presence
+    await invalidate_profile_cache(str(user["_id"]))
+    return {"deleted": True}
+
+
+@router.post("/me/banner")
+async def upload_banner(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    """Upload profile banner image"""
+    db = get_db()
+
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in {"jpg", "jpeg", "png", "gif", "webp"}:
+        raise HTTPException(400, "Only jpg, png, gif, webp allowed")
+
+    content = await file.read()
+    if len(content) > BANNER_MAX_SIZE:
+        raise HTTPException(400, "File too large (max 10MB)")
+
+    uid = uuid.uuid4().hex[:10]
+    original_name = f"{user['username']}_banner_{uid}.{ext}"
+    thumb_name = f"{user['username']}_banner_{uid}_thumb.webp"
+
+    original_path = BANNER_ORIGINAL / original_name
+    thumb_path = BANNER_THUMB / thumb_name
+
+    # Save original
+    async with aiofiles.open(original_path, "wb") as f:
+        await f.write(content)
+
+    # Process image
+    with Image.open(original_path) as img:
+        if img.mode in ("RGBA", "LA", "P"):
+            bg = Image.new("RGB", img.size, (18, 18, 18))
+            if img.mode == "P":
+                img = img.convert("RGBA")
+            bg.paste(img, mask=img.split()[-1] if img.mode == "RGBA" else None)
+            img = bg
+        elif img.mode != "RGB":
+            img = img.convert("RGB")
+
+        # Save original
+        img.save(original_path, quality=90)
+
+        # Create thumb (resize to banner dimensions)
+        thumb_img = img.copy()
+        thumb_img.thumbnail(BANNER_THUMB_SIZE, Image.Resampling.LANCZOS)
+        thumb_img.save(thumb_path, "WEBP", quality=85, method=6)
+
+    # Delete old banner
+    old_banner = user.get("banner_image")
+    if old_banner:
+        old_path = UPLOAD_DIR / old_banner
+        if old_path.exists():
+            old_path.unlink(missing_ok=True)
+        old_thumb_path = UPLOAD_DIR / old_banner.replace("original", "thumb").replace(ext, "webp")
+        if old_thumb_path.exists():
+            old_thumb_path.unlink(missing_ok=True)
+
+    banner_original = f"banners/original/{original_name}"
+    banner_thumb = f"banners/thumb/{thumb_name}"
+
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"banner_image": banner_original}},
+    )
+
+    # FIX: инвалидируем кэш presence
+    await invalidate_profile_cache(str(user["_id"]))
+    return {
+        "banner_image": banner_original,
+    }
+
+
+@router.delete("/me/banner")
+async def delete_banner(user: dict = Depends(get_current_user)):
+    db = get_db()
+    old_banner = user.get("banner_image")
+    if old_banner:
+        p = UPLOAD_DIR / old_banner
+        if p.exists():
+            p.unlink(missing_ok=True)
+        # Delete thumb by pattern
+        for f in BANNER_THUMB.glob(f"{user['username']}_banner_*_thumb.webp"):
+            f.unlink(missing_ok=True)
+
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"banner_image": None}},
     )
     # FIX: инвалидируем кэш presence
     await invalidate_profile_cache(str(user["_id"]))

@@ -103,7 +103,7 @@
   });
 </script>
 
-<header class="mobile-header" role="banner" aria-label="Mobile navigation">
+<header class="mobile-header" aria-label="Mobile navigation">
   <div class="nav-info" aria-live="polite">
     <svg class="sitemap-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="7" height="7" rx="1"/>
@@ -148,21 +148,20 @@
   id="mobile-menu"
   class="menu-panel"
   class:active={isOpen}
-  role="menu"
   aria-label="Mobile navigation menu"
   aria-hidden={!isOpen}
 >
   <div class="panel-header" tabindex="-1" bind:this={panelHeader}>Navigation</div>
 
-  <div class="main-links" role="none">
+  <div class="main-links">
     {#each mainLinks as item}
+      {@const Icon = item.icon}
       <a
         href={item.path}
-        role="menuitem"
         class="btn-link"
         onclick={closeMenu}
       >
-        <svelte:component this={item.icon} size={20} />
+        <Icon size={20} />
         {item.text}
       </a>
     {/each}
@@ -170,15 +169,15 @@
 
   <div class="subsection-label">Other</div>
 
-  <div class="other-links" role="none">
+  <div class="other-links">
     {#each otherLinks as item}
+      {@const Icon = item.icon}
       <a
         href={item.path}
-        role="menuitem"
         class="btn-link"
         onclick={closeMenu}
       >
-        <svelte:component this={item.icon} size={20} />
+        <Icon size={20} />
         {item.text}
       </a>
     {/each}

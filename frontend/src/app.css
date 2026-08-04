@@ -5,13 +5,13 @@
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-50; }
   .btn-primary { @apply bg-accent-green text-dark-950 hover:bg-accent-green/90; }
-  .btn-secondary { background: var(--w8); color: var(--w); border: 1px solid var(--w12); } .btn-secondary:hover { background: var(--w12); }
+  .btn-secondary { background: var(--w8); color: var(--w); } .btn-secondary:hover { background: var(--w12); }
   .btn-breadcrumb { @apply inline-flex items-center justify-center gap-[6px] px-[12px] py-[6px] text-[14px] font-medium transition-all rounded-[8px] disabled:opacity-5 hover:bg-[--w5] }
   .btn-danger { @apply bg-accent-red text-white hover:bg-accent-red/90; }
   .card { background: var(--w5); border: 1px solid var(--w8); border-radius: 0.75rem; overflow: hidden; }
   .card-hover { transition: background 0.15s; } .card-hover:hover { background: var(--w8); }
-  .input { @apply w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent-green/50; background: var(--w8); border: 1px solid var(--w12); color: var(--w); }
-  .textarea { @apply w-full px-4 py-3 rounded-lg focus:outline-none resize-none; background: var(--w8); border: 1px solid var(--w12); color: var(--w); }
+  .input { @apply w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/40; background: var(--w8); color: var(--w); }
+  .textarea { @apply w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/40 resize-none; background: var(--w8); color: var(--w); }
   .label { @apply block text-sm font-medium mb-1; color: var(--w60); }
   .nav-link { @apply px-4 py-2 text-sm font-medium transition-colors rounded-lg; color: var(--w60); } .nav-link:hover { color: var(--w); }
   .nav-link-active { background: var(--w8); color: var(--w); }
