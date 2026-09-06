@@ -15,10 +15,8 @@
     { href: '/admin/music',     label: 'Music',     short: 'Music'  },
     { href: '/admin/blog',      label: 'Blog',      short: 'Blog'   },
     { href: '/admin/arts',      label: 'Arts',      short: 'Arts'   },
-    { href: '/admin/links',     label: 'Links',     short: 'Links'  },
     { href: '/admin/users',     label: 'Users',     short: 'Users'  },
     { href: '/admin/media',     label: 'Media',     short: 'Media'  },
-    { href: '/admin/views-map', label: 'Views Map', short: 'Map'    },
   ];
 
   const isActive = (href) =>

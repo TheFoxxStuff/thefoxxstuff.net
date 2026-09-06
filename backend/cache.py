@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 _pool: Optional[ConnectionPool] = None
 _redis: Optional[Redis] = None
 
-# Locks для защиты от Cache Stampede
-_stampede_locks: dict[str, asyncio.Lock] = {}
-
 
 async def init_cache() -> None:
     global _pool, _redis
@@ -107,28 +104,60 @@ async def cache_delete_pattern(pattern: str) -> int:
 
 
 # ─── Защита от Cache Stampede ─────────────────────────────────────────────────
+#
+# FIX: раньше лок был обычным asyncio.Lock в словаре процесса — при 2+ воркерах
+# (см. Dockerfile --workers 2) он защищал stampede только внутри своего процесса,
+# а словарь ключей никогда не чистился (медленная утечка памяти). Теперь лок —
+# в Redis (SET NX PX), общий для всех воркеров/реплик, с TTL — не течёт.
+
+_STAMPEDE_LOCK_TTL_MS = 5000
+_STAMPEDE_POLL_INTERVAL = 0.1
+_STAMPEDE_MAX_WAIT = 5.0
 
 async def cache_get_or_set(key: str, fetcher, ttl: int) -> Any:
     """
     Атомарный get-or-set: только один запрос идёт в DB при cache miss.
-    Остальные ждут на asyncio.Lock и получают результат из кэша.
+    Остальные ждут (poll) и получают результат из кэша, как только он появится.
     """
     cached = await cache_get(key)
     if cached is not None:
         return cached
 
-    if key not in _stampede_locks:
-        _stampede_locks[key] = asyncio.Lock()
+    if _redis is None:
+        return await fetcher()
 
-    async with _stampede_locks[key]:
-        # Двойная проверка — пока ждали lock, кто-то уже записал
+    lock_key = f"lock:{key}"
+    waited = 0.0
+    while waited < _STAMPEDE_MAX_WAIT:
+        try:
+            acquired = await _redis.set(lock_key, "1", nx=True, px=_STAMPEDE_LOCK_TTL_MS)
+        except Exception:
+            # Redis недоступен — не блокируемся, просто идём в DB
+            return await fetcher()
+
+        if acquired:
+            try:
+                cached = await cache_get(key)
+                if cached is not None:
+                    return cached
+                result = await fetcher()
+                await cache_set(key, result, ttl)
+                return result
+            finally:
+                try:
+                    await _redis.delete(lock_key)
+                except Exception:
+                    pass
+
+        # Кто-то другой уже считает — ждём и проверяем кэш
+        await asyncio.sleep(_STAMPEDE_POLL_INTERVAL)
+        waited += _STAMPEDE_POLL_INTERVAL
         cached = await cache_get(key)
         if cached is not None:
             return cached
 
-        result = await fetcher()
-        await cache_set(key, result, ttl)
-        return result
+    # Лок не отпустили за разумное время — не ждём вечно, считаем сами
+    return await fetcher()
 
 
 # ─── Батчинг счётчиков просмотров ────────────────────────────────────────────

@@ -53,6 +53,16 @@ def generate_filename(base_name: str, ext: str) -> str:
         slug = uuid.uuid4().hex[:8]
     return f"{slug}.{ext}"
 
+def _validate_image_sync(path: Path) -> tuple:
+    """Runs in a thread — decode + verify is CPU-bound Pillow work."""
+    with Image.open(path) as img:
+        width, height = img.size
+        if width > 10000 or height > 10000:
+            raise ValueError(f"Image dimensions too large. Max: 10000x10000, got: {width}x{height}")
+        img.verify()
+    return width, height
+
+
 def create_thumbnail(input_path: Path, output_path: Path, size: tuple, format: str = 'AVIF') -> tuple:
     """
     Create resized version maintaining aspect ratio.
@@ -134,29 +144,25 @@ async def process_image(
         await f.write(content)
 
     # Validate image and get dimensions
+    # FIX: Pillow — синхронный CPU-bound код. Вызванный напрямую в async-хендлере,
+    # он блокирует event loop всего воркера на время decode/resize/encode —
+    # все остальные запросы этого воркера встают в очередь. Уносим в отдельный поток.
     try:
-        with Image.open(original_path) as img:
-            width, height = img.size
-
-            # Validate dimensions (max 10000x10000 to prevent memory issues)
-            if width > 10000 or height > 10000:
-                original_path.unlink()  # Delete the file
-                raise HTTPException(400, f"Image dimensions too large. Max: 10000x10000, got: {width}x{height}")
-
-            # Validate image is not corrupted
-            img.verify()
+        width, height = await asyncio.to_thread(_validate_image_sync, original_path)
     except Exception as e:
         # Clean up on error
         if original_path.exists():
             original_path.unlink()
-        if isinstance(e, HTTPException):
-            raise
         raise HTTPException(400, f"Invalid or corrupted image file: {str(e)}")
 
     # Create thumbnails in AVIF format (with WebP fallback)
     try:
-        thumb_size, actual_thumb_path = create_thumbnail(original_path, thumb_path, settings.thumb_size, 'AVIF')
-        medium_size, actual_medium_path = create_thumbnail(original_path, medium_path, settings.medium_size, 'AVIF')
+        thumb_size, actual_thumb_path = await asyncio.to_thread(
+            create_thumbnail, original_path, thumb_path, settings.thumb_size, 'AVIF'
+        )
+        medium_size, actual_medium_path = await asyncio.to_thread(
+            create_thumbnail, original_path, medium_path, settings.medium_size, 'AVIF'
+        )
 
         # Use actual filenames (may be .webp if AVIF failed)
         thumb_filename = actual_thumb_path.name

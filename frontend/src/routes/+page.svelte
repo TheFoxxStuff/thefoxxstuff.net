@@ -132,27 +132,30 @@
     </div>
   </section>
 
-  <!-- Chat -->
-  <section>
-    <GuestChat />
-  </section>
-
-  <!-- Online Users -->
-  <section class="card p-4">
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></span>
-        <h2 class="text-sm font-medium text-[--w60] uppercase tracking-wider">Who's Online</h2>
-      </div>
-      <span class="text-xs text-[--w30]">
-        {$presence.onlineCount} user{$presence.onlineCount !== 1 ? 's' : ''}
-      </span>
+  <!-- Chat + Who's Online -->
+  <section class="flex flex-col lg:flex-row gap-4 items-stretch">
+    <div class="flex-1 min-w-0">
+      <GuestChat />
     </div>
-    {#if $presence.onlineCount > 0}
-      <OnlineUsers users={$presence.online} count={$presence.onlineCount} />
-    {:else}
-      <p class="text-xs text-[--w30] py-2">No users online right now</p>
-    {/if}
+
+    <div class="card p-4 flex flex-col lg:w-[280px] lg:shrink-0">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-accent-green animate-pulse"></span>
+          <h2 class="text-sm font-medium text-[--w60] uppercase tracking-wider">Who's Online</h2>
+        </div>
+        <span class="text-xs text-[--w30]">
+          {$presence.onlineCount}
+        </span>
+      </div>
+      <div class="flex-1 overflow-y-auto">
+        {#if $presence.onlineCount > 0}
+          <OnlineUsers users={$presence.online} count={$presence.onlineCount} />
+        {:else}
+          <p class="text-xs text-[--w30] py-2">No users online right now</p>
+        {/if}
+      </div>
+    </div>
   </section>
 
 </div>

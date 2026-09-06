@@ -12,7 +12,7 @@ setup_logging()
 from database import connect_db, close_db, get_db
 from cache import init_cache, close_cache, is_rate_limited, flush_view_buffers
 from config import settings
-from routers import music, blog, arts, links, auth, stats, upload, banner, views, profile, chat, presence
+from routers import music, blog, arts, auth, stats, upload, banner, views, profile, chat, presence
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +59,12 @@ app = FastAPI(title="TheFoxxStuff API", version="1.0.0", lifespan=lifespan)
 
 allowed_origins = [
     settings.frontend_url,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://localhost:4173",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:4173",
     "http://front.thefoxxstuff.net",
     "https://front.thefoxxstuff.net",
     "https://api.thefoxxstuff.net",
@@ -133,7 +136,6 @@ app.include_router(auth.router)
 app.include_router(music.router)
 app.include_router(blog.router)
 app.include_router(arts.router)
-app.include_router(links.router)
 app.include_router(stats.router)
 app.include_router(upload.router)
 app.include_router(banner.router)

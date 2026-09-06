@@ -2,7 +2,7 @@
   import { SEO } from "$lib/components";
   import { canonicalUrl } from "$lib/seo.js";
   import { api } from '$lib/api';
-  import { LayoutDashboard, Music, FileText, Palette, Link, Users, Image, Zap, Eye, ArrowUpRight } from "lucide-svelte";
+  import { LayoutDashboard, Music, FileText, Palette, Users, Image, Zap, Eye, ArrowUpRight } from "lucide-svelte";
 
   let { data: pageData } = $props();
   let stats = $derived(pageData.stats);
@@ -58,11 +58,6 @@
       label: 'Artworks', value: stats.arts.count, href: '/admin/arts',
       subtitle: `${stats.arts.views.toLocaleString()} views`,
       icon: Palette, color: 'from-purple-500/20 to-purple-500/0', accent: 'text-purple-400'
-    },
-    {
-      label: 'Links', value: stats.links.count, href: '/admin/links',
-      subtitle: 'External resources',
-      icon: Link, color: 'from-yellow-500/20 to-yellow-500/0', accent: 'text-yellow-400'
     },
     {
       label: 'Users', value: stats.users.count, href: '/admin/users',
@@ -261,10 +256,6 @@
           <a href="/admin/arts" class="action-btn action-btn--arts">
             <Palette size="18" />
             <span>Upload Artwork</span>
-          </a>
-          <a href="/admin/links" class="action-btn action-btn--links">
-            <Link size="18" />
-            <span>Add Link</span>
           </a>
           <a href="/admin/banner" class="action-btn action-btn--banner">
             <Image size="18" />

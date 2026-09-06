@@ -3,7 +3,6 @@ from database import get_db
 from auth import get_current_admin
 from datetime import datetime, timedelta
 from bson import ObjectId
-import re
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
@@ -14,7 +13,6 @@ async def get_stats(admin: dict = Depends(get_current_admin)):
     music_count = await db.music.count_documents({})
     blog_count = await db.blog.count_documents({})
     arts_count = await db.arts.count_documents({})
-    links_count = await db.links.count_documents({})
     users_count = await db.users.count_documents({})
     images_count = await db.images.count_documents({})
 
@@ -38,7 +36,6 @@ async def get_stats(admin: dict = Depends(get_current_admin)):
         "music": {"count": music_count, "views": music_views},
         "blog": {"count": blog_count, "views": blog_views},
         "arts": {"count": arts_count, "views": arts_views},
-        "links": {"count": links_count},
         "users": {"count": users_count},
         "images": {"count": images_count},
         "total_views": music_views + blog_views + arts_views
@@ -229,60 +226,64 @@ async def global_search(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50)
 ):
-    """Global search across music, blog, and arts with pagination"""
+    """
+    Global search across music, blog, and arts with pagination.
+
+    Раньше это был неанкорированный $regex по title/genre/description/content/excerpt
+    без индекса — на каждый (публичный, без авторизации!) запрос три collection scan
+    по всем трём коллекциям. С ростом контента это дешёвый способ положить Mongo.
+    Теперь используются текстовые индексы (см. database.py) — MongoDB ищет по
+    предпостроенному словарю токенов, а не сравнивает регэксп с каждым документом.
+    """
     db = get_db()
-    if not q.strip():
+    query = q.strip()
+    if not query:
         return {"music": [], "blog": [], "arts": [], "total": {"music": 0, "blog": 0, "arts": 0}}
 
-    # Escape regex special characters to prevent ReDoS attacks
-    escaped_query = re.escape(q.strip())
-    regex = {"$regex": escaped_query, "$options": "i"}
-
+    text_query = {"$text": {"$search": query}}
+    score = {"score": {"$meta": "textScore"}}
     skip = (page - 1) * limit
 
-    # Count total matches for each category
-    music_total = await db.music.count_documents({"$or": [{"title": regex}, {"genre": regex}, {"description": regex}]})
-    blog_total = await db.blog.count_documents({"$or": [{"title": regex}, {"content": regex}, {"excerpt": regex}]})
-    arts_total = await db.arts.count_documents({"$or": [{"title": regex}, {"description": regex}]})
+    music_total = await db.music.count_documents(text_query)
+    blog_total = await db.blog.count_documents(text_query)
+    arts_total = await db.arts.count_documents(text_query)
 
-    # Fetch paginated results
     music = []
-    async for doc in db.music.find({"$or": [{"title": regex}, {"genre": regex}, {"description": regex}]}).sort("views", -1).skip(skip).limit(limit):
-        doc["_id"] = str(doc["_id"])
+    cursor = db.music.find(text_query, score).sort([("score", {"$meta": "textScore"})]).skip(skip).limit(limit)
+    async for doc in cursor:
         music.append({
-            "_id": doc["_id"],
-            "title": doc.get("title",""),
-            "slug": doc.get("slug",""),
-            "genre": doc.get("genre",""),
-            "views": doc.get("views",0),
+            "_id": str(doc["_id"]),
+            "title": doc.get("title", ""),
+            "slug": doc.get("slug", ""),
+            "genre": doc.get("genre", ""),
+            "views": doc.get("views", 0),
             "type": "music"
         })
 
     blog = []
-    async for doc in db.blog.find({"$or": [{"title": regex}, {"content": regex}, {"excerpt": regex}]}).sort("views", -1).skip(skip).limit(limit):
-        doc["_id"] = str(doc["_id"])
+    cursor = db.blog.find(text_query, score).sort([("score", {"$meta": "textScore"})]).skip(skip).limit(limit)
+    async for doc in cursor:
         excerpt = doc.get("excerpt", "")
-        # Proper text truncation with ellipsis
         if len(excerpt) > 120:
             excerpt = excerpt[:117] + "..."
         blog.append({
-            "_id": doc["_id"],
-            "title": doc.get("title",""),
-            "slug": doc.get("slug",""),
+            "_id": str(doc["_id"]),
+            "title": doc.get("title", ""),
+            "slug": doc.get("slug", ""),
             "excerpt": excerpt,
-            "views": doc.get("views",0),
+            "views": doc.get("views", 0),
             "type": "blog"
         })
 
     arts = []
-    async for doc in db.arts.find({"$or": [{"title": regex}, {"description": regex}]}).sort("views", -1).skip(skip).limit(limit):
-        doc["_id"] = str(doc["_id"])
+    cursor = db.arts.find(text_query, score).sort([("score", {"$meta": "textScore"})]).skip(skip).limit(limit)
+    async for doc in cursor:
         arts.append({
-            "_id": doc["_id"],
-            "title": doc.get("title",""),
-            "slug": doc.get("slug",""),
-            "year": doc.get("year",""),
-            "views": doc.get("views",0),
+            "_id": str(doc["_id"]),
+            "title": doc.get("title", ""),
+            "slug": doc.get("slug", ""),
+            "year": doc.get("year", ""),
+            "views": doc.get("views", 0),
             "type": "arts"
         })
 

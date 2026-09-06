@@ -376,7 +376,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="label" for="title">Title</label>
-            <input type="text" bind:value={form.title} oninput={handleTitleChange} required class="input" />
+            <input type="text" bind:value={form.title} required class="input" />
           </div>
           <div>
             <label class="label" for="slug">Slug (URL)</label>

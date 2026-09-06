@@ -184,12 +184,6 @@ export const api = {
     update:    (id, data)  => { invalidateCache('/arts'); return request(`/arts/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
     delete:    (id)        => { invalidateCache('/arts'); return request(`/arts/${id}`, { method: 'DELETE' }); },
   },
-  links: {
-    list:   ()          => request('/links', {}, { cacheable: true }),
-    create: (data)      => { invalidateCache('/links'); return request('/links', { method: 'POST', body: JSON.stringify(data) }); },
-    update: (id, data)  => { invalidateCache('/links'); return request(`/links/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
-    delete: (id)        => { invalidateCache('/links'); return request(`/links/${id}`, { method: 'DELETE' }); },
-  },
   banner: {
     get:         ()                        => request('/banner', {}, { cacheable: true }),
     update:      (data)                    => { invalidateCache('/banner'); return request('/banner', { method: 'PUT', body: JSON.stringify(data) }); },
@@ -241,8 +235,6 @@ export const api = {
         method: 'POST', headers,
       }).catch(() => {});
     },
-    map:    (days=30)          => request(`/views/map?days=${days}`),
-    recent: (page=1, limit=50) => request(`/views/recent?page=${page}&limit=${limit}`),
   },
   about: {
     get:    ()     => request('/about', {}, { cacheable: true }),

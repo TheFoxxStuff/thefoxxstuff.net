@@ -13,7 +13,6 @@ export async function GET({ fetch }) {
     { path: '/blog',   changefreq: 'weekly',  priority: '0.9' },
     { path: '/arts',   changefreq: 'weekly',  priority: '0.8' },
     { path: '/about',  changefreq: 'monthly', priority: '0.7' },
-    { path: '/links',  changefreq: 'monthly', priority: '0.5' },
   ];
 
   // Fetch dynamic content (best-effort — silently skip on error)

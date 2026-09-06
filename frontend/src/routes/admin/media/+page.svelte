@@ -2,13 +2,15 @@
   import { SEO } from "$lib/components";
   import { canonicalUrl } from "$lib/seo.js";
   import { api, getImageUrl, API_BASE } from '$lib/api';
-  import { onMount } from 'svelte';
 
   let { data: pageData } = $props();
   let activeTab = $state('images'); // 'images' | 'audio'
 
   // ── Images ──────────────────────────────────────────
-  let images = $state([]);
+  // FIX: форма ответа бэкенда — {items, total, page, pages}, а не массив.
+  // Инициализация пустым массивом ломала первый рендер ({images.items.length})
+  // до того как onMount успевал его заменить — страница падала в белый экран.
+  let images = $state(pageData.images ?? { items: [], total: 0, page: 1, pages: 1 });
   let loadingImages = $state(false);
   let imgPage = $state(1);
   let category = $state('');
@@ -16,7 +18,6 @@
   let cleanupResult = $state(null);
   let cleaning = $state(false);
   let selectedImage = $state(null);
-  onMount(() => { images = pageData.images ?? []; });
 
   // ── Audio ────────────────────────────────────────────
   let audioFiles = $state([]);

@@ -27,7 +27,6 @@
     { href: '/music', label: 'Music' },
     { href: '/blog', label: 'Blog' },
     { href: '/arts', label: 'Arts' },
-    { href: '/links', label: 'Links' },
     { href: '/about', label: 'About' },
   ];
 

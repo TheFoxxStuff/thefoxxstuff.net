@@ -3,7 +3,7 @@ from bson import ObjectId
 from datetime import datetime
 from database import get_db
 from models import UserCreate, UserLogin, Token
-from auth import get_password_hash, verify_password, create_access_token, get_current_user
+from auth import get_password_hash, verify_password, create_access_token, get_current_user, invalidate_user_cache
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -32,7 +32,7 @@ async def register(user_data: UserCreate):
     user_doc = {
         "username": user_data.username,
         "email": user_data.email,
-        "password": get_password_hash(user_data.password),
+        "password": await get_password_hash(user_data.password),
         "role": role,
         "display_name": "",
         "bio": "",
@@ -55,7 +55,7 @@ async def login(credentials: UserLogin):
     if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     
-    if not verify_password(credentials.password, user["password"]):
+    if not await verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     
     if not user.get("is_active", True):
@@ -90,10 +90,11 @@ async def update_user_role(user_id: str, role: str, current_user: dict = Depends
     
     db = get_db()
     result = await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": role}})
-    
+
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
+    await invalidate_user_cache(user_id)
     return {"success": True}
 
 @router.delete("/users/{user_id}")
@@ -106,8 +107,9 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
     
     db = get_db()
     result = await db.users.delete_one({"_id": ObjectId(user_id)})
-    
+
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
+    await invalidate_user_cache(user_id)
     return {"deleted": True}

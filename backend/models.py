@@ -112,19 +112,6 @@ class ArtWorkCreate(BaseModel):
             raise ValueError('Slug must contain only lowercase letters, numbers, and hyphens')
         return v
 
-class LinkCreate(BaseModel):
-    title: str = Field(..., min_length=1, max_length=100)
-    url: str = Field(..., min_length=1, max_length=500)
-    icon: Optional[str] = Field(None, max_length=50)
-    order: int = Field(default=0, ge=0, le=999)
-
-    @field_validator('url')
-    @classmethod
-    def validate_url(cls, v):
-        if not v.startswith(('http://', 'https://', '/')):
-            raise ValueError('URL must start with http://, https://, or /')
-        return v
-
 class BannerSlide(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)
     image: str = Field(..., min_length=1)  # Image ID

@@ -7,7 +7,7 @@ import uuid
 import aiofiles
 from database import get_db
 from config import settings
-from auth import get_current_user, get_optional_user
+from auth import get_current_user, get_optional_user, invalidate_user_cache
 from routers.presence import invalidate_profile_cache
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
@@ -87,6 +87,8 @@ async def update_profile(
 
     await db.users.update_one({"_id": user["_id"]}, {"$set": update})
     updated = await db.users.find_one({"_id": user["_id"]})
+    await invalidate_user_cache(str(user["_id"]))
+    await invalidate_profile_cache(str(user["_id"]))
     return serialize_profile(updated)
 
 
@@ -173,7 +175,8 @@ async def upload_avatar(
         {"$set": {"avatar_original": avatar_original, "avatar_thumb": avatar_thumb}},
     )
 
-    # FIX: инвалидируем кэш presence
+    # FIX: инвалидируем кэш presence и кэш get_current_user
+    await invalidate_user_cache(str(user["_id"]))
     await invalidate_profile_cache(str(user["_id"]))
     return {
         "avatar_original": avatar_original,
@@ -199,7 +202,8 @@ async def delete_avatar(user: dict = Depends(get_current_user)):
         {"_id": user["_id"]},
         {"$set": {"avatar_original": None, "avatar_thumb": None}},
     )
-    # FIX: инвалидируем кэш presence
+    # FIX: инвалидируем кэш presence и кэш get_current_user
+    await invalidate_user_cache(str(user["_id"]))
     await invalidate_profile_cache(str(user["_id"]))
     return {"deleted": True}
 
@@ -268,7 +272,8 @@ async def upload_banner(
         {"$set": {"banner_image": banner_original}},
     )
 
-    # FIX: инвалидируем кэш presence
+    # FIX: инвалидируем кэш presence и кэш get_current_user
+    await invalidate_user_cache(str(user["_id"]))
     await invalidate_profile_cache(str(user["_id"]))
     return {
         "banner_image": banner_original,
@@ -291,6 +296,7 @@ async def delete_banner(user: dict = Depends(get_current_user)):
         {"_id": user["_id"]},
         {"$set": {"banner_image": None}},
     )
-    # FIX: инвалидируем кэш presence
+    # FIX: инвалидируем кэш presence и кэш get_current_user
+    await invalidate_user_cache(str(user["_id"]))
     await invalidate_profile_cache(str(user["_id"]))
     return {"deleted": True}

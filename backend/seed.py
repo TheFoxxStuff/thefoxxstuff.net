@@ -12,7 +12,6 @@ async def seed():
     await db.music.delete_many({})
     await db.blog.delete_many({})
     await db.arts.delete_many({})
-    await db.links.delete_many({})
     await db.about.delete_many({})
 
     music_releases = [
@@ -33,19 +32,11 @@ async def seed():
         for i in range(7 if year == 2025 else 4):
             artworks.append({"title": f"Artwork {year}-{i+1}", "description": "Digital artwork.", "image_url": None, "dimensions": "1024 x 1024", "file_size": "1.2 MB", "year": year, "created_at": datetime(year, 4, 28 - i), "views": 100 + i * 50})
 
-    links = [
-        {"title": "BANDCAMP", "url": "https://thefoxxstuff.bandcamp.com", "icon": "bandcamp", "order": 1},
-        {"title": "SOUNDCLOUD", "url": "https://soundcloud.com/thefoxxstuff", "icon": "soundcloud", "order": 2},
-        {"title": "TWITTER", "url": "https://twitter.com/thefoxxstuff", "icon": "twitter", "order": 3},
-        {"title": "VK", "url": "https://vk.com/thefoxxstuff", "icon": "vk", "order": 4},
-    ]
-
     about = {"name": "TheFoxxStuff", "location": "Republic of Sakha (Yakutia)", "genres": ["Hardcore", "Breakcore", "Drum'n'Bass"], "bio": "He has his own unique style...", "avatar": None, "email": "mail@thefoxxstuff.net", "social_links": {"bandcamp": "https://thefoxxstuff.bandcamp.com", "soundcloud": "https://soundcloud.com/thefoxxstuff", "twitter": "https://twitter.com/thefoxxstuff", "vk": "https://vk.com/thefoxxstuff", "telegram": "https://t.me/thefoxxstuff"}, "liner_notes": "So I spent a few hours in this world..."}
 
     await db.music.insert_many(music_releases)
     await db.blog.insert_many(blog_posts)
     await db.arts.insert_many(artworks)
-    await db.links.insert_many(links)
     await db.about.insert_one(about)
 
     print("Database seeded! Register a new user - first user will be admin.")

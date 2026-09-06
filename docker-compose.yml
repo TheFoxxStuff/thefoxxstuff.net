@@ -63,7 +63,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256m
+          # Было 256m — 2 uvicorn воркера + Pillow (AVIF-энкод) + ffmpeg-сабпроцессы
+          # для конвертации аудио одновременно легко в это не помещались (риск OOM-kill).
+          memory: 512m
 
   frontend:
     build:

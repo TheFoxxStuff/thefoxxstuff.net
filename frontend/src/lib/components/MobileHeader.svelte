@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/stores';
   import { onMount, onDestroy } from 'svelte';
-  import { Home, Music, FileText, Palette, Link2, Info, Users, Menu, X } from 'lucide-svelte';
+  import { Home, Music, FileText, Palette, Info, Users, Menu, X } from 'lucide-svelte';
 
   // Navigation links
   const mainLinks = [
@@ -9,7 +9,6 @@
     { text: 'Blog', icon: FileText, path: '/blog' },
     { text: 'Music', icon: Music, path: '/music' },
     { text: 'Arts', icon: Palette, path: '/arts' },
-    { text: 'Links', icon: Link2, path: '/links' },
     { text: 'About', icon: Info, path: '/about' },
   ];
 
@@ -40,7 +39,6 @@
       if (segment === 'blog') title = 'Blog';
       else if (segment === 'music') title = 'Music';
       else if (segment === 'arts') title = 'Arts';
-      else if (segment === 'links') title = 'Links';
       else if (segment === 'about') title = 'About';
       else if (segment === 'world') title = 'World';
       else if (segment === 'profile') title = 'Profile';
